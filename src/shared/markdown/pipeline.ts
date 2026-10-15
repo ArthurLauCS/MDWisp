@@ -16,6 +16,7 @@ import sub from 'markdown-it-sub'
 import sup from 'markdown-it-sup'
 import hljs from 'highlight.js/lib/common'
 import { detectLanguage } from './detect'
+import { mathPlugin } from './math'
 import { frontmatterEnd } from './frontmatter'
 import type { Locale } from '../types'
 import { en } from '../locales/en'
@@ -92,7 +93,7 @@ md.use(anchor, {
         .replace(/[^\p{L}\p{N}\-_]/gu, '')
     )
 })
-md.use(footnote).use(taskLists, { label: true }).use(deflist).use(mark).use(sub).use(sup)
+md.use(footnote).use(taskLists, { label: true }).use(deflist).use(mark).use(sub).use(sup).use(mathPlugin)
 
 const fence = md.renderer.rules.fence!
 md.renderer.rules.fence = (tokens, index, options, env, self) => fence(tokens, index, options, env, self)

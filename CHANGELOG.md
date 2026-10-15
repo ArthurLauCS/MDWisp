@@ -1,5 +1,16 @@
 # 更新记录
 
+## 0.4.0 · 2026-10-15
+
+- 新增行内与块级数学公式渲染；HTML/PDF 导出包含公式字体，支持离线阅读。
+- 新增源码模式（Ctrl+/）、正文缩放（Ctrl+=、Ctrl+-、Ctrl+0）和中英文字数及选区统计。
+- 自动载入外部程序对未修改文档的更新；存在未保存编辑时提示冲突，可用 Ctrl+Shift+R 载入磁盘版本并撤销。
+- 选中文字后粘贴网址可生成链接；表格支持 Enter / Shift+Enter 上下移动，长单元格编辑保持多行高度。
+- Add inline and display math rendering, with formula fonts embedded in HTML/PDF exports for offline reading.
+- Add source mode (Ctrl+/), reading zoom (Ctrl+=, Ctrl+-, Ctrl+0), and Chinese/English word and selection counts.
+- Reload external changes to clean documents automatically; warn when unsaved edits exist and offer undoable disk reload with Ctrl+Shift+R.
+- Paste a URL over selected text to create a link; navigate table cells with Enter / Shift+Enter and keep long cells multi-line while editing.
+
 ## 0.3.5 · 2026-10-09
 
 - 修复长表格中的查找跳转：按匹配文字的实际显示坐标定位，不再按整个表格组件跳转。

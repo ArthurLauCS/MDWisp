@@ -31,9 +31,9 @@ Formerly **MDView**. The icon is unchanged. Existing settings and history remain
 
 ## Download and installation
 
-Download `MDWisp-0.3.5-setup.exe` from [Releases](https://github.com/ArthurLauCS/MDWisp/releases/latest), or build it with `npm run dist`. Installation offers English and Simplified Chinese, a directory choice and a desktop shortcut. Installers are currently unsigned; macOS and Linux have not been verified.
+Download `MDWisp-0.4.0-setup.exe` from [Releases](https://github.com/ArthurLauCS/MDWisp/releases/latest), or build it with `npm run dist`. Installation offers English and Simplified Chinese, a directory choice and a desktop shortcut. Installers are currently unsigned; macOS and Linux have not been verified.
 
-`MDWisp-AI-skills-0.3.5.zip` provides AI rules without installing the app. Copy `en/.agents` into a project for English rules, or `.agents` for Simplified Chinese. Check downloaded files against `SHA256SUMS.txt` from the release.
+`MDWisp-AI-skills-0.4.0.zip` provides AI rules without installing the app. Copy `en/.agents` into a project for English rules, or `.agents` for Simplified Chinese. Check downloaded files against `SHA256SUMS.txt` from the release.
 
 ## Getting started
 

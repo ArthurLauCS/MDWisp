@@ -106,6 +106,8 @@ export interface ActionContext {
   search?: (command: SearchCommand) => void
   searchOpen?: () => boolean
   pickCodeLanguage?: () => void
+  /** Replace the buffer with the file on disk as one undoable step. */
+  reloadFromDisk?: () => void | Promise<void>
   /** Push a transient message. */
   toast: (message: string, tone?: 'info' | 'success' | 'error') => void
 }

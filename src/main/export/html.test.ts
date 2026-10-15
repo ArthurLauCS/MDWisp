@@ -99,6 +99,14 @@ describe('standalone html', () => {
     expect(r.html).not.toMatch(/body,\s*\{/)
   })
 
+  it('embeds formula fonts only for documents with math', async () => {
+    const math = await buildHtml(docPath, '$$\nE = mc^2\n$$')
+    expect(math.html).toContain('katex-display')
+    expect(math.html).toContain('data:font/woff2;base64,')
+    expect(math.html).not.toMatch(/url\(fonts\//)
+    expect((await buildHtml(docPath, '# 标题')).html).not.toContain('KaTeX_Main')
+  })
+
   it('keeps the app code-block markup so the two renderings agree', async () => {
     const r = await buildHtml(docPath, '```\ninterface X { a: string }\n```')
     expect(r.html).toContain('codeblock__lang')

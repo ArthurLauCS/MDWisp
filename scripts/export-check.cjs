@@ -16,6 +16,7 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms))
 async function main() {
   const docDir = path.join(OUT, 'workspace', '欢迎使用')
   await fs.cp(path.join(app.isPackaged ? process.resourcesPath : ROOT, 'stock', '欢迎使用'), docDir, { recursive: true })
+  await fs.appendFile(path.join(docDir, '欢迎使用.md'), '\n\n$$\nE = mc^2\n$$\n')
   for (let i = 0; i < 60 && !BrowserWindow.getAllWindows().length; i++) await wait(100)
   const win = BrowserWindow.getAllWindows()[0]
   win.setSize(1440, 900)
@@ -53,6 +54,10 @@ async function main() {
     console.log('PASS', ext, data.length, 'bytes')
   }
   assert.doesNotMatch(await fs.readFile(path.join(OUT, 'documents', 'out.html'), 'utf8'), /title: 欢迎使用/)
+  const exportedHtml = await fs.readFile(path.join(OUT, 'documents', 'out.html'), 'utf8')
+  assert.match(exportedHtml, /katex-display/)
+  assert.match(exportedHtml, /data:font\/woff2;base64,/)
+  assert.doesNotMatch(exportedHtml, /url\(fonts\//)
   const htmlWindow = new BrowserWindow({ show: false, width: 1280, height: 960, webPreferences: { sandbox: true, nodeIntegration: false } })
   try {
     await htmlWindow.loadFile(path.join(OUT, 'documents', 'out.html'))

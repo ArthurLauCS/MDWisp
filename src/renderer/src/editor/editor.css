@@ -143,6 +143,11 @@
 .live-link { color: var(--link); text-decoration: underline; text-underline-offset: var(--space-1); }
 .cm-editor :is([data-md-href], a[href]) { cursor: text; }
 .is-link-navigation .cm-editor :is([data-md-href], a[href], [data-md-href] *, a[href] *) { cursor: pointer; }
+/* Monospace keeps table pipes and indentation aligned while editing raw Markdown. */
+.editor__surface .cm-content.source-mode { font-family: var(--font-code); font-size: var(--editor-font-size); }
+.live-math-source { font-family: var(--font-code); font-size: 0.88em; color: var(--text-secondary); }
+.live-rendered.live-math-block { display: block; text-align: center; padding-block: var(--space-2); }
+.live-rendered.live-math { white-space: nowrap; }
 .live-code {
   font-family: var(--font-code);
   font-size: 0.88em;
@@ -243,6 +248,12 @@
   color: inherit;
   text-align: inherit;
   background: transparent;
+  /* Wrap like the rendered cell and grow with the text instead of scrolling one line. */
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  field-sizing: content;
+  resize: none;
+  overflow: hidden;
 }
 
 .editor__status {

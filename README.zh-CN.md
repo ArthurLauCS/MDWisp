@@ -35,11 +35,11 @@
 
 ## 下载与安装
 
-前往 **[Releases](https://github.com/ArthurLauCS/MDWisp/releases/latest)**，下载 `MDWisp-0.3.5-setup.exe`，也可通过 `npm run dist` 自行构建。安装时可以选择中英文、安装目录，并创建桌面快捷方式。
+前往 **[Releases](https://github.com/ArthurLauCS/MDWisp/releases/latest)**，下载 `MDWisp-0.4.0-setup.exe`，也可通过 `npm run dist` 自行构建。安装时可以选择中英文、安装目录，并创建桌面快捷方式。
 
 当前提供 **Windows x64** 安装包；macOS 和 Linux 尚未验证。安装包暂未进行代码签名。
 
-只需要 AI 协作规则，可以下载同一发行版中的 `MDWisp-AI-skills-0.3.5.zip`，无需安装桌面应用。中文规则位于 `.agents`，英文规则位于 `en/.agents`；选择一份复制到项目根目录。`SHA256SUMS.txt` 提供下载文件的校验值。
+只需要 AI 协作规则，可以下载同一发行版中的 `MDWisp-AI-skills-0.4.0.zip`，无需安装桌面应用。中文规则位于 `.agents`，英文规则位于 `en/.agents`；选择一份复制到项目根目录。`SHA256SUMS.txt` 提供下载文件的校验值。
 
 ## 语言与链接
 

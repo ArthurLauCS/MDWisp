@@ -107,4 +107,30 @@ describe('document lifecycle', () => {
     await documents.loadDocument('/notes/missing.md')
     expect(documents.currentDocument()?.meta.path).toBe('/notes/a.md')
   })
+
+  it('takes edits from other programs as the new save baseline', async () => {
+    await documents.loadDocument('/notes/a.md')
+    expect(await documents.diskState()).toMatchObject({ changed: false })
+    const external = { meta: meta('/notes/a.md'), text: '# Agent', body: '# Agent', frontmatter: null, conflictWithDisk: false }
+    bridge.doc.read.mockResolvedValue(external)
+    expect(await documents.diskState()).toEqual({ text: '# Agent', changed: true, dirty: false })
+    documents.updateDocumentBuffer('# Mine')
+    expect(await documents.diskState()).toMatchObject({ changed: true, dirty: true })
+    documents.adoptDiskText('# Agent')
+    expect(documents.hasUnsavedChanges()).toBe(true)
+    documents.updateDocumentBuffer('# Agent')
+    expect(documents.hasUnsavedChanges()).toBe(false)
+    documents.updateDocumentBuffer('# Agent, then mine')
+    await documents.saveDocument()
+    expect(bridge.doc.write).toHaveBeenLastCalledWith('/notes/a.md', '# Agent, then mine', '# Agent')
+  })
+
+  it('treats its own save as already seen', async () => {
+    await documents.loadDocument('/notes/a.md')
+    documents.updateDocumentBuffer('# Written here')
+    const saving = documents.saveDocument()
+    bridge.doc.read.mockResolvedValue({ meta: meta('/notes/a.md'), text: '# Written here', body: '', frontmatter: null, conflictWithDisk: false })
+    expect(await documents.diskState()).toMatchObject({ changed: false, dirty: false })
+    await saving
+  })
 })

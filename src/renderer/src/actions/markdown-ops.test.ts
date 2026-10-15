@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { autoPair, minimalChange, toggleInline, toggleLinePrefix, setHeading, toPlainText } from './markdown-ops'
+import { autoPair, countWords, minimalChange, pasteAsLink, toggleInline, toggleLinePrefix, setHeading, toPlainText } from './markdown-ops'
 import { renderMarkdown } from '@shared/markdown/pipeline'
 
 const formats = [['**', 'strong'], ['*', 'em'], ['~~', 's'], ['==', 'mark'], ['<u>', 'u']] as const
@@ -102,5 +102,29 @@ describe('typing and local edits', () => {
     ['same', 'same', { from: 4, to: 4, insert: '' }]
   ])('keeps untouched document ranges: %s', (source, next, expected) => {
     expect(minimalChange(source as string, next as string)).toEqual(expected)
+  })
+})
+
+describe('countWords', () => {
+  it.each([
+    ['', 0],
+    ['写作，从这里开始。', 7],
+    ['Hello world, it’s 2026.', 4],
+    ['# 标题 Title\n\n**加粗** and [链接](https://example.com/a-b)', 8],
+    ['| 名称 | 数量 |\n| --- | --- |\n| 苹果<br>梨 | 2 |', 8],
+    ['混排English单词', 5]
+  ])('%s → %i', (source, expected) => {
+    expect(countWords(source)).toBe(expected)
+  })
+})
+
+describe('pasteAsLink', () => {
+  it('links a selection to a pasted URL only', () => {
+    expect(pasteAsLink('MDWisp', ' https://github.com/x \n')).toBe('[MDWisp](https://github.com/x)')
+    expect(pasteAsLink('a [b]', 'https://e.com/(1)')).toBe('[a \\[b\\]](https://e.com/%281%29)')
+    expect(pasteAsLink('', 'https://e.com')).toBeNull()
+    expect(pasteAsLink('two\nlines', 'https://e.com')).toBeNull()
+    expect(pasteAsLink('text', 'not a url')).toBeNull()
+    expect(pasteAsLink('text', 'https://a.com https://b.com')).toBeNull()
   })
 })

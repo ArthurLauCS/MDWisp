@@ -8,6 +8,7 @@ import './styles/tokens.css'
 import './styles/fonts.css'
 import './styles/base.css'
 import './styles/markdown.css'
+import 'katex/dist/katex.min.css'
 import './App.css'
 
 const el = document.getElementById('root')

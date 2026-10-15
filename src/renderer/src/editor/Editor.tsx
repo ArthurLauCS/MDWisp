@@ -1,5 +1,5 @@
 import { t } from '../i18n'
-import { useEffect, useLayoutEffect, useImperativeHandle, useRef, useState, forwardRef } from 'react'
+import { useEffect, useLayoutEffect, useImperativeHandle, useMemo, useRef, useState, forwardRef } from 'react'
 import { Compartment, EditorState, Transaction } from '@codemirror/state'
 import { EditorView, keymap, highlightActiveLine, placeholder, scrollPastEnd } from '@codemirror/view'
 import { defaultKeymap, history, historyKeymap, indentWithTab, isolateHistory, undo, redo } from '@codemirror/commands'
@@ -7,7 +7,7 @@ import { markdownKeymap } from '@codemirror/lang-markdown'
 import { closeSearchPanel, getSearchQuery, openSearchPanel, search, searchPanelOpen, setSearchQuery } from '@codemirror/search'
 import { indentUnit, syntaxTree } from '@codemirror/language'
 import type { Locale } from '@shared/types'
-import { autoPair, minimalChange } from '../actions/markdown-ops'
+import { autoPair, countWords, minimalChange } from '../actions/markdown-ops'
 import { focusTableCell, livePreview, liveMarkdown, startCodeBlock, leaveCodeBlock, deleteHorizontalRule } from './live-preview'
 import { PageMargins } from './PageMargins'
 import { searchChinese, searchCommands, previewSearchScroll, type SearchCommand } from './search'
@@ -46,6 +46,7 @@ interface Props {
   autoPair?: boolean
   smartLists?: boolean
   tabSize?: number
+  sourceMode?: boolean
 }
 
 export const Editor = forwardRef<EditorHandle, Props>(function Editor(props, ref) {
@@ -55,8 +56,9 @@ export const Editor = forwardRef<EditorHandle, Props>(function Editor(props, ref
   current.current = props
   const config = useRef(new Compartment())
   const documentConfig = useRef(new Compartment())
-  const configuredDocument = useRef({ path: props.docPath, language: props.language })
-  const [cursor, setCursor] = useState(0)
+  const configuredDocument = useRef({ path: props.docPath, language: props.language, sourceMode: props.sourceMode })
+  const [range, setRange] = useState({ from: 0, to: 0 })
+  const preview = () => current.current.sourceMode ? [] : livePreview(current.current.docPath ? current.current.docPath.replace(/[\\/][^\\/]+$/, '') : null)
 
   const configure = () => [
     current.current.language === 'zh-CN' ? searchChinese : [],
@@ -66,7 +68,7 @@ export const Editor = forwardRef<EditorHandle, Props>(function Editor(props, ref
     EditorState.readOnly.of(!!current.current.readOnly),
     EditorView.editable.of(!current.current.readOnly),
     EditorView.contentAttributes.of({
-      class: 'md',
+      class: current.current.sourceMode ? 'md source-mode' : 'md',
       'aria-label': t('Markdown 文档'),
       spellcheck: String(!!current.current.spellCheck)
     }),
@@ -93,7 +95,8 @@ export const Editor = forwardRef<EditorHandle, Props>(function Editor(props, ref
     },
     setSource: (text) => {
       const view = viewRef.current
-      if (view && !view.state.readOnly) view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: text }, annotations: isolateHistory.of('full') })
+      // A minimal change keeps the caret and scroll position where the text did not move.
+      if (view && !view.state.readOnly) view.dispatch({ changes: minimalChange(view.state.doc.toString(), text), annotations: isolateHistory.of('full') })
     },
     replace: (start, end, text, at) => {
       const view = viewRef.current
@@ -142,7 +145,7 @@ export const Editor = forwardRef<EditorHandle, Props>(function Editor(props, ref
           keymap.of([{ key: 'Enter', run: startCodeBlock }, { key: 'Backspace', run: deleteHorizontalRule }, ...historyKeymap, indentWithTab, ...defaultKeymap]),
           EditorView.lineWrapping,
           scrollPastEnd(),
-          documentConfig.current.of(livePreview(current.current.docPath ? current.current.docPath.replace(/[\\/][^\\/]+$/, '') : null)),
+          documentConfig.current.of(preview()),
           EditorView.domEventHandlers({
             mousedown(event, view) {
               if (event.button !== 0 || view.state.readOnly) return false
@@ -193,7 +196,7 @@ export const Editor = forwardRef<EditorHandle, Props>(function Editor(props, ref
             }
             if (update.docChanged || update.selectionSet) {
               const offset = update.state.selection.main.from
-              setCursor(offset)
+              setRange({ from: offset, to: update.state.selection.main.to })
               current.current.onCursorChange?.(offset)
               if (current.current.typewriter && update.view.hasFocus && update.docChanged) {
                 requestAnimationFrame(() => {
@@ -228,14 +231,15 @@ export const Editor = forwardRef<EditorHandle, Props>(function Editor(props, ref
   }, [])
 
   useEffect(() => {
-    if (configuredDocument.current.path === props.docPath && configuredDocument.current.language === props.language) return
-    configuredDocument.current = { path: props.docPath, language: props.language }
-    viewRef.current?.dispatch({ effects: documentConfig.current.reconfigure(livePreview(props.docPath ? props.docPath.replace(/[\\/][^\\/]+$/, '') : null)) })
-  }, [props.docPath, props.language])
+    const { path, language, sourceMode } = configuredDocument.current
+    if (path === props.docPath && language === props.language && sourceMode === props.sourceMode) return
+    configuredDocument.current = { path: props.docPath, language: props.language, sourceMode: props.sourceMode }
+    viewRef.current?.dispatch({ effects: documentConfig.current.reconfigure(preview()) })
+  }, [props.docPath, props.language, props.sourceMode])
 
   useEffect(() => {
     viewRef.current?.dispatch({ effects: config.current.reconfigure(configure()) })
-  }, [props.readOnly, props.highlightLine, props.spellCheck, props.smartLists, props.tabSize, props.language])
+  }, [props.readOnly, props.highlightLine, props.spellCheck, props.smartLists, props.tabSize, props.language, props.sourceMode])
 
   useEffect(() => {
     const view = viewRef.current
@@ -258,7 +262,8 @@ export const Editor = forwardRef<EditorHandle, Props>(function Editor(props, ref
     })
   }, [props.source])
 
-  const before = props.source.slice(0, cursor)
+  const before = props.source.slice(0, range.from)
+  const words = useMemo(() => countWords(props.source), [props.source])
   return (
     <div className="editor">
       <div className="editor__surface">
@@ -267,8 +272,8 @@ export const Editor = forwardRef<EditorHandle, Props>(function Editor(props, ref
       </div>
       <div className="editor__status">
         <span>{t('第 {0} 行', before.split('\n').length)}</span>
-        <span>{t('{0} 字符', props.source.length)}</span>
-        <span>{props.readOnly ? t('只读') : t('直接编辑')}</span>
+        <span>{range.to > range.from ? t('已选 {0} / 共 {1} 字', countWords(props.source.slice(range.from, range.to)), words) : t('{0} 字', words)}</span>
+        <span>{props.readOnly ? t('只读') : props.sourceMode ? t('源码模式') : t('直接编辑')}</span>
       </div>
     </div>
   )

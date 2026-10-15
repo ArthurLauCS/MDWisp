@@ -31,6 +31,8 @@ export const IPC = {
   DOC_ORGANIZE_PLAN: 'doc:organize-plan',
   DOC_ORGANIZE: 'doc:organize',
   DOC_CHANGED_ON_DISK: 'doc:changed-on-disk',
+  /** Watch this window's document so edits by other programs reach the editor. */
+  DOC_WATCH: 'doc:watch',
 
   // ---- assets -------------------------------------------------------------
   ASSET_FROM_CLIPBOARD: 'asset:from-clipboard',

@@ -6,6 +6,7 @@ import { openWorkspaceDialog } from '../state/workspace'
 import { linkAt, unlinkAt } from '../markdown/links'
 import { followDocumentLink } from '../markdown/navigation'
 import type { ActionContext, ActionDef } from './types'
+import { DEFAULT_SETTINGS } from '@shared/types'
 import {
   autoPair,
   INLINE_WRAPPERS,
@@ -177,6 +178,21 @@ const tableStub = (
   run: () => undefined
 })
 
+const zoom = (id: string, title: string, key: string, size: (current: number) => number): ActionDef => ({
+  id,
+  get title() { return t(title) },
+  keywords: ['zoom', 'font size', '字号', '缩放'],
+  scope: 'app',
+  key,
+  group: 'view',
+  run: (ctx) => {
+    // Same bounds as the font size field in settings.
+    const fontSize = Math.min(26, Math.max(12, size(settingsSnapshot().fontSize)))
+    void patchSettings({ fontSize })
+    ctx.toast(t('正文字号 {0}px', fontSize))
+  }
+})
+
 export const ACTIONS: ActionDef[] = [
   { id: 'document.new', get title() { return t('新建文档') }, key: 'Ctrl+N', scope: 'app', group: 'file', keywords: ['new', 'blank', '草稿'], run: () => newDocument() },
   { id: 'document.open', get title() { return t('打开文档') }, key: 'Ctrl+O', scope: 'app', group: 'file', keywords: ['open'], run: () => openDocumentDialog() },
@@ -194,6 +210,13 @@ export const ACTIONS: ActionDef[] = [
   {
     id: 'document.save', get title() { return t('保存文档') }, key: 'Ctrl+S', scope: 'document', group: 'file',
     run: async () => { await saveDocument() }
+  },
+  {
+    id: 'document.reload', get title() { return t('重新载入磁盘版本') }, key: 'Ctrl+Shift+R', scope: 'document', group: 'file',
+    keywords: ['reload', 'revert', 'disk', '还原', '外部修改'],
+    enabled: () => !!currentDocument()?.meta.path,
+    disabledReason: () => t('请先保存文档'),
+    run: (ctx) => ctx.reloadFromDisk?.()
   },
   {
     id: 'document.organize', get title() { return t('整理为文档文件夹') }, scope: 'document', group: 'file',
@@ -456,6 +479,22 @@ export const ACTIONS: ActionDef[] = [
       void patchSettings({ sidebarVisible: !settingsSnapshot().sidebarVisible })
     }
   },
+  {
+    id: 'view.sourceMode',
+    get title() { return t('切换源码模式') },
+    keywords: ['source', 'raw', 'markdown', '源码'],
+    scope: 'app',
+    key: 'Ctrl+Slash',
+    group: 'view',
+    run: (ctx) => {
+      const sourceMode = !settingsSnapshot().sourceMode
+      void patchSettings({ sourceMode })
+      ctx.toast(sourceMode ? t('已切换到源码模式') : t('已切换到排版编辑'))
+    }
+  },
+  zoom('view.zoomIn', '放大正文', 'Ctrl+Equal', (size) => size + 1),
+  zoom('view.zoomOut', '缩小正文', 'Ctrl+Minus', (size) => size - 1),
+  zoom('view.zoomReset', '恢复默认字号', 'Ctrl+Digit0', () => DEFAULT_SETTINGS.fontSize),
   {
     id: 'view.showOutline', get title() { return t('大纲') }, keywords: ['outline', 'heading', '标题层级'],
     scope: 'app', group: 'view',
