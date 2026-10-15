@@ -199,7 +199,6 @@ class LiveTable extends WidgetType {
       // and column alignment, instead of guessing a character width.
       const text = document.createElement('span')
       text.className = 'live-cell-input'
-      text.style.whiteSpace = 'pre'
       text.textContent = cell.dataset.raw ?? ''
       cell.replaceChildren(text)
       const caret = document.caretRangeFromPoint(event.clientX, event.clientY)
@@ -209,10 +208,10 @@ class LiveTable extends WidgetType {
     })
     dom.addEventListener('click', (event) => {
       const cell = (event.target as HTMLElement).closest<HTMLElement>('[data-cell-from]')
-      if (cell && !cell.querySelector('input') && !view.state.readOnly) editCell(view, cell)
+      if (cell && !cell.querySelector('textarea') && !view.state.readOnly) editCell(view, cell)
     })
     dom.addEventListener('input', (event) => {
-      const input = event.target as HTMLInputElement
+      const input = event.target as HTMLTextAreaElement
       if (!input.matches('.live-cell-input') || view.state.readOnly) return
       const cell = input.parentElement!
       const current = tables.get(dom)!
@@ -254,14 +253,14 @@ class LiveTable extends WidgetType {
         cell.tabIndex = this.readOnly ? -1 : 0
         cell.setAttribute('aria-label', t('第 {0} 行，第 {1} 列', row + 1, col + 1))
         cell.onfocus = () => {
-          if (!this.readOnly && !cell.querySelector('input')) editCell(EditorView.findFromDOM(dom)!, cell)
+          if (!this.readOnly && !cell.querySelector('textarea')) editCell(EditorView.findFromDOM(dom)!, cell)
         }
       })
     })
   }
   updateDOM(dom: HTMLElement): boolean {
     const previous = tables.get(dom)!
-    const input = dom.querySelector<HTMLInputElement>('.live-cell-input')
+    const input = dom.querySelector<HTMLTextAreaElement>('.live-cell-input')
     const sameShape = previous.ctx.cols === this.ctx.cols && previous.ctx.bodyRows === this.ctx.bodyRows
     tables.set(dom, this)
     if (input && document.activeElement === input && sameShape && !this.readOnly) {
@@ -286,15 +285,15 @@ class LiveTable extends WidgetType {
 
 function editCell(view: EditorView, cell: HTMLElement, start?: number, end = start): void {
   const table = cell.closest<HTMLElement>('.live-table')!
-  for (const other of table.querySelectorAll<HTMLInputElement>('.live-cell-input')) {
+  for (const other of table.querySelectorAll<HTMLTextAreaElement>('.live-cell-input')) {
     if (other.parentElement !== cell) {
       const previous = other.parentElement!
       previous.innerHTML = cellHtml(previous.dataset.raw ?? '', tables.get(table)!.docDir, tables.get(table)!.references)
     }
   }
-  let input = cell.querySelector<HTMLInputElement>('input')
+  let input = cell.querySelector('textarea')
   if (!input) {
-    input = document.createElement('input')
+    input = document.createElement('textarea')
     input.className = 'live-cell-input'
     input.value = cell.dataset.raw ?? ''
     input.setAttribute('aria-label', cell.getAttribute('aria-label')!)
@@ -307,6 +306,8 @@ function editCell(view: EditorView, cell: HTMLElement, start?: number, end = sta
     input.addEventListener('select', sync)
     input.addEventListener('keyup', sync)
     input.addEventListener('click', sync)
+    // Line breaks go through the Alt+Enter action; a bare Enter must not insert a raw newline.
+    input.addEventListener('keydown', (event) => { if (event.key === 'Enter') event.preventDefault() })
   }
   input.focus()
   input.setSelectionRange(start ?? input.value.length, end ?? input.value.length)

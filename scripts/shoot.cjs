@@ -149,6 +149,25 @@ async function main() {
   await press('z', ['control'])
   assert.equal(await run(`window.__mdview.editorContext().source`), fixture)
 
+  const longPath = path.join(WORKSPACE, '长单元格.md')
+  const longFixture = `| 说明 | 值 |\n| --- | --- |\n| ${'很长的一段话，'.repeat(40)} | 1 |\n`
+  await fs.writeFile(longPath, longFixture)
+  await run(`window.__mdview.loadDocument(${JSON.stringify(longPath)})`)
+  await wait(350)
+  const shownHeight = await run(`document.querySelector('.live-table tbody td').getBoundingClientRect().height`)
+  await run(`document.querySelector('.live-table tbody td').click()`)
+  await wait(100)
+  const editing = await run(`(() => { const el = document.activeElement; return { className: el.className, height: el.closest('td').getBoundingClientRect().height, line: parseFloat(getComputedStyle(el).lineHeight), hidden: el.scrollHeight - el.clientHeight } })()`)
+  assert.equal(editing.className, 'live-cell-input')
+  assert.ok(editing.height > editing.line * 2, `long cell collapsed to one line while editing: ${JSON.stringify(editing)}`)
+  assert.ok(Math.abs(editing.height - shownHeight) < editing.line, `cell height jumped from ${shownHeight} to ${editing.height}`)
+  assert.equal(editing.hidden, 0)
+  await shot('06-long-cell-editing')
+  await press('Enter')
+  assert.equal(await run(`window.__mdview.editorContext().source`), longFixture)
+  await run(`window.__mdview.loadDocument(${JSON.stringify(fixturePath)})`)
+  await wait(350)
+
   await run(`window.__mdview.setSettings({ autoSave: true, autoSaveDelayMs: 100 })`)
   const imagePath = path.join(ROOT, 'stock', '欢迎使用', '欢迎使用_img', '01-文档即文件夹.svg')
   await run(`(async () => {

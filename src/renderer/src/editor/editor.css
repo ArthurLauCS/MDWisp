@@ -243,6 +243,12 @@
   color: inherit;
   text-align: inherit;
   background: transparent;
+  /* Wrap like the rendered cell and grow with the text instead of scrolling one line. */
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  field-sizing: content;
+  resize: none;
+  overflow: hidden;
 }
 
 .editor__status {
