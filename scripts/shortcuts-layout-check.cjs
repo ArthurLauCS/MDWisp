@@ -18,7 +18,8 @@ const used = new Set()
 let sequence = 0
 const canonical = binding => binding.replace(/Digit/g, '').replace(/ArrowUp/g, '↑').replace(/ArrowDown/g, '↓')
   .replace(/ArrowLeft/g, '←').replace(/ArrowRight/g, '→').replace(/Backspace/g, '⌫').replace(/Enter/g, '↵')
-  .replace(/Space/g, '空格').replace(/Backslash/g, '\\').replace(/Escape/g, 'Esc').replace(/\s*\+\s*/g, '+')
+  .replace(/Space/g, '空格').replace(/Backslash/g, '\\').replace(/Slash/g, '/').replace(/Equal/g, '=').replace(/Minus/g, '-')
+  .replace(/Escape/g, 'Esc').replace(/\s*\+\s*/g, '+')
 
 async function main() {
   for (let i = 0; i < 80 && !BrowserWindow.getAllWindows().length; i++) await wait(100)
@@ -49,6 +50,7 @@ async function main() {
     }
     const parts = binding.split('+')
     const keyCode = parts.pop().replace(/^Digit/, '').replace(/^Arrow/, '').replace('Backslash', '\\').replace('Space', ' ')
+      .replace('Slash', '/').replace('Equal', '=').replace('Minus', '-')
     const modifiers = parts.map(p => ({ Ctrl: 'control', Shift: 'shift', Alt: 'alt' })[p])
     win.webContents.sendInputEvent({ type: 'keyDown', keyCode, modifiers })
     win.webContents.sendInputEvent({ type: 'keyUp', keyCode, modifiers })
@@ -253,6 +255,24 @@ async function main() {
   assert.equal(await run(`!!document.querySelector('.sidebar')`), false)
   await press('Ctrl+Backslash')
   await run(`window.__mdview.setSettings({theme:'dark',sidebarVisible:true})`)
+  await press('Ctrl+Slash')
+  await until(`!!document.querySelector('.cm-content.source-mode')`)
+  await press('Ctrl+Slash')
+  await until(`!document.querySelector('.cm-content.source-mode')`)
+  const readingSize = () => run(`getComputedStyle(document.documentElement).getPropertyValue('--reading-size').trim()`)
+  await press('Ctrl+Equal')
+  assert.equal(await readingSize(), '18px')
+  await press('Ctrl+Minus')
+  await press('Ctrl+Minus')
+  assert.equal(await readingSize(), '16px')
+  await press('Ctrl+Digit0')
+  assert.equal(await readingSize(), '17px')
+  // Reload shows the file on disk; an unsaved draft has none and stays as typed.
+  const reloadPath = await run(`${ctx}.docPath`)
+  const beforeReload = await text()
+  await press('Ctrl+Shift+R')
+  await wait(200)
+  assert.equal(await text(), reloadPath ? await fs.readFile(reloadPath, 'utf8') : beforeReload)
   // Close history dock, which remains independent of modal panels.
   if (await run(`!!document.querySelector('.history-panel')`)) await press('Ctrl+Alt+Y')
 

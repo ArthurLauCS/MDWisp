@@ -25,7 +25,7 @@ describe('Markdown syntax coverage', () => {
   })
 
   it('preserves unsupported extension source instead of claiming rendered output', () => {
-    for (const source of ['$$\nx^2\n$$', '[TOC]']) expect(renderMarkdown(source)).toContain(source)
+    expect(renderMarkdown('[TOC]')).toContain('[TOC]')
     expect(renderMarkdown('```mermaid\ngraph TD\nA --> B\n```')).toContain('<code')
   })
 })

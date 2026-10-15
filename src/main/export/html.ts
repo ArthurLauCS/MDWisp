@@ -11,7 +11,7 @@ import { promises as fs } from 'node:fs'
 import { basename, extname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { renderMarkdown } from '@shared/markdown/pipeline'
-import { documentStyles } from './css'
+import { documentStyles, mathStyles } from './css'
 
 const MIME: Record<string, string> = {
   '.png': 'image/png',
@@ -185,6 +185,7 @@ export async function buildHtml(
 <title>${escapeHtml(title)}</title>
 <style>
 ${documentStyles()}
+${body.includes('class="katex') ? mathStyles() : ''}
 </style>
 </head>
 <body>

@@ -10,10 +10,11 @@ import { useTableEdit } from '../tableui/useTableEdit'
 import { insertFromClipboard, insertFromPaths } from '../assets/insert'
 import { installDropTarget } from '../assets/drop'
 import { codeAt } from '../actions/registry'
+import { pasteAsLink } from '../actions/markdown-ops'
 import { findTableAt } from '../table/model'
 import { followDocumentLink, jumpToFragment } from '../markdown/navigation'
 import { linkAt } from '../markdown/links'
-import { documentBuffer, saveDocument, updateDocumentBuffer, useDocuments } from '../state/documents'
+import { adoptDiskText, diskState, documentBuffer, documentError, saveDocument, updateDocumentBuffer, useDocuments } from '../state/documents'
 import { openPanel } from '../state/ui'
 import { useSettings } from '../state/settings'
 import type { ActionContext, ActionScope } from '../actions/types'
@@ -42,6 +43,41 @@ export function EditorPane(): JSX.Element {
   const docPath = active?.meta.path || null
   const tableEdit = useTableEdit(source, cursor)
 
+  const showToast = (message: string): void => {
+    setToast(message)
+    window.setTimeout(() => setToast(null), 2200)
+  }
+
+  /** Undoable where the editor accepts edits, so Ctrl+Z brings this window's text back. */
+  const showDiskText = (text: string): void => {
+    adoptDiskText(text)
+    editorRef.current?.setSource(text)
+    if (editorRef.current?.getSource() !== text) update(text)
+  }
+
+  const reloadFromDisk = async (): Promise<void> => {
+    const disk = await diskState()
+    if (!disk) return
+    if (disk.text === editorRef.current?.getSource()) { showToast(t('已是磁盘上的最新内容')); return }
+    showDiskText(disk.text)
+    showToast(t('已载入磁盘版本，按 Ctrl+Z 可找回之前的内容'))
+  }
+
+  useEffect(() => {
+    if (!docPath) return
+    void window.mdview.doc.watch(docPath)
+    return window.mdview.doc.onChangedOnDisk(() => {
+      void diskState().then((disk) => {
+        if (!disk?.changed) return
+        if (disk.dirty) documentError(t('文件已被其他程序修改。按 Ctrl+Shift+R 载入磁盘版本，载入后可按 Ctrl+Z 找回本窗口的修改。'))
+        else {
+          showDiskText(disk.text)
+          showToast(t('已载入其他程序对文件的修改'))
+        }
+      }).catch(documentError)
+    })
+  }, [docPath])
+
   const ctx: ActionContext = useMemo(() => {
     const handle = editorRef.current
     const selection = handle?.getSelection() ?? null
@@ -60,6 +96,7 @@ export function EditorPane(): JSX.Element {
       search: (command) => editorRef.current?.search(command),
       searchOpen: () => editorRef.current?.searchOpen() ?? false,
       pickCodeLanguage: () => editorRef.current?.pickCodeLanguage(),
+      reloadFromDisk,
       toggleLinePrefix: () => undefined,
       toggleInline: () => undefined,
       insertBlock: (block) => {
@@ -189,7 +226,17 @@ export function EditorPane(): JSX.Element {
     (e: ClipboardEvent) => {
       if (settings.readOnly || !e.clipboardData) return
       const hasImage = [...e.clipboardData.items].some((i) => i.type.startsWith('image/'))
-      if (!hasImage) return
+      if (!hasImage) {
+        const handle = editorRef.current
+        const range = handle?.getSelection()
+        const text = handle?.getSource() ?? ''
+        const link = range && !codeAt(text, range.start) ? pasteAsLink(text.slice(range.start, range.end), e.clipboardData.getData('text/plain')) : null
+        if (link) {
+          e.preventDefault()
+          handle!.replace(range!.start, range!.end, link)
+        }
+        return
+      }
       e.preventDefault()
       if (!docPath) { ctx.toast(t('请先保存文档，再粘贴图片；图片会放在文档旁边。')); return }
       const handle = editorRef.current!
@@ -242,6 +289,7 @@ export function EditorPane(): JSX.Element {
           autoPair={settings.autoPair}
           smartLists={settings.smartLists}
           tabSize={settings.tabSize}
+          sourceMode={settings.sourceMode}
         />
         {!settings.readOnly && <TableToolbar
           edit={tableEdit}

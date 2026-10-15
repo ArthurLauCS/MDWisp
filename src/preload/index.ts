@@ -40,6 +40,11 @@ const api = {
   doc: {
     resolveLink: (docPath: string, href: string): Promise<LinkTarget> => ipcRenderer.invoke(IPC.DOC_RESOLVE_LINK, docPath, href),
     read: (path: string): Promise<DocumentContent> => ipcRenderer.invoke(IPC.DOC_READ, path),
+    watch: (path: string): Promise<void> => ipcRenderer.invoke(IPC.DOC_WATCH, path),
+    onChangedOnDisk: (callback: () => void): (() => void) => {
+      ipcRenderer.on(IPC.DOC_CHANGED_ON_DISK, callback)
+      return () => { ipcRenderer.removeListener(IPC.DOC_CHANGED_ON_DISK, callback) }
+    },
     write: (path: string, text: string, expected?: string): Promise<DocumentMeta> =>
       ipcRenderer.invoke(IPC.DOC_WRITE, path, text, expected),
     create: (dir: string, stem: string, withAssetFolder: boolean): Promise<DocumentMeta> =>

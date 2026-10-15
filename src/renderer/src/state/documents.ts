@@ -63,6 +63,22 @@ export function saveDocument(manual = true): Promise<boolean> {
   return saving
 }
 
+/** The file as it is on disk now, and whether it moved on since this window last loaded or saved it. */
+export async function diskState(): Promise<{ text: string; changed: boolean; dirty: boolean } | null> {
+  if (saving) await saving
+  const path = state.active?.meta.path
+  if (!path) return null
+  const { text } = await window.mdview.doc.read(path)
+  return { text, changed: text !== saved, dirty: state.dirty }
+}
+
+/** Make the disk text the saved baseline before the editor switches to it. */
+export function adoptDiskText(text: string): void {
+  saved = text
+  publish({ error: null })
+  updateDocumentBuffer(buffer)
+}
+
 export async function confirmDocumentChange(): Promise<boolean> {
   if (saving) await saving
   if (!state.dirty) return true

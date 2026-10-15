@@ -2,6 +2,7 @@ import { t } from '../i18n'
 import { app, BrowserWindow, clipboard, dialog, nativeImage, shell } from 'electron'
 import { promises as fs } from 'node:fs'
 import { existsSync } from 'node:fs'
+import { watch, type FSWatcher } from 'chokidar'
 import { dirname, extname, join, relative } from 'node:path'
 import { IPC } from '@shared/ipc'
 import { previewPlainMd } from '../services/export'
@@ -93,6 +94,15 @@ export function registerAllHandlers(ctx: HandlerContext): void {
     await documents.write(path, text, expected)
     return documents.metaFor(path)
   })
+  let watcher: FSWatcher | null = null
+  ipcMain.handle(IPC.DOC_WATCH, (_e, path: string) => {
+    void watcher?.close()
+    // Wait for writers to finish so the renderer never reads half a file.
+    watcher = watch(path, { ignoreInitial: true, awaitWriteFinish: { stabilityThreshold: 150, pollInterval: 50 } })
+    const changed = (): void => getWindow()?.webContents.send(IPC.DOC_CHANGED_ON_DISK, path)
+    watcher.on('change', changed).on('add', changed)
+  })
+  getWindow()?.on('closed', () => void watcher?.close())
   ipcMain.handle(IPC.DIALOG_OPEN_DOCUMENT, async () => {
     const result = await dialog.showOpenDialog(getWindow()!, {
       title: t('打开文档'), properties: ['openFile'],

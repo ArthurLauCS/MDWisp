@@ -23,7 +23,8 @@ MDWisp uses CodeMirror decorations for live editing and markdown-it for HTML/PDF
 | YAML front matter | 元数据源码 / Metadata source | 不显示 / Omitted |
 | 脚注、定义列表 / Footnotes and definition lists | 保留源码 / Source view | 支持 / Supported |
 | HTML、details、分页标签 / HTML, details, page breaks | 部分支持；其余源码 / Partial support; other tags stay as source | 按 HTML 渲染 / Rendered as HTML |
-| 数学公式、Mermaid、TOC / Math, Mermaid, TOC | 仅源码 / Source only | 仅源码或代码块 / Source or code block |
+| 数学公式 `$…$`、`$$…$$` / Math | KaTeX 渲染，光标进入时显示源码 / Rendered with KaTeX; source while the cursor is inside | KaTeX，字体内嵌 / KaTeX with embedded fonts |
+| Mermaid、TOC | 仅源码 / Source only | 仅源码或代码块 / Source or code block |
 
 ## Links / 链接
 

@@ -2,12 +2,14 @@ import { t } from '../i18n'
 import { StateField, type EditorState, type Range } from '@codemirror/state'
 import { Decoration, EditorView, ViewPlugin, WidgetType, type DecorationSet } from '@codemirror/view'
 import { ensureSyntaxTree, syntaxTree } from '@codemirror/language'
+import type { SyntaxNode } from '@lezer/common'
 import { getSearchQuery, searchPanelOpen } from '@codemirror/search'
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown'
 import hljs from 'highlight.js/lib/common'
 import { detectLanguage } from '@shared/markdown/detect'
 import { frontmatterEnd } from '@shared/markdown/frontmatter'
 import { markdownReferences, type MarkdownReferences } from '@shared/markdown/pipeline'
+import { blockMath, findInlineMath, renderMath } from '@shared/markdown/math'
 import { renderMarkdown } from '../markdown/render'
 import { resolveDocumentAssets } from '../markdown/resolve-assets'
 import { linkResolver } from '../markdown/links'
@@ -306,8 +308,14 @@ function editCell(view: EditorView, cell: HTMLElement, start?: number, end = sta
     input.addEventListener('select', sync)
     input.addEventListener('keyup', sync)
     input.addEventListener('click', sync)
-    // Line breaks go through the Alt+Enter action; a bare Enter must not insert a raw newline.
-    input.addEventListener('keydown', (event) => { if (event.key === 'Enter') event.preventDefault() })
+    // Enter moves between rows like a spreadsheet; line breaks go through the Alt+Enter action.
+    input.addEventListener('keydown', (event) => {
+      if (event.key !== 'Enter' || event.isComposing) return
+      event.preventDefault()
+      const row = Number(cell.dataset.row) + (event.shiftKey ? -1 : 1)
+      const next = table.querySelector<HTMLElement>(`[data-row="${row}"][data-col="${cell.dataset.col}"]`)
+      if (next) editCell(view, next)
+    })
   }
   input.focus()
   input.setSelectionRange(start ?? input.value.length, end ?? input.value.length)
@@ -356,12 +364,42 @@ export function previewDecorations(state: EditorState, docDir: string | null): D
   }
   const body = frontmatterEnd(source)
   for (let pos = 0; pos < body; pos = state.doc.lineAt(pos).to + 1) line(pos, 'live-frontmatter')
-  syntaxTree(state).iterate({
+  const tree = syntaxTree(state)
+  const maths: { from: number; to: number }[] = []
+  const editing = (from: number, to: number): boolean => searching || state.selection.ranges.some(r => r.from <= to && r.to >= from)
+  const inCode = (at: number): boolean => {
+    for (let node: SyntaxNode | null = tree.resolveInner(at, 1); node; node = node.parent) {
+      if (['InlineCode', 'Autolink', 'URL', 'HTMLTag'].includes(node.name)) return true
+    }
+    return false
+  }
+  tree.iterate({
     enter(node) {
       const { name, from, to } = node
       if (from < body && name !== 'Document') return false
+      // Markdown parsed inside a formula (such as `_` emphasis) is not markup.
+      if (maths.some(m => from >= m.from && to <= m.to)) return false
       const heading = /^(?:ATX|Setext)Heading(\d)$/.exec(name)
       if (heading) line(from, `live-heading live-h${heading[1]}`)
+      if (name === 'Paragraph' || heading) {
+        const tex = heading ? null : blockMath(source.slice(from, to))
+        // A block widget must cover whole lines, so list or quote prefixes keep the source.
+        if (tex !== null && state.doc.lineAt(from).from === from) {
+          const widget = new Rendered(renderMath(tex, true), 'live-math-block')
+          maths.push({ from, to })
+          if (editing(from, to)) {
+            mark(from, to, 'live-math-source')
+            ranges.push(Decoration.widget({ widget, block: true, side: 1 }).range(to))
+          } else ranges.push(Decoration.replace({ widget, block: true }).range(from, to))
+          return false
+        }
+        for (const math of findInlineMath(source.slice(from, to), at => inCode(from + at))) {
+          const a = from + math.from, b = from + math.to
+          maths.push({ from: a, to: b })
+          if (editing(a, b)) mark(a, b, 'live-math-source')
+          else ranges.push(Decoration.replace({ widget: new Rendered(renderMath(math.tex, false), 'live-math') }).range(a, b))
+        }
+      }
       if (name === 'Paragraph') {
         line(from, 'live-paragraph-start')
         line(to, 'live-paragraph-end')
@@ -545,6 +583,7 @@ function selectionAffectsPreview(state: EditorState): boolean {
   for (const range of state.selection.ranges) {
     for (let node = syntaxTree(state).resolveInner(range.head, -1); node; node = node.parent!) {
       if (['Link', 'Image', 'FencedCode'].includes(node.name)) return true
+      if ((node.name === 'Paragraph' || node.name.includes('Heading')) && state.doc.sliceString(node.from, node.to).includes('$')) return true
     }
   }
   return false

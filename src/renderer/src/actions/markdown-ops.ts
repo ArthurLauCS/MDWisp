@@ -321,6 +321,20 @@ export function toPlainText(md: string): string {
     .trim()
 }
 
+const WORD = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]|(?:(?![\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}])[\p{L}\p{N}_])+(?:['’.-](?:(?![\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}])[\p{L}\p{N}_])+)*/gu
+
+/** Words as a reader counts them: one per CJK character, one per Latin or number run, never markup. */
+export function countWords(md: string): number {
+  return toPlainText(md).replace(/<[^>]+>/g, ' ').match(WORD)?.length ?? 0
+}
+
+/** `[selected](url)` when a single URL is pasted over a one-line selection. */
+export function pasteAsLink(selected: string, pasted: string): string | null {
+  const url = pasted.trim()
+  if (!selected.trim() || selected.includes('\n') || !/^(?:https?:\/\/|mailto:)\S+$/i.test(url)) return null
+  return `[${selected.replace(/[[\]]/g, '\\$&')}](${url.replace(/\(/g, '%28').replace(/\)/g, '%29')})`
+}
+
 /** Normalise whitespace and list markers without touching prose content. */
 export function tidyMarkdown(src: string): string {
   return src

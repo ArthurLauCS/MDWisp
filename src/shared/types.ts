@@ -191,6 +191,8 @@ export interface AppSettings {
   highlightCurrentLine: boolean
   /** Source view refuses edits; the document is presented for reading. */
   readOnly: boolean
+  /** Plain Markdown source instead of the formatted live view. */
+  sourceMode: boolean
   /** Code and gutter size in px, independent of the reading size. */
   codeFontSize: number
   /** Body line-height multiplier, shared by the editor and the reading view. */
@@ -232,6 +234,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   typewriterMode: false,
   highlightCurrentLine: true,
   readOnly: false,
+  sourceMode: false,
   codeFontSize: 13.5,
   lineHeight: 1.9,
   cursorStyle: 'bar',

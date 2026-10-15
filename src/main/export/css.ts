@@ -14,6 +14,7 @@ import { t } from '../i18n'
  */
 import { existsSync, readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
+import { createRequire } from 'node:module'
 import { app } from 'electron'
 
 const SHEET_NAMES = ['tokens.css', 'fonts.css', 'base.css', 'markdown.css'] as const
@@ -80,6 +81,13 @@ function sheets(): Record<string, string> {
   })
   cache.set(dir, JSON.stringify(out))
   return out
+}
+
+/** KaTeX's sheet with its woff2 fonts inlined; only documents with formulas pay for it. */
+export function mathStyles(): string {
+  const sheet = createRequire(__filename).resolve('katex/dist/katex.min.css')
+  return readFileSync(sheet, 'utf8').replace(/src:url\(fonts\/([\w-]+\.woff2)\)[^;}]*/g, (_match, name: string) =>
+    `src:url(data:font/woff2;base64,${readFileSync(join(dirname(sheet), 'fonts', name)).toString('base64')}) format("woff2")`)
 }
 
 /**
