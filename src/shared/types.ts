@@ -186,6 +186,8 @@ export interface AppSettings {
   sidebarVisible: boolean
   sidebarWidth: number
   historyWidth: number
+  /** Images' share of the sidebar height; 0 hides the images, 1 hides the navigation. */
+  assetsRatio: number
   outlineVisible: boolean
   typewriterMode: boolean
   highlightCurrentLine: boolean
@@ -230,6 +232,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   sidebarVisible: true,
   sidebarWidth: 260,
   historyWidth: 360,
+  assetsRatio: 0.4,
   outlineVisible: true,
   typewriterMode: false,
   highlightCurrentLine: true,

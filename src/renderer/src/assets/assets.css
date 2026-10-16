@@ -1,6 +1,6 @@
 .assets {
   width: 100%;
-  flex: 0 1 40%;
+  flex: 0 1 calc(var(--assets-ratio) * 100%);
   min-height: 0;
   min-width: 0;
   display: flex;

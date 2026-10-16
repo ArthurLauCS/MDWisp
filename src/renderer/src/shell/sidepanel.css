@@ -49,3 +49,4 @@
 .side-resizer:hover::after,
 .side-resizer:focus-visible::after { opacity: 1; }
 [data-resizing] * { cursor: col-resize !important; user-select: none !important; }
+[data-resizing='row'] * { cursor: row-resize !important; }

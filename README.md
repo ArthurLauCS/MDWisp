@@ -25,15 +25,15 @@ Formerly **MDView**. The icon is unchanged. Existing settings and history remain
 | Write | Organize | Share |
 | --- | --- | --- |
 | Edit directly in formatted Markdown | Collapsible heading outline | Markdown, ZIP, HTML and PDF export |
-| Adjustable margins and sidebar widths | Relative image paths beside the document | HTML with embedded images and fonts |
+| Adjustable margins, sidebar widths and outline/image split | Relative image paths beside the document | HTML with embedded images and fonts |
 | Local code detection and explicit language selection | Version history, comparison and restore | Rules for Codex, Cursor and Claude Code |
 | Dark/light themes and configurable fonts | Table editing, sorting, statistics and transpose | Ordinary files that work in other editors |
 
 ## Download and installation
 
-Download `MDWisp-0.4.0-setup.exe` from [Releases](https://github.com/ArthurLauCS/MDWisp/releases/latest), or build it with `npm run dist`. Installation offers English and Simplified Chinese, a directory choice and a desktop shortcut. Installers are currently unsigned; macOS and Linux have not been verified.
+Download `MDWisp-0.4.1-setup.exe` from [Releases](https://github.com/ArthurLauCS/MDWisp/releases/latest), or build it with `npm run dist`. Installation offers English and Simplified Chinese, a directory choice and a desktop shortcut. Installers are currently unsigned; macOS and Linux have not been verified.
 
-`MDWisp-AI-skills-0.4.0.zip` provides AI rules without installing the app. Copy `en/.agents` into a project for English rules, or `.agents` for Simplified Chinese. Check downloaded files against `SHA256SUMS.txt` from the release.
+`MDWisp-AI-skills-0.4.1.zip` provides AI rules without installing the app. Copy `en/.agents` into a project for English rules, or `.agents` for Simplified Chinese. Check downloaded files against `SHA256SUMS.txt` from the release.
 
 ## Getting started
 
@@ -43,6 +43,16 @@ Download `MDWisp-0.4.0-setup.exe` from [Releases](https://github.com/ArthurLauCS
 4. Organize a loose file into a document folder, then use **Ctrl+Shift+E** to export.
 
 New documents, opened files and repeated shortcut launches use independent windows, preserving the current document and its unsaved edits. After the first save, autosave and history follow **Settings → Documents & saving**. Closing a window offers Save, Don't save and Cancel for unsaved edits. A failed save keeps that window open. A stale save cannot overwrite changes made by another window.
+
+## Editing and layout
+
+Use **Ctrl+/** to switch between formatted editing and Markdown source. **Ctrl+= / Ctrl+- / Ctrl+0** enlarge, reduce or reset the body text size. The status bar counts Chinese characters, English words and selected text.
+
+Inline math uses `$...$`; display math uses `$$...$$`. Formulas render locally, and HTML/PDF exports include their fonts for offline reading. Select text and paste a URL to turn it into a link. In tables, **Enter / Shift+Enter** move to the next or previous row while long cells remain multi-line.
+
+For saved documents, drag the divider above the images panel to adjust its height relative to the outline or file tree. Drag to either edge to hide that section, then drag back to restore it. Double-click resets the split; a focused divider supports **Up / Down** keys. The split persists across restarts.
+
+External edits reload automatically when the document has no unsaved changes. Otherwise a conflict notice appears; **Ctrl+Shift+R** loads the disk version and can be undone.
 
 ## Language and links
 
@@ -150,6 +160,7 @@ Real Electron regressions use isolated profiles and document copies:
 ```bash
 npm run build
 npx electron scripts/shoot.cjs design-review/round-N
+npx electron scripts/sidebar-split-check.cjs design-review/sidebar-split-N
 npx electron scripts/links-i18n-check.cjs design-review/round-links-i18n-N
 npx electron scripts/code-block-menu-check.cjs design-review/code-block-menu-N
 npx electron scripts/shortcuts-layout-check.cjs design-review/shortcuts-layout-N

@@ -50,6 +50,38 @@
   padding: var(--space-2) var(--space-2) var(--space-6);
 }
 
+/* Basis 0 so the images' ratio alone decides the split, whatever the outline's length. */
+.sidebar .outline, .sidebar__tree { flex-basis: 0; }
+.sidebar[data-collapse='nav'] .outline, .sidebar[data-collapse='nav'] .sidebar__tree,
+.sidebar[data-collapse='assets'] .assets { display: none; }
+.sidebar[data-collapse='nav'] .assets { flex: 1 1 0; }
+
+/* Overlaps the images' top border; stays at the edge once a part is hidden so it can be dragged back. */
+.split-resizer {
+  position: relative;
+  flex: 0 0 auto;
+  height: var(--space-2);
+  margin-bottom: calc(-1 * var(--space-2));
+  z-index: 2;
+  cursor: row-resize;
+  touch-action: none;
+}
+.split-resizer::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 2px;
+  background: var(--accent);
+  opacity: 0;
+  transition: opacity var(--dur-fast) var(--ease-out);
+}
+.split-resizer:hover::after,
+.split-resizer:focus-visible::after { opacity: 1; }
+.sidebar[data-collapse='assets'] .split-resizer { margin: calc(-1 * var(--space-2)) 0 0; }
+.sidebar[data-collapse='assets'] .split-resizer::after { top: auto; bottom: 0; }
+
 .sidebar__empty {
   margin: var(--space-6) var(--space-3) 0;
   font-size: var(--text-sm);

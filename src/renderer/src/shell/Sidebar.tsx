@@ -7,6 +7,7 @@ import { useEditorContext } from '../state/editor-context'
 import { AssetPanel } from '../assets/AssetPanel'
 import { Outline } from '../outline/Outline'
 import { ResizeHandle } from './ResizeHandle'
+import { SplitHandle, sidebarCollapse } from './SplitHandle'
 import { findAction } from '../actions/registry'
 import type { TreeNode } from '@shared/types'
 import './sidebar.css'
@@ -65,7 +66,8 @@ export function Sidebar(): JSX.Element {
       {/* Only reachable under the narrow breakpoint; a click anywhere off the
           panel dismisses it, which is what an overlay implies. */}
       <button className="sidebar__scrim" onClick={close} aria-label={t('关闭侧栏')} />
-      <aside className="sidebar" aria-label={t('导航侧栏')}>
+      <aside className="sidebar" aria-label={t('导航侧栏')} data-collapse={active?.meta.path ? sidebarCollapse(settings.assetsRatio) : ''}
+        style={{ '--assets-ratio': settings.assetsRatio } as CSSProperties}>
       <ResizeHandle side="left" />
       <div className="side-panel__head sidebar__head">
         <div className="sidebar__tabs" aria-label={t('导航视图')}>
@@ -88,13 +90,14 @@ export function Sidebar(): JSX.Element {
             {t('用上方「打开目录」选一个装满 markdown 的文件夹。')}</p>
         )}
       </nav>}
-      {active?.meta.path ? (
+      {active?.meta.path ? (<>
+        <SplitHandle />
         <AssetPanel
           key={active.meta.path}
           docPath={active.meta.path}
           source={source}
         />
-      ) : <div className="sidebar__draft-note">{t('文字可直接输入。保存文档后即可插入本地图片，并启用自动保存与历史记录。')}</div>}
+      </>) : <div className="sidebar__draft-note">{t('文字可直接输入。保存文档后即可插入本地图片，并启用自动保存与历史记录。')}</div>}
       </aside>
     </>
   )
