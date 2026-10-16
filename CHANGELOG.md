@@ -1,5 +1,12 @@
 # 更新记录
 
+## 0.4.1 · 2026-10-15
+
+- 侧栏支持拖动调整大纲/文件树与图片区域的高度，拖到边缘可折叠，双击恢复默认比例；支持方向键与重启后保留设置。
+- 同步中英文 README，补充公式、源码模式、正文缩放、字数统计和外部修改处理说明。
+- Resize the sidebar navigation/image split, collapse either section at the edges, reset with a double-click, and preserve the split across restarts with keyboard support.
+- Update both READMEs with math, source mode, text zoom, word counts and external-change handling.
+
 ## 0.4.0 · 2026-10-15
 
 - 新增行内与块级数学公式渲染；HTML/PDF 导出包含公式字体，支持离线阅读。

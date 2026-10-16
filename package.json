@@ -1,6 +1,6 @@
 {
   "name": "mdwisp",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "private": true,
   "description": "Markdown reader + editor with folder-based documents, local code language detection and a Claude-inspired dark-first UI.",
   "main": "./out/main/index.js",

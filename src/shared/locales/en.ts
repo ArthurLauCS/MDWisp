@@ -462,6 +462,7 @@ export const en = {
   '已保存': 'Saved',
   '调整导航栏宽度': 'Resize navigation sidebar',
   '调整历史栏宽度': 'Resize history panel',
+  '调整大纲与图片高度': 'Resize outline and images',
   '关闭侧栏': 'Close sidebar',
   '导航侧栏': 'Navigation sidebar',
   '导航视图': 'Navigation views',

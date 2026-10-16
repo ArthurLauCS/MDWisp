@@ -29,17 +29,17 @@
 | 写作 | 整理 | 交付 |
 | :--- | :--- | :--- |
 | 在排版后的正文中直接编辑 | 按标题层级折叠和跳转的大纲 | Markdown、ZIP、HTML、PDF 导出 |
-| 正文宽度、边距和侧栏可拖动调整 | 图片使用相对路径，跟随文档保存 | HTML 内嵌图片与字体，便于离线阅读 |
+| 正文边距、侧栏宽度和大纲/图片高度可拖动调整 | 图片使用相对路径，跟随文档保存 | HTML 内嵌图片与字体，便于离线阅读 |
 | 代码语言自动检测，也可手动选择 | 右侧历史面板，查看差异与恢复版本 | Codex、Cursor、Claude Code 协作规则 |
 | 深浅主题，中文圆体与等宽代码字体 | 表格编辑、排序、统计与转置 | 本地文件，可用其他编辑器继续打开 |
 
 ## 下载与安装
 
-前往 **[Releases](https://github.com/ArthurLauCS/MDWisp/releases/latest)**，下载 `MDWisp-0.4.0-setup.exe`，也可通过 `npm run dist` 自行构建。安装时可以选择中英文、安装目录，并创建桌面快捷方式。
+前往 **[Releases](https://github.com/ArthurLauCS/MDWisp/releases/latest)**，下载 `MDWisp-0.4.1-setup.exe`，也可通过 `npm run dist` 自行构建。安装时可以选择中英文、安装目录，并创建桌面快捷方式。
 
 当前提供 **Windows x64** 安装包；macOS 和 Linux 尚未验证。安装包暂未进行代码签名。
 
-只需要 AI 协作规则，可以下载同一发行版中的 `MDWisp-AI-skills-0.4.0.zip`，无需安装桌面应用。中文规则位于 `.agents`，英文规则位于 `en/.agents`；选择一份复制到项目根目录。`SHA256SUMS.txt` 提供下载文件的校验值。
+只需要 AI 协作规则，可以下载同一发行版中的 `MDWisp-AI-skills-0.4.1.zip`，无需安装桌面应用。中文规则位于 `.agents`，英文规则位于 `en/.agents`；选择一份复制到项目根目录。`SHA256SUMS.txt` 提供下载文件的校验值。
 
 ## 语言与链接
 
@@ -63,6 +63,16 @@
 保存后的自动保存和历史记录由「设置 → 文档与保存」控制。未命名草稿不会在退出后恢复，关闭前请保存。
 
 输入三个反引号后按回车即可开始代码块，无需先填写语言。悬停或在代码块内编辑时显示语言选择器；点击代码块下方可以继续写正文。正文两侧边距可直接拖动，双击恢复默认。
+
+## 编辑与布局
+
+按 **Ctrl+/** 切换排版编辑与 Markdown 源码；**Ctrl+= / Ctrl+- / Ctrl+0** 放大、缩小或重置正文字号。状态栏显示中文字数、英文词数及选区统计。
+
+行内公式使用 `$...$`，独立公式使用 `$$...$$`，均在本地渲染；HTML/PDF 导出包含公式字体，支持离线阅读。选中文字后粘贴网址可直接生成链接。表格中按 **Enter / Shift+Enter** 移到下一行或上一行，长单元格编辑时保持多行高度。
+
+保存文档后，拖动图片区域上方的分隔线，可调整大纲或文件树与图片区域的高度。拖到上下边缘可折叠对应区域，反向拖回即可恢复；双击恢复默认比例，分隔线获得焦点后可用 **上 / 下方向键** 调整。比例会在重启后保留。
+
+其他程序修改文档时，没有未保存编辑的窗口会自动载入更新；有未保存编辑时显示冲突提示。**Ctrl+Shift+R** 可载入磁盘版本，并支持撤销。
 
 ## 文档与图片，一起保存
 
@@ -197,6 +207,7 @@ npm run dist         # 构建 Windows NSIS 安装包，输出到 release/
 ```bash
 npm run build
 npx electron scripts/shoot.cjs design-review/round-N
+npx electron scripts/sidebar-split-check.cjs design-review/sidebar-split-N
 npx electron scripts/links-i18n-check.cjs design-review/round-links-i18n-N
 npx electron scripts/code-block-menu-check.cjs design-review/code-block-menu-N
 npx electron scripts/shortcuts-layout-check.cjs design-review/shortcuts-layout-N
