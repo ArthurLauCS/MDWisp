@@ -18,7 +18,9 @@ A local Markdown desktop editor for writing, code notes and tables, with English
   <img src="docs/images/editor-dark.png" alt="Editor with outline, live Markdown, code highlighting and tables" width="100%" />
 </picture>
 
-Formerly **MDView**. The icon is unchanged. Existing settings and history remain compatible. The repository and new AI skill installations use MDWisp. The screenshots show the earlier Chinese interface.
+Formerly **MDView**. The icon is unchanged. Existing settings and history remain compatible. The repository and new AI skill installations use MDWisp. The screenshots show the 0.4 Chinese interface; 0.5 keeps the same layout.
+
+Since 0.5 MDWisp is a native Windows app written in Rust: the window appears in about 90 ms and uses about 60 MB of memory in one process (0.4 on Electron: about 850 ms, 450 MB, four processes).
 
 ## Features
 
@@ -31,9 +33,11 @@ Formerly **MDView**. The icon is unchanged. Existing settings and history remain
 
 ## Download and installation
 
-Download `MDWisp-0.4.1-setup.exe` from [Releases](https://github.com/ArthurLauCS/MDWisp/releases/latest), or build it with `npm run dist`. Installation offers English and Simplified Chinese, a directory choice and a desktop shortcut. Installers are currently unsigned; macOS and Linux have not been verified.
+Download `MDWisp-0.5.0-setup.exe` from [Releases](https://github.com/ArthurLauCS/MDWisp/releases/latest), or build it yourself (see [Development](#development-and-verification)). It needs Windows 10 or later, x64. Installation offers English and Simplified Chinese, a directory choice and a desktop shortcut. It installs for the current user without administrator rights, and removes an installed 0.4.x version while keeping its settings and history.
 
-`MDWisp-AI-skills-0.4.1.zip` provides AI rules without installing the app. Copy `en/.agents` into a project for English rules, or `.agents` for Simplified Chinese. Check downloaded files against `SHA256SUMS.txt` from the release.
+The installer is unsigned, so Windows SmartScreen may show "Windows protected your PC". Choose **More info → Run anyway**. macOS and Linux are not supported.
+
+`MDWisp-AI-skills-<version>.zip` provides AI rules without installing the app. Copy `en/.agents` into a project for English rules, or `.agents` for Simplified Chinese. Check downloaded files against `SHA256SUMS.txt` from the release.
 
 ## Getting started
 
@@ -48,7 +52,7 @@ New documents, opened files and repeated shortcut launches use independent windo
 
 Use **Ctrl+/** to switch between formatted editing and Markdown source. **Ctrl+= / Ctrl+- / Ctrl+0** enlarge, reduce or reset the body text size. The status bar counts Chinese characters, English words and selected text.
 
-Inline math uses `$...$`; display math uses `$$...$$`. Formulas render locally, and HTML/PDF exports include their fonts for offline reading. Select text and paste a URL to turn it into a link. In tables, **Enter / Shift+Enter** move to the next or previous row while long cells remain multi-line.
+Inline math uses `$...$`; display math uses `$$...$$`. The editor currently shows formulas as styled TeX source; HTML/PDF exports render them as MathML. Select text and paste a URL to turn it into a link. In tables, **Enter / Shift+Enter** move to the next or previous row while long cells remain multi-line.
 
 For saved documents, drag the divider above the images panel to adjust its height relative to the outline or file tree. Drag to either edge to hide that section, then drag back to restore it. Double-click resets the split; a focused divider supports **Up / Down** keys. The split persists across restarts.
 
@@ -58,9 +62,9 @@ External edits reload automatically when the document has no unsaved changes. Ot
 
 Use **Ctrl+F** to find text and **Ctrl+H** to replace it in the current document. The panel supports replace-next, replace-all, case sensitivity, whole words and regular expressions. **F3 / Shift+F3** cycle through matches; **Esc** closes search. Search keeps the formatted preview, with visible matches in tables, link destinations, image paths and hidden Markdown markers. Replacements can be undone; read-only documents allow searching only. Version history uses **Ctrl+Alt+Y**.
 
-Choose **Settings → Appearance & fonts → Interface language** for **English** or **简体中文**. The choice applies immediately and persists across restarts without translating document content or resetting the editor.
+Choose **Settings → Appearance & fonts → Language** for **English** or **中文/Chinese**. The choice applies immediately and persists across restarts without translating document content or resetting the editor.
 
-Use **Ctrl+click** to follow links; use Cmd on macOS. Holding the modifier displays a hand cursor over links. Relative Markdown files open in a new app window, heading anchors navigate within the current document, websites open in the default browser and email links use the mail handler. Reference links, table links and linked images are supported. Ordinary clicks remain editing actions.
+Use **Ctrl+click** to follow links. Holding the modifier displays a hand cursor over links. Relative Markdown files open in a new app window, heading anchors navigate within the current document, websites open in the default browser and email links use the mail handler. Reference links, table links and linked images are supported. Ordinary clicks remain editing actions.
 
 ```markdown
 [English](README.md) · [简体中文](README.zh-CN.md)
@@ -143,33 +147,37 @@ node .agents/skills/mdwisp-doc/scripts/check.mjs "./Notes"
 
 Press **F1** for the searchable list. Table, code and image commands depend on focus. App commands such as Export remain available while panels are open.
 
+## Known limitations
+
+These differ from 0.4 and will be addressed in later versions:
+
+- Math shows as TeX source in the editor; exports render it.
+- The spell check setting has no effect yet.
+- "Select all matches" is unavailable because the editor has a single selection.
+- 14 table actions without shortcuts (table styles, min/max, Excel paste, CSV/JSON/list conversion, CSV export, delete table) are listed but disabled.
+- Renaming a document can overwrite an existing file with the same name.
+
+Details are in [project status](docs/STATUS.md) (Chinese).
+
 ## Development and verification
 
-Built with Electron, React, TypeScript, CodeMirror 6 and markdown-it. Use Node.js 22 LTS, npm and Git. Build Windows installers on Windows.
+Written in Rust on Win32, Direct2D, DirectWrite and DirectComposition. Use stable Rust (MSVC toolchain) and Git; building the installer needs [Inno Setup 6](https://jrsoftware.org/isinfo.php). Node.js is only needed for the plugin's `check.mjs` test.
 
 ```bash
-npm ci
-npm run dev
-npm test
-npm run typecheck
-npm run dist
-```
-
-Real Electron regressions use isolated profiles and document copies:
-
-```bash
-npm run build
-npx electron scripts/shoot.cjs design-review/round-N
-npx electron scripts/sidebar-split-check.cjs design-review/sidebar-split-N
-npx electron scripts/links-i18n-check.cjs design-review/round-links-i18n-N
-npx electron scripts/code-block-menu-check.cjs design-review/code-block-menu-N
-npx electron scripts/shortcuts-layout-check.cjs design-review/shortcuts-layout-N
-node scripts/packaged-check.cjs design-review/packaged-N
+cargo test --workspace
+cargo build --release -p mdwisp        # target/release/mdwisp.exe
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/dist.ps1   # target/installer/MDWisp-<version>-setup.exe
 claude plugin validate plugin
 ```
 
-See [AGENTS.md](AGENTS.md) for development rules. Report issues in the existing [GitHub repository](https://github.com/ArthurLauCS/MDWisp/issues).
+UI regressions drive a real window with a script and save the app's own frames. Run them on document copies with an isolated profile; the commands are listed in `crates/app/src/script.rs`:
+
+```bash
+MDWISP_USER_DATA=<temp dir> MDWISP_SCRIPT=<script> target/release/mdwisp.exe <copy of a document>
+```
+
+See [AGENTS.md](AGENTS.md) (Chinese) for development rules. Report issues in the existing [GitHub repository](https://github.com/ArthurLauCS/MDWisp/issues).
 
 ## License and fonts
 
-Code uses [MIT](LICENSE). Bundled fonts retain their open licenses: [GenSen Rounded](src/renderer/public/OFL-GenSen.txt) and [ZCOOL XiaoWei](src/renderer/public/OFL-ZCOOLXiaoWei.txt).
+Code uses [MIT](LICENSE). Bundled fonts retain their open licenses: [GenSen Rounded](crates/export/assets/fonts/OFL-GenSen.txt) and [ZCOOL XiaoWei](crates/export/assets/fonts/OFL-ZCOOLXiaoWei.txt).

@@ -1,11 +1,6 @@
-node_modules/
-out/
-dist/
-release/
+target/
 *.log
 .DS_Store
 Thumbs.db
-.vite/
-coverage/
 design-review/
-*.tsbuildinfo
+CLAUDE.local.md

@@ -1,5 +1,16 @@
 # 更新记录
 
+## 0.5.0 · 2026-10-18
+
+- 用 Rust 重写为 Windows 原生应用（Win32 + Direct2D + DirectWrite）：窗口约 90 毫秒出现（原约 850 毫秒），单进程内存约 60MB（原约 450MB、4 个进程），安装包 14MB（原 102MB）。界面布局、字体与动效保持一致，设置、会话与历史记录直接沿用。
+- 安装包改为按当前用户安装、无需管理员权限，安装时自动移除 0.4.x。
+- 精简 AI 插件规则文本（约 14.5KB → 10.4KB），插件版本 0.3.2。
+- 暂未补齐：编辑器内公式渲染、拼写检查、全选匹配；详见项目状态文档。
+- Rewrite as a native Windows app in Rust (Win32 + Direct2D + DirectWrite): the window appears in about 90 ms instead of 850 ms, memory is about 60 MB in one process instead of 450 MB in four, and the installer is 14 MB instead of 102 MB. Layout, fonts and motion are unchanged; settings, sessions and history carry over.
+- Install per user without administrator rights; the installer removes 0.4.x.
+- Trim the AI plugin rules (about 14.5 KB → 10.4 KB); plugin version 0.3.2.
+- Not yet restored: math rendering in the editor, spell check and select-all-matches; see the project status document.
+
 ## 0.4.1 · 2026-10-15
 
 - 侧栏支持拖动调整大纲/文件树与图片区域的高度，拖到边缘可折叠，双击恢复默认比例；支持方向键与重启后保留设置。

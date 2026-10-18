@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1000" height="944" viewBox="0 0 1000 944" role="img" aria-labelledby="title desc">
   <title id="title">MDWisp 应用架构</title>
-  <desc id="desc">渲染进程通过 preload 暴露的 window.mdview 接口访问主进程。三层引用 shared 中的共享契约与逻辑。主进程管理文档、图片、历史、导出和技能安装；Codex、Cursor 与 Claude Code 使用 plugin 中的同源规则。</desc>
+  <desc id="desc">单个原生进程：编辑界面用 Direct2D 与 DirectWrite 绘制，Win32 窗口层处理输入与系统交互，本地服务管理文档、图片、历史、导出和技能安装。三层引用 text 与 table 中的纯函数逻辑；Codex、Cursor 与 Claude Code 使用 plugin 中的同源规则。</desc>
   <defs>
     <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M1 1 L7 4 L1 7" fill="none" stroke="#d9977a" stroke-width="1.5"/></marker>
     <marker id="shared-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M1 1 L7 4 L1 7" fill="none" stroke="#9caaa2" stroke-width="1.5"/></marker>
@@ -17,16 +17,16 @@
       <rect x="48" y="464" width="590" height="130" rx="14"/>
     </g>
     <text x="72" y="178" font-size="24" font-weight="700" fill="#f3eee8">编辑与界面</text>
-    <text x="608" y="176" text-anchor="end" font-size="16" fill="#d9977a">renderer / React + CodeMirror 6</text>
+    <text x="608" y="176" text-anchor="end" font-size="16" fill="#d9977a">crates/app · Direct2D + DirectWrite</text>
     <text x="72" y="215" font-size="19" fill="#ddd5cd">实时编辑、大纲、表格与历史面板</text>
     <text x="72" y="245" font-size="18" fill="#b6ada4">动作注册表统一快捷键、右键菜单与命令面板</text>
 
-    <text x="72" y="352" font-size="24" font-weight="700" fill="#f3eee8">系统能力桥接</text>
-    <text x="608" y="350" text-anchor="end" font-size="16" fill="#d9977a">preload / contextBridge</text>
-    <text x="72" y="390" font-size="19" fill="#ddd5cd">通过 window.mdview 暴露约定的接口</text>
+    <text x="72" y="352" font-size="24" font-weight="700" fill="#f3eee8">窗口与系统</text>
+    <text x="608" y="350" text-anchor="end" font-size="16" fill="#d9977a">Win32 + DirectComposition</text>
+    <text x="72" y="390" font-size="19" fill="#ddd5cd">无边框窗口、输入法、单实例与文件监视</text>
 
     <text x="72" y="502" font-size="24" font-weight="700" fill="#f3eee8">本地服务</text>
-    <text x="608" y="500" text-anchor="end" font-size="16" fill="#d9977a">main / Electron + Node.js</text>
+    <text x="608" y="500" text-anchor="end" font-size="16" fill="#d9977a">crates/core · crates/export</text>
     <text x="72" y="540" font-size="19" fill="#ddd5cd">文档、图片、历史、设置与会话</text>
     <text x="72" y="571" font-size="18" fill="#b6ada4">相对路径生成 · 导出 · AI 技能安装</text>
 
@@ -34,18 +34,18 @@
       <path d="M343 268 V308"/>
       <path d="M343 416 V456"/>
     </g>
-    <text x="362" y="298" font-size="16" fill="#b6ada4">调用接口</text>
-    <text x="362" y="446" font-size="16" fill="#b6ada4">IPC 请求</text>
+    <text x="362" y="298" font-size="16" fill="#b6ada4">绘制与输入</text>
+    <text x="362" y="446" font-size="16" fill="#b6ada4">直接调用</text>
 
     <rect x="704" y="142" width="248" height="452" rx="14" fill="#252b28" stroke="#48594f"/>
-    <text x="728" y="181" font-size="24" font-weight="700" fill="#e2e9e4">共享契约与逻辑</text>
-    <text x="728" y="214" font-size="16" fill="#9caaa2">shared/</text>
+    <text x="728" y="181" font-size="24" font-weight="700" fill="#e2e9e4">共享逻辑</text>
+    <text x="728" y="214" font-size="16" fill="#9caaa2">crates/text · crates/table</text>
     <path d="M728 239 H928" stroke="#48594f"/>
-    <text x="728" y="279" font-size="19" fill="#d4ded7">类型与 IPC 常量</text>
-    <text x="728" y="323" font-size="19" fill="#d4ded7">Markdown 解析管线</text>
-    <text x="728" y="367" font-size="19" fill="#d4ded7">本地代码语言检测</text>
-    <text x="728" y="475" font-size="17" fill="#9caaa2">由需要它们的进程引用</text>
-    <text x="728" y="506" font-size="17" fill="#9caaa2">不依赖进程实现</text>
+    <text x="728" y="279" font-size="19" fill="#d4ded7">Markdown 解析与大纲</text>
+    <text x="728" y="323" font-size="19" fill="#d4ded7">本地代码语言检测</text>
+    <text x="728" y="367" font-size="19" fill="#d4ded7">表格引擎</text>
+    <text x="728" y="475" font-size="17" fill="#9caaa2">由需要它们的模块引用</text>
+    <text x="728" y="506" font-size="17" fill="#9caaa2">纯函数，不依赖界面</text>
     <text x="728" y="565" font-size="16" fill="#9caaa2">虚线 → 共享依赖</text>
     <g fill="none" stroke="#9caaa2" stroke-width="2" stroke-dasharray="5 5" marker-end="url(#shared-arrow)">
       <path d="M638 206 H696"/>
