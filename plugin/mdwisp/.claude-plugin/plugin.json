@@ -1,6 +1,6 @@
 {
   "name": "mdwisp",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "让 AI 按 MDWisp 文档文件夹格式产出文档：markdown 与它的图片放在同一个文件夹里，相对路径引用，整个文件夹拷走即可阅读。",
   "author": { "name": "MDWisp" },
   "license": "MIT"
