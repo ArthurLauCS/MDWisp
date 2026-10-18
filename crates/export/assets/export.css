@@ -1,0 +1,75 @@
+/* ---- standalone document shell ------------------------------------------ */
+html {
+  height: auto;
+}
+body {
+  background: var(--bg-base);
+  overflow: auto;
+  user-select: text;
+}
+.md {
+  padding-block-end: var(--space-16);
+}
+
+/* A missing image, drawn rather than broken. Mirrors the app's own
+   img.is-missing treatment for a frame the app itself never renders. */
+.img-missing {
+  margin: var(--space-6) 0;
+}
+.img-missing__frame,
+.md .img-missing__frame.is-missing {
+  min-height: 96px;
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--border-strong);
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--bg-raised),
+    var(--bg-raised) 8px,
+    var(--bg-inset) 8px,
+    var(--bg-inset) 16px
+  );
+}
+.img-missing figcaption {
+  margin-top: var(--space-2);
+  text-align: center;
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+}
+
+@media print {
+  :root {
+    --measure: none;
+  }
+  .md {
+    max-width: none;
+    padding: 0;
+  }
+  .md h1 {
+    margin-left: 0;
+  }
+  /* A long line must wrap instead of being clipped at the page edge. */
+  .codeblock__pre {
+    overflow-x: visible;
+  }
+  .codeblock__pre code,
+  .md :not(pre) > code {
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .codeblock__bar,
+  .heading-anchor {
+    display: none;
+  }
+  /* An image straddling a page break is worse than one pushed to the next. */
+  .md img,
+  .md table,
+  .md .codeblock {
+    break-inside: avoid;
+  }
+  .md h1,
+  .md h2,
+  .md h3 {
+    break-after: avoid;
+  }
+}

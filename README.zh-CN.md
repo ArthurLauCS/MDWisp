@@ -11,6 +11,8 @@
 
 原名 MDView，图标保持不变。旧设置与历史记录继续使用，仓库名称与新安装的 AI 技能统一使用 MDWisp。
 
+0.5 起 MDWisp 是用 Rust 编写的 Windows 原生应用：窗口约 90 毫秒出现，单进程内存约 60MB（0.4 的 Electron 版约 850 毫秒、450MB、4 个进程）。截图来自 0.4 版，0.5 保持相同布局。
+
 [![Release](https://img.shields.io/github/v/release/ArthurLauCS/MDWisp?color=d97757&label=release)](https://github.com/ArthurLauCS/MDWisp/releases/latest)
 ![Windows x64](https://img.shields.io/badge/Windows-x64-30302e)
 [![License: MIT](https://img.shields.io/badge/license-MIT-30302e)](LICENSE)
@@ -35,19 +37,19 @@
 
 ## 下载与安装
 
-前往 **[Releases](https://github.com/ArthurLauCS/MDWisp/releases/latest)**，下载 `MDWisp-0.4.1-setup.exe`，也可通过 `pnpm dist` 自行构建。安装时可以选择中英文、安装目录，并创建桌面快捷方式。
+前往 **[Releases](https://github.com/ArthurLauCS/MDWisp/releases/latest)**，下载 `MDWisp-0.5.0-setup.exe`，也可自行构建（见[开发与验证](#开发与验证)）。安装时可以选择中英文、安装目录，并创建桌面快捷方式。按当前用户安装，不需要管理员权限；已装 0.4.x 时会先移除旧版，设置与历史记录保留。
 
-当前提供 **Windows x64** 安装包；macOS 和 Linux 尚未验证。安装包暂未进行代码签名。
+需要 **Windows 10 及以上 x64**；不支持 macOS 和 Linux。安装包暂未进行代码签名，Windows SmartScreen 可能提示「Windows 已保护你的电脑」，点击 **更多信息 → 仍要运行** 即可。
 
-只需要 AI 协作规则，可以下载同一发行版中的 `MDWisp-AI-skills-0.4.1.zip`，无需安装桌面应用。中文规则位于 `.agents`，英文规则位于 `en/.agents`；选择一份复制到项目根目录。`SHA256SUMS.txt` 提供下载文件的校验值。
+只需要 AI 协作规则，可以下载同一发行版中的 `MDWisp-AI-skills-<版本>.zip`，无需安装桌面应用。中文规则位于 `.agents`，英文规则位于 `en/.agents`；选择一份复制到项目根目录。`SHA256SUMS.txt` 提供下载文件的校验值。
 
 ## 语言与链接
 
 按 **Ctrl+F** 查找当前文档，**Ctrl+H** 打开替换。支持逐个替换、全部替换、区分大小写、全字和正则匹配；**F3 / Shift+F3** 切换匹配，**Esc** 关闭。查找和替换保持排版预览，表格、链接目标、图片路径及隐藏标记中的匹配仍有可见提示。替换可以撤销，只读文档只能查找。历史版本快捷键为 **Ctrl+Alt+Y**。
 
-在「设置 → 外观与字体 → 界面语言」中切换简体中文和 English，即时生效并在重启后保留，不会翻译文档内容。
+在「设置 → 外观与字体 → 语言/Language」中切换「中文/Chinese」和「English」，即时生效并在重启后保留，不会翻译文档内容。
 
-按住 **Ctrl 点击**链接跳转；macOS 使用 Cmd。按住时链接显示手形指针。相对 Markdown 文档在新窗口打开，当前文档内的锚点在原窗口定位。支持网址、邮箱、参考式链接，以及表格中的链接。普通点击仍用于编辑。`[English](README.md)` 是链接；`[English]\(README.md)` 是转义后的普通文本。
+按住 **Ctrl 点击**链接跳转。按住时链接显示手形指针。相对 Markdown 文档在新窗口打开，当前文档内的锚点在原窗口定位。支持网址、邮箱、参考式链接，以及表格中的链接。普通点击仍用于编辑。`[English](README.md)` 是链接；`[English]\(README.md)` 是转义后的普通文本。
 
 语法覆盖和现有限制见 [Markdown 支持情况](docs/markdown-support.md)。
 
@@ -68,7 +70,7 @@
 
 按 **Ctrl+/** 切换排版编辑与 Markdown 源码；**Ctrl+= / Ctrl+- / Ctrl+0** 放大、缩小或重置正文字号。状态栏显示中文字数、英文词数及选区统计。
 
-行内公式使用 `$...$`，独立公式使用 `$$...$$`，均在本地渲染；HTML/PDF 导出包含公式字体，支持离线阅读。选中文字后粘贴网址可直接生成链接。表格中按 **Enter / Shift+Enter** 移到下一行或上一行，长单元格编辑时保持多行高度。
+行内公式使用 `$...$`，独立公式使用 `$$...$$`，编辑器内暂显示带样式的 TeX 源码；HTML/PDF 导出以 MathML 渲染。选中文字后粘贴网址可直接生成链接。表格中按 **Enter / Shift+Enter** 移到下一行或上一行，长单元格编辑时保持多行高度。
 
 保存文档后，拖动图片区域上方的分隔线，可调整大纲或文件树与图片区域的高度。拖到上下边缘可折叠对应区域，反向拖回即可恢复；双击恢复默认比例，分隔线获得焦点后可用 **上 / 下方向键** 调整。比例会在重启后保留。
 
@@ -94,7 +96,7 @@ MDWisp 使用普通文件，推荐每篇文档独占一个文件夹：
 
 下面的 MDWisp 应用架构图就是这个相对路径的实际图片：
 
-![MDWisp 应用架构：编辑界面经 preload 访问本地服务，共享解析逻辑，保存文档文件夹并导出多种格式](./我的笔记_img/架构图.svg)
+![MDWisp 应用架构：原生界面与窗口层调用本地服务，共享解析与表格逻辑，保存文档文件夹并导出多种格式](./我的笔记_img/架构图.svg)
 
 把整个文件夹拷走，图片仍然可用。整理前可预览变更，并选择是否保留原文件。
 
@@ -190,36 +192,38 @@ node .agents/skills/mdwisp-doc/scripts/check.mjs "./我的笔记"
 
 按 `F1` 查看按功能分类的完整列表。格式和表格操作取决于当前编辑位置；导出等应用级快捷键在设置、历史等面板获得焦点时仍可使用。
 
+## 已知限制
+
+以下与 0.4 版不一致，后续版本补齐：
+
+- 编辑器内公式显示为 TeX 源码，导出时正常渲染。
+- 「拼写检查」设置暂不生效。
+- 编辑器只支持单选区，「全选匹配」不可用。
+- 14 个无快捷键的表格动作（表格样式、最小值/最大值、Excel 粘贴、CSV/JSON/列表转换、导出 CSV、删除整表）列出但不可用。
+- 重命名文档时可能覆盖同名文件。
+
+详见[项目状态](docs/STATUS.md)。
+
 ## 开发与验证
 
-基于 Electron、React、TypeScript、CodeMirror 6 和 markdown-it。准备 Node.js 22 LTS、pnpm 与 Git；Windows 安装包在 Windows 环境构建。
+使用 Rust 编写，界面基于 Win32、Direct2D、DirectWrite 与 DirectComposition。准备稳定版 Rust（MSVC 工具链）与 Git；打安装包需要 [Inno Setup 6](https://jrsoftware.org/isinfo.php)。Node.js 只用于插件 `check.mjs` 的测试。
 
 ```bash
-pnpm install --frozen-lockfile
-pnpm dev             # 本地开发
-pnpm test            # 单元测试
-pnpm typecheck       # 主进程与渲染进程类型检查
-pnpm dist            # 构建 Windows NSIS 安装包，输出到 release/
-```
-
-交互回归使用真实 Electron 窗口和隔离的临时文档：
-
-```bash
-pnpm build
-pnpm exec electron scripts/shoot.cjs design-review/round-N
-pnpm exec electron scripts/sidebar-split-check.cjs design-review/sidebar-split-N
-pnpm exec electron scripts/links-i18n-check.cjs design-review/round-links-i18n-N
-pnpm exec electron scripts/code-block-menu-check.cjs design-review/code-block-menu-N
-pnpm exec electron scripts/shortcuts-layout-check.cjs design-review/shortcuts-layout-N
-node scripts/packaged-check.cjs design-review/packaged-N
+cargo test --workspace                 # 单元测试
+cargo build --release -p mdwisp        # 输出 target/release/mdwisp.exe
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/dist.ps1   # 安装包，输出到 target/installer/
 claude plugin validate .
 claude plugin validate plugin
 ```
 
-0.2.0 已通过 420 个单元测试、类型检查、71 个快捷键、多窗口与编辑交互回归，并验证打包应用的四种导出和技能安装。剩余的 14 个无快捷键表格动作及其他限制记录在[项目状态](docs/STATUS.md)。问题反馈请使用 [Issues](https://github.com/ArthurLauCS/MDWisp/issues)。
+界面回归用脚本驱动真实窗口，截取应用自身的画面。请使用隔离的配置目录和文档副本，脚本命令见 `crates/app/src/script.rs`：
 
-开发约定见 [AGENTS.md](AGENTS.md)：系统能力通过 preload 暴露；资源路径集中处理；快捷键、右键菜单与命令面板共享动作注册表。
+```bash
+MDWISP_USER_DATA=<临时目录> MDWISP_SCRIPT=<脚本> target/release/mdwisp.exe <文档副本>
+```
+
+开发约定见 [AGENTS.md](AGENTS.md)：资源路径集中处理；快捷键、右键菜单与命令面板共享动作注册表；颜色与动效统一取自主题。问题反馈请使用 [Issues](https://github.com/ArthurLauCS/MDWisp/issues)。
 
 ## 许可证与字体
 
-应用代码采用 [MIT License](LICENSE)。内置字体使用各自的开源授权，授权文本随源码与安装包分发：[源泉圆体](src/renderer/public/OFL-GenSen.txt)、[站酷小薇体](src/renderer/public/OFL-ZCOOLXiaoWei.txt)。
+应用代码采用 [MIT License](LICENSE)。内置字体使用各自的开源授权，授权文本随源码与安装包分发：[源泉圆体](crates/export/assets/fonts/OFL-GenSen.txt)、[站酷小薇体](crates/export/assets/fonts/OFL-ZCOOLXiaoWei.txt)。

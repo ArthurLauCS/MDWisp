@@ -1,0 +1,10 @@
+[package]
+name = "mdwisp-table"
+version = "0.5.0"
+edition = "2024"
+
+[dependencies]
+mdwisp-core = { path = "../core" }
+regex = "1"
+serde = "1"
+serde_json = "1"
