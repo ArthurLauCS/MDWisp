@@ -94,16 +94,16 @@ renderer  →  preload  →  main
 ## 测试与验证
 
 ```bash
-npm test              # 单元测试
-npm run typecheck     # 两个 tsconfig 都要过
+pnpm test             # 单元测试
+pnpm typecheck        # 两个 tsconfig 都要过
 claude plugin validate plugin   # 改过 plugin/ 之后
 ```
 
 改完 UI 后的视觉验证：
 
 ```bash
-npx electron-vite build
-npx electron scripts/shoot.cjs design-review/round-N
+pnpm exec electron-vite build
+pnpm exec electron scripts/shoot.cjs design-review/round-N
 ```
 
 截图按轮次存档，用于对比是否退化。

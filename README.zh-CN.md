@@ -35,7 +35,7 @@
 
 ## 下载与安装
 
-前往 **[Releases](https://github.com/ArthurLauCS/MDWisp/releases/latest)**，下载 `MDWisp-0.4.1-setup.exe`，也可通过 `npm run dist` 自行构建。安装时可以选择中英文、安装目录，并创建桌面快捷方式。
+前往 **[Releases](https://github.com/ArthurLauCS/MDWisp/releases/latest)**，下载 `MDWisp-0.4.1-setup.exe`，也可通过 `pnpm dist` 自行构建。安装时可以选择中英文、安装目录，并创建桌面快捷方式。
 
 当前提供 **Windows x64** 安装包；macOS 和 Linux 尚未验证。安装包暂未进行代码签名。
 
@@ -192,25 +192,25 @@ node .agents/skills/mdwisp-doc/scripts/check.mjs "./我的笔记"
 
 ## 开发与验证
 
-基于 Electron、React、TypeScript、CodeMirror 6 和 markdown-it。准备 Node.js 22 LTS、npm 与 Git；Windows 安装包在 Windows 环境构建。
+基于 Electron、React、TypeScript、CodeMirror 6 和 markdown-it。准备 Node.js 22 LTS、pnpm 与 Git；Windows 安装包在 Windows 环境构建。
 
 ```bash
-npm ci
-npm run dev          # 本地开发
-npm test             # 单元测试
-npm run typecheck    # 主进程与渲染进程类型检查
-npm run dist         # 构建 Windows NSIS 安装包，输出到 release/
+pnpm install --frozen-lockfile
+pnpm dev             # 本地开发
+pnpm test            # 单元测试
+pnpm typecheck       # 主进程与渲染进程类型检查
+pnpm dist            # 构建 Windows NSIS 安装包，输出到 release/
 ```
 
 交互回归使用真实 Electron 窗口和隔离的临时文档：
 
 ```bash
-npm run build
-npx electron scripts/shoot.cjs design-review/round-N
-npx electron scripts/sidebar-split-check.cjs design-review/sidebar-split-N
-npx electron scripts/links-i18n-check.cjs design-review/round-links-i18n-N
-npx electron scripts/code-block-menu-check.cjs design-review/code-block-menu-N
-npx electron scripts/shortcuts-layout-check.cjs design-review/shortcuts-layout-N
+pnpm build
+pnpm exec electron scripts/shoot.cjs design-review/round-N
+pnpm exec electron scripts/sidebar-split-check.cjs design-review/sidebar-split-N
+pnpm exec electron scripts/links-i18n-check.cjs design-review/round-links-i18n-N
+pnpm exec electron scripts/code-block-menu-check.cjs design-review/code-block-menu-N
+pnpm exec electron scripts/shortcuts-layout-check.cjs design-review/shortcuts-layout-N
 node scripts/packaged-check.cjs design-review/packaged-N
 claude plugin validate .
 claude plugin validate plugin

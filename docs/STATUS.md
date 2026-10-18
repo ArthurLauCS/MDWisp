@@ -47,18 +47,18 @@
 ## 验证方式
 
 ```bash
-npm test              # 357 个测试
-npm run typecheck     # 主进程 + 渲染进程
-npm run dist          # 打 NSIS 安装包
-npx electron scripts/make-icon.cjs   # 改过 build/icon.svg 后重新生成 build/icon.png
+pnpm test             # 357 个测试
+pnpm typecheck        # 主进程 + 渲染进程
+pnpm dist             # 打 NSIS 安装包
+pnpm exec electron scripts/make-icon.cjs   # 改过 build/icon.svg 后重新生成 build/icon.png
 
-npx electron scripts/shoot.cjs design-review/round-N   # 视觉走查截图
-npx electron scripts/workflow-check.cjs design-review/workflow-N  # 文档全流程与设置回归
-npx electron scripts/shortcuts-layout-check.cjs design-review/shortcuts-layout-N  # 全部快捷键、导出与正文缩放/拖动
-npx electron scripts/export-check.cjs design-review/export-check-N  # front matter 显示与四种导出的真实产物
-npx electron scripts/launch-check.cjs design-review/launch-check-N  # 启动参数打开文档、第二次启动复用窗口
-npx electron scripts/organize-check.cjs design-review/organize-check-N  # 散装提示、ZIP 拦截、整理全流程
-npx electron scripts/code-block-menu-check.cjs design-review/code-block-menu-N  # 围栏输入、语言选择、独立子菜单
+pnpm exec electron scripts/shoot.cjs design-review/round-N   # 视觉走查截图
+pnpm exec electron scripts/workflow-check.cjs design-review/workflow-N  # 文档全流程与设置回归
+pnpm exec electron scripts/shortcuts-layout-check.cjs design-review/shortcuts-layout-N  # 全部快捷键、导出与正文缩放/拖动
+pnpm exec electron scripts/export-check.cjs design-review/export-check-N  # front matter 显示与四种导出的真实产物
+pnpm exec electron scripts/launch-check.cjs design-review/launch-check-N  # 启动参数打开文档、第二次启动复用窗口
+pnpm exec electron scripts/organize-check.cjs design-review/organize-check-N  # 散装提示、ZIP 拦截、整理全流程
+pnpm exec electron scripts/code-block-menu-check.cjs design-review/code-block-menu-N  # 围栏输入、语言选择、独立子菜单
 node scripts/packaged-check.cjs design-review/packaged-N  # 安装包资源、四种导出和技能安装
 claude plugin validate .             # GitHub 仓库入口
 claude plugin validate plugin        # 插件与市场清单

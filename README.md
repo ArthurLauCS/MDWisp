@@ -31,7 +31,7 @@ Formerly **MDView**. The icon is unchanged. Existing settings and history remain
 
 ## Download and installation
 
-Download `MDWisp-0.4.1-setup.exe` from [Releases](https://github.com/ArthurLauCS/MDWisp/releases/latest), or build it with `npm run dist`. Installation offers English and Simplified Chinese, a directory choice and a desktop shortcut. Installers are currently unsigned; macOS and Linux have not been verified.
+Download `MDWisp-0.4.1-setup.exe` from [Releases](https://github.com/ArthurLauCS/MDWisp/releases/latest), or build it with `pnpm dist`. Installation offers English and Simplified Chinese, a directory choice and a desktop shortcut. Installers are currently unsigned; macOS and Linux have not been verified.
 
 `MDWisp-AI-skills-0.4.1.zip` provides AI rules without installing the app. Copy `en/.agents` into a project for English rules, or `.agents` for Simplified Chinese. Check downloaded files against `SHA256SUMS.txt` from the release.
 
@@ -145,25 +145,25 @@ Press **F1** for the searchable list. Table, code and image commands depend on f
 
 ## Development and verification
 
-Built with Electron, React, TypeScript, CodeMirror 6 and markdown-it. Use Node.js 22 LTS, npm and Git. Build Windows installers on Windows.
+Built with Electron, React, TypeScript, CodeMirror 6 and markdown-it. Use Node.js 22 LTS, pnpm and Git. Build Windows installers on Windows.
 
 ```bash
-npm ci
-npm run dev
-npm test
-npm run typecheck
-npm run dist
+pnpm install --frozen-lockfile
+pnpm dev
+pnpm test
+pnpm typecheck
+pnpm dist
 ```
 
 Real Electron regressions use isolated profiles and document copies:
 
 ```bash
-npm run build
-npx electron scripts/shoot.cjs design-review/round-N
-npx electron scripts/sidebar-split-check.cjs design-review/sidebar-split-N
-npx electron scripts/links-i18n-check.cjs design-review/round-links-i18n-N
-npx electron scripts/code-block-menu-check.cjs design-review/code-block-menu-N
-npx electron scripts/shortcuts-layout-check.cjs design-review/shortcuts-layout-N
+pnpm build
+pnpm exec electron scripts/shoot.cjs design-review/round-N
+pnpm exec electron scripts/sidebar-split-check.cjs design-review/sidebar-split-N
+pnpm exec electron scripts/links-i18n-check.cjs design-review/round-links-i18n-N
+pnpm exec electron scripts/code-block-menu-check.cjs design-review/code-block-menu-N
+pnpm exec electron scripts/shortcuts-layout-check.cjs design-review/shortcuts-layout-N
 node scripts/packaged-check.cjs design-review/packaged-N
 claude plugin validate plugin
 ```

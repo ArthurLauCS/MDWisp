@@ -12,7 +12,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
     "test": "vitest run",
     "test:watch": "vitest",
-    "dist": "npm run build && electron-builder --win"
+    "dist": "node -e \"fs.rmSync('release',{recursive:true,force:true})\" && pnpm build && electron-builder --win"
   },
   "build": {
     "appId": "dev.mdview.app",
