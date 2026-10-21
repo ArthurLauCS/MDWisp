@@ -42,7 +42,8 @@ pub struct View {
     pub content_x: f32,
     pub content_w: f32,
     pub dragging: bool,
-    pub composition: Option<String>,
+    /// IME text not yet committed, already in the buffer; see `compose`.
+    pub composition: Option<Range<usize>>,
     pub read_only: bool,
     pub highlight_line: bool,
     pub searching: bool,
@@ -377,7 +378,7 @@ impl View {
             }
         }
         // Caret.
-        if self.focused && sel.empty() && self.composition.is_none() {
+        if self.focused && sel.empty() {
             let on = (self.blink.elapsed().as_millis() / 530) % 2 == 0;
             if on {
                 if let Some((x, y, h)) = self.caret_at(sel.head) {
@@ -520,6 +521,19 @@ impl View {
             }
         }
 
+        // IME composition, underlined below its glyphs as the system would.
+        if let Some(c) = self.composition.as_ref().filter(|c| c.start >= line.src.start && c.start <= line.src.end) {
+            let a = src_to_disp_pos(&s.segs, c.start, &self.buf.text);
+            let b = src_to_disp_pos(&s.segs, c.end.min(line.src.end), &self.buf.text);
+            let rows = range_rects(layout, a, b);
+            if let (Some(first), Some((_, cy, ch))) = (rows.first(), self.caret_at(c.start)) {
+                let under = cy + ch - (line.y + s.pad_top) - first.y - 1.0;
+                for r in &rows {
+                    g.fill(Rect::new(tx + r.x, ty + r.y + under, r.w, 1.0), t.text_primary);
+                }
+            }
+        }
+
         // Inline backgrounds.
         for (r, bg) in &s.backgrounds {
             let c = match bg {
@@ -619,7 +633,7 @@ impl View {
         self.after_edit();
     }
 
-    fn after_edit(&mut self) {
+    pub(super) fn after_edit(&mut self) {
         self.goal_x = None;
         self.blink = Instant::now();
     }

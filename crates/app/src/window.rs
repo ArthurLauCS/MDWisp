@@ -337,6 +337,7 @@ impl Window {
     }
 
     pub fn pointer_down(&mut self, x: f32, y: f32, button: u8, double: bool) {
+        self.end_ime();
         self.ui.mx = x;
         self.ui.my = y;
         let hit = self.ui.hit_at(x, y);
@@ -446,6 +447,10 @@ impl Window {
     // ---- keyboard --------------------------------------------------------------
 
     pub fn key_down(&mut self, vk: VIRTUAL_KEY, m: Mods) -> bool {
+        if vk == VK_PROCESSKEY {
+            return false;
+        }
+        self.end_ime();
         self.sync_view();
         // Overlays first; then registry shortcuts; then plain editing keys.
         if self.modal.is_some() {
@@ -603,12 +608,65 @@ impl Window {
         }
     }
 
-    /// IME: the system draws the composition window at the caret; the commit arrives as WM_CHAR.
-    pub fn ime(&mut self, msg: u32, _lp: LPARAM) -> bool {
+    /// IME: the editor types the composition into the document (`View::compose`),
+    /// so it lays out like the text around it; fields leave it to the system window.
+    pub fn ime(&mut self, msg: u32, lp: LPARAM) -> bool {
         if msg == WM_IME_STARTCOMPOSITION {
             self.place_ime();
         }
-        false
+        let editor = self.modal.is_none() && !shell::text_focus(self) && self.doc.as_ref().is_some_and(|d| !d.view.read_only);
+        if !editor {
+            return false;
+        }
+        if msg == WM_IME_COMPOSITION {
+            let flags = lp.0 as u32;
+            let (result, comp, cursor) = unsafe {
+                let himc = ImmGetContext(self.hwnd);
+                let read = |kind: IME_COMPOSITION_STRING| {
+                    if flags & kind.0 == 0 {
+                        return None;
+                    }
+                    let n = ImmGetCompositionStringW(himc, kind, None, 0).max(0) as usize;
+                    let mut buf = vec![0u16; n / 2];
+                    ImmGetCompositionStringW(himc, kind, Some(buf.as_mut_ptr().cast()), n as u32);
+                    Some(String::from_utf16_lossy(&buf))
+                };
+                let r = (read(GCS_RESULTSTR), read(GCS_COMPSTR), ImmGetCompositionStringW(himc, GCS_CURSORPOS, None, 0).max(0) as usize);
+                let _ = ImmReleaseContext(self.hwnd, himc);
+                r
+            };
+            let auto = app().s().auto_pair;
+            if let Some(d) = &mut self.doc {
+                if let Some(s) = result {
+                    d.view.commit(&s, auto);
+                }
+                if let Some(s) = comp {
+                    d.view.compose(&s, cursor);
+                }
+            }
+            self.after_input();
+            self.place_ime();
+        } else if msg == WM_IME_ENDCOMPOSITION {
+            if let Some(d) = &mut self.doc {
+                d.view.commit("", false);
+            }
+            self.after_input();
+        }
+        true
+    }
+
+    /// A key or click the IME passes on acts on committed text: keep what was
+    /// composed as typed, then have the IME drop its copy.
+    fn end_ime(&mut self) {
+        let Some(d) = &mut self.doc else { return };
+        let Some(r) = d.view.composition.clone() else { return };
+        let text = d.view.buf.text.get(r).unwrap_or_default().to_string();
+        d.view.commit(&text, false);
+        unsafe {
+            let himc = ImmGetContext(self.hwnd);
+            let _ = ImmNotifyIME(himc, NI_COMPOSITIONSTR, CPS_CANCEL, 0);
+            let _ = ImmReleaseContext(self.hwnd, himc);
+        }
     }
 
     fn place_ime(&self) {

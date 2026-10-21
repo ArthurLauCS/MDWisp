@@ -68,6 +68,43 @@ impl View {
         self.insert(text);
     }
 
+    /// IME composition: the text sits in the buffer, so it wraps and renders
+    /// with its line, but stays out of undo until `commit` types the result.
+    pub fn compose(&mut self, text: &str, cursor16: usize) {
+        if self.read_only || text.is_empty() && self.composition.is_none() {
+            return;
+        }
+        let r = match self.composition.take().filter(|r| self.buf.text.get(r.clone()).is_some()) {
+            Some(r) => r,
+            None => {
+                let sel = self.buf.sel;
+                if !sel.empty() {
+                    self.buf.replace(sel.from(), sel.to(), "", Sel::at(sel.from()), Kind::Delete);
+                }
+                sel.from()..sel.from()
+            }
+        };
+        let mut n = 0;
+        let cursor = text.char_indices().find(|(_, c)| {
+            n += c.len_utf16();
+            n > cursor16
+        });
+        let cursor = cursor.map_or(text.len(), |(i, _)| i);
+        self.buf.splice(r.start, r.end, text, Sel::at(r.start + cursor));
+        self.composition = (!text.is_empty()).then(|| r.start..r.start + text.len());
+        self.after_edit();
+    }
+
+    /// End the composition and type `result` where it stood (empty when cancelled).
+    pub fn commit(&mut self, result: &str, auto: bool) {
+        if let Some(r) = self.composition.take().filter(|r| self.buf.text.get(r.clone()).is_some()) {
+            self.buf.splice(r.start, r.end, "", Sel::at(r.start));
+        }
+        if !result.is_empty() {
+            self.type_text(result, auto);
+        }
+    }
+
     fn in_code(&self, pos: usize) -> bool {
         let l = self.deco.line_of(pos);
         self.deco.lines.get(l).is_some_and(|d| d.code != Code::None)
