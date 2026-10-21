@@ -175,40 +175,40 @@ pub fn line_style(d: &LineDeco, look: &Look, t: &Theme) -> LineStyle {
         return s;
     }
     if d.para_start {
-        s.pad_top = 4.0;
+        s.pad_top = 8.0;
     }
     if d.para_end {
-        s.pad_bottom = 4.0;
+        s.pad_bottom = 8.0;
     }
     match d.heading {
         1 => {
             s.style = Style::new(Stack::Display, size * 2.15).weight(500);
             s.lh = size * 2.15 * 1.16;
-            (s.pad_top, s.pad_bottom) = (24.0, 20.0);
+            (s.pad_top, s.pad_bottom) = (24.0, 24.0);
             s.tracking = -0.018 * size * 2.15;
         }
         2 => {
             s.style = Style::new(Stack::Read, size * 1.55).weight(600);
             s.lh = size * 1.55 * 1.24;
-            (s.pad_top, s.pad_bottom) = (24.0, 16.0);
+            (s.pad_top, s.pad_bottom) = (36.0, 16.0);
             s.tracking = -0.008 * size * 1.55;
         }
         3 => {
             s.style = Style::new(Stack::Ui, size * 1.2).weight(640);
             s.lh = size * 1.2 * 1.32;
-            (s.pad_top, s.pad_bottom) = (20.0, 12.0);
+            (s.pad_top, s.pad_bottom) = (28.0, 12.0);
             s.tracking = -0.004 * size * 1.2;
         }
         4 => {
             s.style = Style::new(Stack::Ui, size * 1.02).weight(640);
             s.lh = lh * size * 1.02;
-            (s.pad_top, s.pad_bottom) = (16.0, 8.0);
+            (s.pad_top, s.pad_bottom) = (24.0, 8.0);
             s.tracking = 0.012 * size * 1.02;
         }
         5 => {
             s.style = Style::new(Stack::Ui, size * 0.84).weight(600);
             s.lh = lh * size * 0.84;
-            (s.pad_top, s.pad_bottom) = (16.0, 8.0);
+            (s.pad_top, s.pad_bottom) = (24.0, 8.0);
             s.color = t.text_secondary;
             s.upper = true;
             s.tracking = 0.09 * size * 0.84;
@@ -217,7 +217,7 @@ pub fn line_style(d: &LineDeco, look: &Look, t: &Theme) -> LineStyle {
         6 => {
             s.style = Style::new(Stack::Code, size * 0.78).weight(500);
             s.lh = lh * size * 0.78;
-            (s.pad_top, s.pad_bottom) = (16.0, 8.0);
+            (s.pad_top, s.pad_bottom) = (24.0, 8.0);
             s.color = t.text_tertiary;
             s.upper = true;
             s.tracking = 0.09 * size * 0.78;

@@ -245,8 +245,9 @@ impl View {
         let mut y = 0.0;
         let mut m = DWRITE_HIT_TEST_METRICS::default();
         unsafe { layout.HitTestTextPosition(d, false, &mut x, &mut y, &mut m).ok()? };
-        let lh = line_height_at(layout, m.top);
-        Some((x0 + x, y0 + m.top, lh.max(m.height)))
+        // The box of the font drawing `pos` (a CJK fallback sits lower than Latin):
+        // where its glyphs are, not the line spacing around them.
+        Some((x0 + x, y0 + m.top, m.height))
     }
 
     /// Source position under a window point.
@@ -378,8 +379,8 @@ impl View {
                     let cw = self.caret_at(self.buf.next_char(sel.head)).filter(|(nx, ny, _)| *ny == y && *nx > x).map_or(self.look.size() * 0.55, |(nx, _, _)| nx - x);
                     match self.cursor_style {
                         CursorStyle::Bar => g.fill(Rect::new(x - 0.5, y + oy, 1.5, h), t.accent),
-                        CursorStyle::Block => g.fill(Rect::new(x, y + oy + h * 0.12, cw, h * 0.76), with_alpha(t.accent, 0.55)),
-                        CursorStyle::Underline => g.fill(Rect::new(x, y + oy + h * 0.86, cw, 2.0), t.accent),
+                        CursorStyle::Block => g.fill(Rect::new(x, y + oy, cw, h), with_alpha(t.accent, 0.55)),
+                        CursorStyle::Underline => g.fill(Rect::new(x, y + oy + h - 2.0, cw, 2.0), t.accent),
                     }
                 }
             }
@@ -402,7 +403,6 @@ impl View {
         }
         let s = &line.shaped;
         let d = &line.deco;
-        let full = Rect::new(x, y, w, line.h);
 
         // Line backgrounds.
         if d.code != Code::None {
@@ -422,7 +422,8 @@ impl View {
                 _ => g.fill(r, t.bg_inset),
             }
         } else if caret_line && self.highlight_line && self.focused {
-            g.fill(full, t.bg_hover);
+            // The text rows only: a heading's spacing above it is not part of the line you are on.
+            g.fill(Rect::new(x, y + s.pad_top, w, line.h - s.pad_top - s.pad_bottom), t.bg_hover);
         }
         if d.heading == 1 {
             let plate = Rect::new(x - 24.0, y, w + 24.0, line.h);
@@ -772,23 +773,6 @@ fn source_deco(src: &str) -> Deco {
     d.starts.extend(src.match_indices('\n').map(|(i, _)| i + 1));
     d.lines = vec![Default::default(); d.starts.len()];
     d
-}
-
-fn line_height_at(layout: &IDWriteTextLayout, top: f32) -> f32 {
-    let mut count = 0;
-    unsafe {
-        let _ = layout.GetLineMetrics(None, &mut count);
-        let mut lm = vec![DWRITE_LINE_METRICS::default(); count as usize];
-        let _ = layout.GetLineMetrics(Some(&mut lm), &mut count);
-        let mut y = 0.0;
-        for m in &lm {
-            if top < y + m.height - 0.01 {
-                return m.height;
-            }
-            y += m.height;
-        }
-        lm.last().map_or(0.0, |m| m.height)
-    }
 }
 
 fn last_line(layout: &IDWriteTextLayout) -> (f32, f32, f32) {
