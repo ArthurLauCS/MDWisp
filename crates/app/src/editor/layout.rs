@@ -94,6 +94,30 @@ impl Shaped {
     pub fn empty() -> Shaped {
         Shaped { layout: None, segs: vec![], marker: None, objects: vec![], backgrounds: vec![], indent: 0.0, pad_top: 0.0, pad_bottom: 0.0, text_h: 0.0, width: 0.0 }
     }
+
+    /// The same line moved from source offset `from` to `to`: the cache is keyed
+    /// by content, and an edit above a line shifts it without changing it.
+    fn moved(mut self, from: usize, to: usize) -> Shaped {
+        if from != to {
+            let m = |p: &mut usize| *p = *p - from + to;
+            for s in &mut self.segs {
+                m(&mut s.src);
+            }
+            for (_, o) in &mut self.objects {
+                match o {
+                    Obj::Checkbox { at, .. } => m(at),
+                    Obj::Image { range, .. } => {
+                        m(&mut range.start);
+                        m(&mut range.end);
+                    }
+                }
+            }
+            if let Some((_, end)) = &mut self.marker {
+                m(end);
+            }
+        }
+        self
+    }
 }
 
 pub struct Line {
@@ -106,7 +130,8 @@ pub struct Line {
 }
 
 pub struct Cache {
-    map: HashMap<u64, Shaped>,
+    /// Shaped lines by content, with the source offset they were shaped at.
+    map: HashMap<u64, (usize, Shaped)>,
 }
 
 impl Cache {
@@ -295,8 +320,8 @@ pub fn shape_line(g: &Gfx, cache: &mut Cache, src: &str, deco: &Deco, line: Rang
         (r.start.saturating_sub(line.start), r.end - line.start, m).hash(&mut key);
     }
     let key = key.finish();
-    if let Some(s) = cache.map.get(&key) {
-        return Some(s.clone());
+    if let Some((at, s)) = cache.map.get(&key) {
+        return Some(s.clone().moved(*at, line.start));
     }
     if lazy {
         return None;
@@ -500,7 +525,7 @@ pub fn shape_line(g: &Gfx, cache: &mut Cache, src: &str, deco: &Deco, line: Rang
     if cache.map.len() > 20000 {
         cache.map.clear();
     }
-    cache.map.insert(key, shaped.clone());
+    cache.map.insert(key, (line.start, shaped.clone()));
     Some(shaped)
 }
 

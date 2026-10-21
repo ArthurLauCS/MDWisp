@@ -1,6 +1,8 @@
 #![windows_subsystem = "windows"]
 //! MDWisp: a Markdown reader and editor, native Win32 + Direct2D.
 
+#[cfg(test)]
+mod bench;
 mod actions;
 mod clipboard;
 mod dialog;

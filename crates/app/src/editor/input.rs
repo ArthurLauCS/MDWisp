@@ -128,8 +128,10 @@ impl View {
                 return;
             }
         }
-        let ls = self.buf.line_start(sel.head);
-        let le = self.buf.line_end(sel.head);
+        // The selection is replaced from its start: a selection dragged upwards
+        // or downwards puts the head on another line than the text it replaces.
+        let ls = self.buf.line_start(sel.from());
+        let le = self.buf.line_end(sel.from());
         let line = self.buf.text[ls..le].to_string();
         // An unfinished fence at its end gets a body and a closing fence.
         if sel.empty() && sel.head == le {
@@ -236,11 +238,13 @@ impl View {
                 out.push_str(&pad);
                 out.push_str(line);
             }
+            // A position inside the removed indentation stops at its own line's start,
+            // not in the line above (possibly inside a multi-byte character).
             if pos <= sel.head {
-                delta_head += change;
+                delta_head += change.max(pos as isize - sel.head as isize);
             }
             if pos <= sel.anchor {
-                delta_anchor += change;
+                delta_anchor += change.max(pos as isize - sel.anchor as isize);
             }
             pos += line.len() + 1;
         }

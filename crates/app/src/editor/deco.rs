@@ -290,7 +290,8 @@ pub fn decorate(src: &str, focus: &Focus) -> Deco {
                 let (ls, le) = (d.starts[row], d.line_end(row, src));
                 // A linked image `[![a](x)](y)` is standalone when the link fills the line.
                 let container = d.links.last().filter(|l| l.range.start <= from && l.range.end >= to).map_or(from..to, |l| l.range.clone());
-                let standalone = src[ls..container.start].trim().is_empty() && src[container.end..le].trim().is_empty();
+                // Alt text or a link label may run over several lines; such an image is inline.
+                let standalone = container.start >= ls && container.end <= le && src[ls..container.start].trim().is_empty() && src[container.end..le].trim().is_empty();
                 if standalone {
                     d.lines[row].image = true;
                 }
