@@ -170,7 +170,9 @@ unsafe extern "system" fn proc(hwnd: HWND, msg: u32, wp: WPARAM, lp: LPARAM) -> 
                         (true, ..) => HTLEFT,
                         (_, true, ..) => HTRIGHT,
                         (_, _, true, _) => HTTOP,
-                        (.., true) => HTBOTTOM,
+                        // With the images dragged away the split handle lies on the bottom
+                        // edge; the border must not swallow it, or they cannot come back.
+                        (.., true) if !matches!(w.ui.hit_at(x, y), Some(Hit::SidebarSplit)) => HTBOTTOM,
                         _ => HTNOWHERE,
                     };
                     if ht != HTNOWHERE {

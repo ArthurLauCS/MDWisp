@@ -340,13 +340,13 @@ impl Window {
         self.ui.mx = x;
         self.ui.my = y;
         let hit = self.ui.hit_at(x, y);
-        // Double-clicking a page margin handle restores its default.
-        if double && matches!(hit, Some(Hit::MarginLeft | Hit::MarginRight)) {
+        // Double-clicking a page margin or the sidebar split handle restores its default.
+        if double && matches!(hit, Some(Hit::MarginLeft | Hit::MarginRight | Hit::SidebarSplit)) {
             let d = mdwisp_core::settings::AppSettings::default();
-            if hit == Some(Hit::MarginLeft) {
-                app().patch(|s| s.page_margin_left = d.page_margin_left);
-            } else {
-                app().patch(|s| s.page_margin_right = d.page_margin_right);
+            match hit {
+                Some(Hit::MarginLeft) => app().patch(|s| s.page_margin_left = d.page_margin_left),
+                Some(Hit::MarginRight) => app().patch(|s| s.page_margin_right = d.page_margin_right),
+                _ => app().patch(|s| s.assets_ratio = d.assets_ratio),
             }
             return;
         }
