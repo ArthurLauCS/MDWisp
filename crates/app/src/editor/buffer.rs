@@ -137,6 +137,14 @@ impl Buffer {
         self.isolate = true;
     }
 
+    /// Change the text outside the undo history: IME composition, spliced back
+    /// out before anything is recorded.
+    pub fn splice(&mut self, from: usize, to: usize, insert: &str, sel: Sel) {
+        self.text.replace_range(from..to, insert);
+        self.version += 1;
+        self.sel = sel;
+    }
+
     // ---- positions -----------------------------------------------------------
 
     pub fn line_start(&self, pos: usize) -> usize {

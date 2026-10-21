@@ -27,7 +27,8 @@ use crate::theme::Color;
 pub struct Gfx {
     d3d: ID3D11Device,
     dxgi: IDXGIFactory2,
-    dcomp: IDCompositionDevice,
+    /// Outlives device switches: windows keep their composition targets.
+    pub dcomp: IDCompositionDevice,
     pub factory: ID2D1Factory1,
     pub dc: ID2D1DeviceContext,
     pub brush: ID2D1SolidColorBrush,
@@ -77,8 +78,8 @@ pub fn spacer(w: f32, h: f32, baseline: f32) -> IDWriteInlineObject {
 #[derive(Clone)]
 pub struct Surface {
     swap: IDXGISwapChain1,
-    _target: IDCompositionTarget,
-    _visual: IDCompositionVisual,
+    target: IDCompositionTarget,
+    visual: IDCompositionVisual,
 }
 
 /// The four font stacks of `fonts.css`.
@@ -140,11 +141,14 @@ fn wide_z(s: &str) -> Vec<u16> {
 }
 
 impl Gfx {
-    pub fn new(font_dir: Option<&Path>) -> Result<Gfx> {
+    /// `gpu`: the hardware device, which draws blurred overlays and high-DPI
+    /// frames far faster but takes ~170 ms to create; otherwise WARP (CPU, ~40 ms).
+    pub fn new(font_dir: Option<&Path>, gpu: bool) -> Result<Gfx> {
         unsafe {
             let factory: ID2D1Factory1 = D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, None)?;
             let mut d3d = None;
-            D3D11CreateDevice(None, D3D_DRIVER_TYPE_WARP, HMODULE::default(), D3D11_CREATE_DEVICE_BGRA_SUPPORT, None, D3D11_SDK_VERSION, Some(&mut d3d), None, None)?;
+            let driver = if gpu { D3D_DRIVER_TYPE_HARDWARE } else { D3D_DRIVER_TYPE_WARP };
+            D3D11CreateDevice(None, driver, HMODULE::default(), D3D11_CREATE_DEVICE_BGRA_SUPPORT, None, D3D11_SDK_VERSION, Some(&mut d3d), None, None)?;
             let d3d = d3d.unwrap();
             let dxgi_dev: IDXGIDevice = d3d.cast()?;
             let dc = factory.CreateDevice(&dxgi_dev)?.CreateDeviceContext(D2D1_DEVICE_CONTEXT_OPTIONS_NONE)?;
@@ -174,6 +178,30 @@ impl Gfx {
 
     pub fn surface(&self, hwnd: HWND, w: u32, h: u32) -> Result<Surface> {
         unsafe {
+            let target = self.dcomp.CreateTargetForHwnd(hwnd, true)?;
+            let visual = self.dcomp.CreateVisual()?;
+            target.SetRoot(&visual)?;
+            let s = Surface { swap: self.swap_chain(w, h)?, target, visual };
+            self.show(&s)?;
+            Ok(s)
+        }
+    }
+
+    /// The same window surface with a swap chain on this device. The old one stays
+    /// on screen until `show`, after the first frame: switching devices never blanks.
+    pub fn move_surface(&self, s: &Surface, w: u32, h: u32) -> Result<Surface> {
+        Ok(Surface { swap: self.swap_chain(w, h)?, target: s.target.clone(), visual: s.visual.clone() })
+    }
+
+    pub fn show(&self, s: &Surface) -> Result<()> {
+        unsafe {
+            s.visual.SetContent(&s.swap)?;
+            self.dcomp.Commit()
+        }
+    }
+
+    fn swap_chain(&self, w: u32, h: u32) -> Result<IDXGISwapChain1> {
+        unsafe {
             let desc = DXGI_SWAP_CHAIN_DESC1 {
                 Width: w.max(1),
                 Height: h.max(1),
@@ -186,13 +214,7 @@ impl Gfx {
                 AlphaMode: DXGI_ALPHA_MODE_IGNORE,
                 ..Default::default()
             };
-            let swap = self.dxgi.CreateSwapChainForComposition(&self.d3d, &desc, None)?;
-            let target = self.dcomp.CreateTargetForHwnd(hwnd, true)?;
-            let visual = self.dcomp.CreateVisual()?;
-            visual.SetContent(&swap)?;
-            target.SetRoot(&visual)?;
-            self.dcomp.Commit()?;
-            Ok(Surface { swap, _target: target, _visual: visual })
+            self.dxgi.CreateSwapChainForComposition(&self.d3d, &desc, None)
         }
     }
 

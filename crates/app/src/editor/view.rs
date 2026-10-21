@@ -24,7 +24,7 @@ pub struct View {
     deco_key: (u64, Sel, bool),
     pub lines: Vec<Line>,
     pub tables: Vec<TableView>,
-    layout_key: (u64, u32, u64),
+    layout_key: (u64, Option<usize>, u32, u64),
     cache: Cache,
     pub look: Look,
     pub scroll: f32,
@@ -42,7 +42,8 @@ pub struct View {
     pub content_x: f32,
     pub content_w: f32,
     pub dragging: bool,
-    pub composition: Option<String>,
+    /// IME text not yet committed, already in the buffer; see `compose`.
+    pub composition: Option<Range<usize>>,
     pub read_only: bool,
     pub highlight_line: bool,
     pub searching: bool,
@@ -74,7 +75,7 @@ impl View {
             deco_key: (u64::MAX, Sel::default(), false),
             lines: vec![],
             tables: vec![],
-            layout_key: (u64::MAX, 0, 0),
+            layout_key: (u64::MAX, None, 0, 0),
             cache: Cache::new(),
             look: Look::default(),
             scroll: 0.0,
@@ -109,6 +110,13 @@ impl View {
         }
     }
 
+    /// Layouts carry brushes, and images are bitmaps, of the old graphics device.
+    pub fn device_lost(&mut self) {
+        self.cache = Cache::new();
+        self.layout_key.0 = u64::MAX;
+        self.images.clear();
+    }
+
     pub fn set_look(&mut self, look: Look) {
         if look != self.look {
             self.look = look;
@@ -126,12 +134,18 @@ impl View {
         let key = (self.buf.version, sel, self.searching);
         let mut changed = false;
         if key != self.deco_key {
-            let focus = Focus { from: sel.from(), to: sel.to(), head: sel.head, searching: self.searching };
-            self.deco = if self.look.source { source_deco(&self.buf.text) } else { deco::decorate(&self.buf.text, &focus) };
+            let old = self.deco_key.1;
+            let moved_only = key.0 == self.deco_key.0 && key.2 == self.deco_key.2 && !self.deco.reveals(old.from(), old.to(), old.head) && !self.deco.reveals(sel.from(), sel.to(), sel.head);
+            if !moved_only {
+                let focus = Focus { from: sel.from(), to: sel.to(), head: sel.head, searching: self.searching };
+                self.deco = if self.look.source { source_deco(&self.buf.text) } else { deco::decorate(&self.buf.text, &focus) };
+                changed = true;
+            }
             self.deco_key = key;
-            changed = true;
         }
-        let lk = (self.buf.version ^ (sel.head as u64) << 32 ^ sel.anchor as u64, self.content_w.to_bits(), self.look_gen ^ self.images.generation << 20);
+        // The caret only changes geometry inside a table, where its cell shows the source.
+        let table_caret = self.deco.tables.iter().any(|c| sel.head >= c.start && sel.head <= c.end).then_some(sel.head);
+        let lk = (self.buf.version, table_caret, self.content_w.to_bits(), self.look_gen ^ self.images.generation << 20);
         if !changed && lk == self.layout_key && self.fill_budget == 0 {
             return;
         }
@@ -175,14 +189,14 @@ impl View {
             let end = d.line_end(l, src);
             let ld = d.lines[l];
             let near = y >= near_top && y <= near_bottom;
-            let lazy = !near && budget == 0;
-            let shaped = match layout::shape_line(g, &mut self.cache, src, d, start..end, &ld, self.content_w, &self.look, t, &size_of, lazy) {
-                Some(s) => {
-                    if !near && budget > 0 {
-                        budget -= 1;
-                    }
-                    s
-                }
+            // The budget counts lines actually shaped: cached ones are free, or the
+            // fill would spend it on the top of the document and never finish.
+            let cached = layout::shape_line(g, &mut self.cache, src, d, start..end, &ld, self.content_w, &self.look, t, &size_of, !near);
+            let shaped = match cached.or_else(|| (budget > 0).then(|| {
+                budget -= 1;
+                layout::shape(g, &mut self.cache, src, d, start..end, &ld, self.content_w, &self.look, t, &size_of)
+            })) {
+                Some(s) => s,
                 None => {
                     pending = true;
                     layout::Shaped { text_h: layout::estimate(src, &(start..end), &ld, self.content_w, &self.look, t), ..layout::Shaped::empty() }
@@ -238,8 +252,9 @@ impl View {
         let mut y = 0.0;
         let mut m = DWRITE_HIT_TEST_METRICS::default();
         unsafe { layout.HitTestTextPosition(d, false, &mut x, &mut y, &mut m).ok()? };
-        let lh = line_height_at(layout, m.top);
-        Some((x0 + x, y0 + m.top, lh.max(m.height)))
+        // The box of the font drawing `pos` (a CJK fallback sits lower than Latin):
+        // where its glyphs are, not the line spacing around them.
+        Some((x0 + x, y0 + m.top, m.height))
     }
 
     /// Source position under a window point.
@@ -363,7 +378,7 @@ impl View {
             }
         }
         // Caret.
-        if self.focused && sel.empty() && self.composition.is_none() {
+        if self.focused && sel.empty() {
             let on = (self.blink.elapsed().as_millis() / 530) % 2 == 0;
             if on {
                 if let Some((x, y, h)) = self.caret_at(sel.head) {
@@ -371,8 +386,8 @@ impl View {
                     let cw = self.caret_at(self.buf.next_char(sel.head)).filter(|(nx, ny, _)| *ny == y && *nx > x).map_or(self.look.size() * 0.55, |(nx, _, _)| nx - x);
                     match self.cursor_style {
                         CursorStyle::Bar => g.fill(Rect::new(x - 0.5, y + oy, 1.5, h), t.accent),
-                        CursorStyle::Block => g.fill(Rect::new(x, y + oy + h * 0.12, cw, h * 0.76), with_alpha(t.accent, 0.55)),
-                        CursorStyle::Underline => g.fill(Rect::new(x, y + oy + h * 0.86, cw, 2.0), t.accent),
+                        CursorStyle::Block => g.fill(Rect::new(x, y + oy, cw, h), with_alpha(t.accent, 0.55)),
+                        CursorStyle::Underline => g.fill(Rect::new(x, y + oy + h - 2.0, cw, 2.0), t.accent),
                     }
                 }
             }
@@ -395,7 +410,6 @@ impl View {
         }
         let s = &line.shaped;
         let d = &line.deco;
-        let full = Rect::new(x, y, w, line.h);
 
         // Line backgrounds.
         if d.code != Code::None {
@@ -415,7 +429,8 @@ impl View {
                 _ => g.fill(r, t.bg_inset),
             }
         } else if caret_line && self.highlight_line && self.focused {
-            g.fill(full, t.bg_hover);
+            // The text rows only: a heading's spacing above it is not part of the line you are on.
+            g.fill(Rect::new(x, y + s.pad_top, w, line.h - s.pad_top - s.pad_bottom), t.bg_hover);
         }
         if d.heading == 1 {
             let plate = Rect::new(x - 24.0, y, w + 24.0, line.h);
@@ -502,6 +517,19 @@ impl View {
                     let rr = Rect::new(tx + r.x, ty + r.y, r.w, r.h);
                     g.fill(rr, if selected { t.accent_line } else { t.accent_soft });
                     g.stroke_round(rr, 0.0, if selected { t.accent } else { t.accent_line }, 1.0);
+                }
+            }
+        }
+
+        // IME composition, underlined below its glyphs as the system would.
+        if let Some(c) = self.composition.as_ref().filter(|c| c.start >= line.src.start && c.start <= line.src.end) {
+            let a = src_to_disp_pos(&s.segs, c.start, &self.buf.text);
+            let b = src_to_disp_pos(&s.segs, c.end.min(line.src.end), &self.buf.text);
+            let rows = range_rects(layout, a, b);
+            if let (Some(first), Some((_, cy, ch))) = (rows.first(), self.caret_at(c.start)) {
+                let under = cy + ch - (line.y + s.pad_top) - first.y - 1.0;
+                for r in &rows {
+                    g.fill(Rect::new(tx + r.x, ty + r.y + under, r.w, 1.0), t.text_primary);
                 }
             }
         }
@@ -605,7 +633,7 @@ impl View {
         self.after_edit();
     }
 
-    fn after_edit(&mut self) {
+    pub(super) fn after_edit(&mut self) {
         self.goal_x = None;
         self.blink = Instant::now();
     }
@@ -765,23 +793,6 @@ fn source_deco(src: &str) -> Deco {
     d.starts.extend(src.match_indices('\n').map(|(i, _)| i + 1));
     d.lines = vec![Default::default(); d.starts.len()];
     d
-}
-
-fn line_height_at(layout: &IDWriteTextLayout, top: f32) -> f32 {
-    let mut count = 0;
-    unsafe {
-        let _ = layout.GetLineMetrics(None, &mut count);
-        let mut lm = vec![DWRITE_LINE_METRICS::default(); count as usize];
-        let _ = layout.GetLineMetrics(Some(&mut lm), &mut count);
-        let mut y = 0.0;
-        for m in &lm {
-            if top < y + m.height - 0.01 {
-                return m.height;
-            }
-            y += m.height;
-        }
-        lm.last().map_or(0.0, |m| m.height)
-    }
 }
 
 fn last_line(layout: &IDWriteTextLayout) -> (f32, f32, f32) {

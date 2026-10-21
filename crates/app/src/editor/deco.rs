@@ -57,7 +57,7 @@ pub enum Style {
     Hl(mdwisp_text::highlight::Token),
 }
 
-#[derive(Clone, PartialEq, Debug)]
+#[derive(Clone, PartialEq, Debug, Hash)]
 pub enum Widget {
     Bullet,
     Checkbox { checked: bool },
@@ -87,6 +87,8 @@ pub struct Deco {
     pub links: Vec<Link>,
     /// Fenced code blocks: (whole block, code text, language as written).
     pub code_blocks: Vec<(Range<usize>, Range<usize>, String)>,
+    /// Links and images: the only sources whose display depends on the selection.
+    pub reveal: Vec<Range<usize>>,
     /// Longest mark and link, so per-line lookups can binary-search.
     pub mark_span: usize,
     pub link_span: usize,
@@ -103,6 +105,12 @@ pub struct Focus {
 impl Deco {
     pub fn line_of(&self, pos: usize) -> usize {
         self.starts.partition_point(|s| *s <= pos).saturating_sub(1)
+    }
+
+    /// Whether a selection touches anything that shows its source when selected;
+    /// if neither the old nor the new selection does, the decorations stay the same.
+    pub fn reveals(&self, from: usize, to: usize, head: usize) -> bool {
+        self.reveal.iter().any(|r| (r.start < to && r.end > from) || (head > r.start && head < r.end))
     }
 }
 
@@ -125,11 +133,14 @@ pub fn decorate(src: &str, focus: &Focus) -> Deco {
             code_ranges.push(r.clone());
         }
     }
-    let in_code = |at: usize| code_ranges.iter().any(|c| c.start <= at && at < c.end);
+    // Events come in document order, so the ranges are sorted and disjoint.
+    let in_code = |at: usize| {
+        let i = code_ranges.partition_point(|c| c.start <= at);
+        i > 0 && at < code_ranges[i - 1].end
+    };
 
     let mut list_depth = 0u8;
     let mut list_lines: Vec<(usize, u8, bool)> = vec![];
-    let mut code_lines: Vec<usize> = vec![];
     let mut skip_until = 0usize;
     // Inline containers whose text gets the `==mark==` and bare-URL scan.
     let mut inline_blocks: Vec<Range<usize>> = vec![];
@@ -205,11 +216,12 @@ pub fn decorate(src: &str, focus: &Focus) -> Deco {
                 let name = tag.strip_prefix('<').and_then(|t| t.strip_suffix('>')).filter(|t| ["u", "strong", "em", "del", "mark"].contains(t));
                 if let Some(name) = name {
                     let mut depth = 1;
+                    let (open_tag, close_tag) = (format!("<{name}>"), format!("</{name}>"));
                     let close = events[i + 1..].iter().find(|(e, _)| {
                         if let Event::InlineHtml(t) = e {
-                            if t.as_ref() == format!("<{name}>") {
+                            if t.as_ref() == open_tag {
                                 depth += 1;
-                            } else if t.as_ref() == format!("</{name}>") {
+                            } else if t.as_ref() == close_tag {
                                 depth -= 1;
                                 return depth == 0;
                             }
@@ -256,6 +268,7 @@ pub fn decorate(src: &str, focus: &Focus) -> Deco {
             }
             Event::Start(Tag::Link { link_type, dest_url, .. }) => {
                 d.links.push(Link { range: r.clone(), href: dest_url.to_string() });
+                d.reveal.push(r.clone());
                 d.marks.push((r.clone(), Style::Link));
                 match link_type {
                     LinkType::Autolink | LinkType::Email => {
@@ -277,10 +290,12 @@ pub fn decorate(src: &str, focus: &Focus) -> Deco {
                 let (ls, le) = (d.starts[row], d.line_end(row, src));
                 // A linked image `[![a](x)](y)` is standalone when the link fills the line.
                 let container = d.links.last().filter(|l| l.range.start <= from && l.range.end >= to).map_or(from..to, |l| l.range.clone());
-                let standalone = src[ls..container.start].trim().is_empty() && src[container.end..le].trim().is_empty();
+                // Alt text or a link label may run over several lines; such an image is inline.
+                let standalone = container.start >= ls && container.end <= le && src[ls..container.start].trim().is_empty() && src[container.end..le].trim().is_empty();
                 if standalone {
                     d.lines[row].image = true;
                 }
+                d.reveal.push(r.clone());
                 let selected = focus.from < to && focus.to > from;
                 let inside = focus.head > from && focus.head < to;
                 if focus.searching || standalone || (!selected && !inside) {
@@ -307,7 +322,6 @@ pub fn decorate(src: &str, focus: &Focus) -> Deco {
                     continue;
                 }
                 for l in first..=last {
-                    code_lines.push(l);
                     d.lines[l].code = if l == first { Code::Header } else if closed && l == last { Code::End } else { Code::Body };
                 }
                 let info_start = from + src[from..first_end].find(info.as_ref()).unwrap_or(first_end - from);
@@ -316,8 +330,8 @@ pub fn decorate(src: &str, focus: &Focus) -> Deco {
                 let text_end = if closed { d.starts[last].saturating_sub(1).max(text_start) } else { end };
                 let code = &src[text_start..text_end];
                 let lang = info.split_whitespace().next().unwrap_or("");
-                let detected = if lang.is_empty() { mdwisp_text::detect::detect_language(code).lang } else { None };
-                for (r, tok) in mdwisp_text::highlight::highlight(detected.unwrap_or(lang), code) {
+                let (detected, spans) = highlighted(lang, code);
+                for (r, tok) in spans {
                     d.marks.push((text_start + r.start..text_start + r.end, Style::Hl(tok)));
                 }
                 d.widgets.push((from..first_end, Widget::CodeLang { block: from..end, info: info_range, lang: info.to_string(), detected }));
@@ -329,7 +343,6 @@ pub fn decorate(src: &str, focus: &Focus) -> Deco {
             }
             Event::Start(Tag::CodeBlock(CodeBlockKind::Indented)) => {
                 for l in d.line_of(from)..=d.line_of(trim_nl(src, from, to).saturating_sub(1).max(from)) {
-                    code_lines.push(l);
                     d.lines[l].code = Code::Body;
                 }
                 skip_until = to;
@@ -344,6 +357,8 @@ pub fn decorate(src: &str, focus: &Focus) -> Deco {
         }
     }
 
+    // Bare URLs are checked against the parsed links only; those are in document order.
+    let parsed_links = std::mem::take(&mut d.links);
     for block in &inline_blocks {
         let text = &src[block.clone()];
         // `==mark==`: the opener hugs its content, the closer too.
@@ -371,11 +386,12 @@ pub fn decorate(src: &str, focus: &Focus) -> Deco {
         for m in mdwisp_text::math::find_inline_math(text, |at| in_code(block.start + at)) {
             d.marks.push((block.start + m.start..block.start + m.end, Style::Math));
         }
-        bare_urls(src, block.clone(), &d.links.clone(), &in_code, &mut d);
+        bare_urls(src, block.clone(), &parsed_links, &in_code, &mut d);
     }
+    d.links.extend(parsed_links);
 
     for (l, depth, first) in list_lines {
-        if code_lines.contains(&l) {
+        if d.lines[l].code != Code::None {
             continue;
         }
         d.lines[l].list = depth;
@@ -432,6 +448,31 @@ impl Deco {
     pub fn line_end(&self, l: usize, src: &str) -> usize {
         self.starts.get(l + 1).map_or(src.len(), |s| s - 1)
     }
+}
+
+thread_local! {
+    /// Detection and highlighting by block content: a keystroke changes one
+    /// block at most, and redoing every block made typing scale with all the code.
+    static HIGHLIGHTS: std::cell::RefCell<std::collections::HashMap<u64, (Option<&'static str>, mdwisp_text::highlight::Spans)>> = Default::default();
+}
+
+fn highlighted(lang: &str, code: &str) -> (Option<&'static str>, mdwisp_text::highlight::Spans) {
+    use std::hash::{Hash, Hasher};
+    let mut h = std::hash::DefaultHasher::new();
+    (lang, code).hash(&mut h);
+    let key = h.finish();
+    HIGHLIGHTS.with_borrow_mut(|cache| {
+        if cache.len() > 4000 {
+            cache.clear();
+        }
+        cache
+            .entry(key)
+            .or_insert_with(|| {
+                let detected = if lang.is_empty() { mdwisp_text::detect::detect_language(code).lang } else { None };
+                (detected, mdwisp_text::highlight::highlight(detected.unwrap_or(lang), code))
+            })
+            .clone()
+    })
 }
 
 /// Emphasis-style delimiters: `n` characters at each end of the range.
@@ -527,7 +568,8 @@ fn bare_urls(src: &str, block: Range<usize>, links: &[Link], in_code: &impl Fn(u
             end -= 1;
         }
         k += p + len.max(1);
-        if !boundary || in_code(start) || links.iter().any(|l| l.range.start <= start && start < l.range.end) || end - start < 5 {
+        let i = links.partition_point(|l| l.range.start <= start);
+        if !boundary || in_code(start) || (i > 0 && start < links[i - 1].range.end) || end - start < 5 {
             continue;
         }
         let url = &src[start..end];

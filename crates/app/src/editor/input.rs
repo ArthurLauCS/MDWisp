@@ -68,6 +68,43 @@ impl View {
         self.insert(text);
     }
 
+    /// IME composition: the text sits in the buffer, so it wraps and renders
+    /// with its line, but stays out of undo until `commit` types the result.
+    pub fn compose(&mut self, text: &str, cursor16: usize) {
+        if self.read_only || text.is_empty() && self.composition.is_none() {
+            return;
+        }
+        let r = match self.composition.take().filter(|r| self.buf.text.get(r.clone()).is_some()) {
+            Some(r) => r,
+            None => {
+                let sel = self.buf.sel;
+                if !sel.empty() {
+                    self.buf.replace(sel.from(), sel.to(), "", Sel::at(sel.from()), Kind::Delete);
+                }
+                sel.from()..sel.from()
+            }
+        };
+        let mut n = 0;
+        let cursor = text.char_indices().find(|(_, c)| {
+            n += c.len_utf16();
+            n > cursor16
+        });
+        let cursor = cursor.map_or(text.len(), |(i, _)| i);
+        self.buf.splice(r.start, r.end, text, Sel::at(r.start + cursor));
+        self.composition = (!text.is_empty()).then(|| r.start..r.start + text.len());
+        self.after_edit();
+    }
+
+    /// End the composition and type `result` where it stood (empty when cancelled).
+    pub fn commit(&mut self, result: &str, auto: bool) {
+        if let Some(r) = self.composition.take().filter(|r| self.buf.text.get(r.clone()).is_some()) {
+            self.buf.splice(r.start, r.end, "", Sel::at(r.start));
+        }
+        if !result.is_empty() {
+            self.type_text(result, auto);
+        }
+    }
+
     fn in_code(&self, pos: usize) -> bool {
         let l = self.deco.line_of(pos);
         self.deco.lines.get(l).is_some_and(|d| d.code != Code::None)
@@ -91,8 +128,10 @@ impl View {
                 return;
             }
         }
-        let ls = self.buf.line_start(sel.head);
-        let le = self.buf.line_end(sel.head);
+        // The selection is replaced from its start: a selection dragged upwards
+        // or downwards puts the head on another line than the text it replaces.
+        let ls = self.buf.line_start(sel.from());
+        let le = self.buf.line_end(sel.from());
         let line = self.buf.text[ls..le].to_string();
         // An unfinished fence at its end gets a body and a closing fence.
         if sel.empty() && sel.head == le {
@@ -199,11 +238,13 @@ impl View {
                 out.push_str(&pad);
                 out.push_str(line);
             }
+            // A position inside the removed indentation stops at its own line's start,
+            // not in the line above (possibly inside a multi-byte character).
             if pos <= sel.head {
-                delta_head += change;
+                delta_head += change.max(pos as isize - sel.head as isize);
             }
             if pos <= sel.anchor {
-                delta_anchor += change;
+                delta_anchor += change.max(pos as isize - sel.anchor as isize);
             }
             pos += line.len() + 1;
         }

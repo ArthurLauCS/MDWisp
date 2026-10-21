@@ -94,6 +94,30 @@ impl Shaped {
     pub fn empty() -> Shaped {
         Shaped { layout: None, segs: vec![], marker: None, objects: vec![], backgrounds: vec![], indent: 0.0, pad_top: 0.0, pad_bottom: 0.0, text_h: 0.0, width: 0.0 }
     }
+
+    /// The same line moved from source offset `from` to `to`: the cache is keyed
+    /// by content, and an edit above a line shifts it without changing it.
+    fn moved(mut self, from: usize, to: usize) -> Shaped {
+        if from != to {
+            let m = |p: &mut usize| *p = *p - from + to;
+            for s in &mut self.segs {
+                m(&mut s.src);
+            }
+            for (_, o) in &mut self.objects {
+                match o {
+                    Obj::Checkbox { at, .. } => m(at),
+                    Obj::Image { range, .. } => {
+                        m(&mut range.start);
+                        m(&mut range.end);
+                    }
+                }
+            }
+            if let Some((_, end)) = &mut self.marker {
+                m(end);
+            }
+        }
+        self
+    }
 }
 
 pub struct Line {
@@ -106,7 +130,8 @@ pub struct Line {
 }
 
 pub struct Cache {
-    map: HashMap<u64, Shaped>,
+    /// Shaped lines by content, with the source offset they were shaped at.
+    map: HashMap<u64, (usize, Shaped)>,
 }
 
 impl Cache {
@@ -175,40 +200,40 @@ pub fn line_style(d: &LineDeco, look: &Look, t: &Theme) -> LineStyle {
         return s;
     }
     if d.para_start {
-        s.pad_top = 4.0;
+        s.pad_top = 8.0;
     }
     if d.para_end {
-        s.pad_bottom = 4.0;
+        s.pad_bottom = 8.0;
     }
     match d.heading {
         1 => {
             s.style = Style::new(Stack::Display, size * 2.15).weight(500);
             s.lh = size * 2.15 * 1.16;
-            (s.pad_top, s.pad_bottom) = (24.0, 20.0);
+            (s.pad_top, s.pad_bottom) = (24.0, 24.0);
             s.tracking = -0.018 * size * 2.15;
         }
         2 => {
             s.style = Style::new(Stack::Read, size * 1.55).weight(600);
             s.lh = size * 1.55 * 1.24;
-            (s.pad_top, s.pad_bottom) = (24.0, 16.0);
+            (s.pad_top, s.pad_bottom) = (36.0, 16.0);
             s.tracking = -0.008 * size * 1.55;
         }
         3 => {
             s.style = Style::new(Stack::Ui, size * 1.2).weight(640);
             s.lh = size * 1.2 * 1.32;
-            (s.pad_top, s.pad_bottom) = (20.0, 12.0);
+            (s.pad_top, s.pad_bottom) = (28.0, 12.0);
             s.tracking = -0.004 * size * 1.2;
         }
         4 => {
             s.style = Style::new(Stack::Ui, size * 1.02).weight(640);
             s.lh = lh * size * 1.02;
-            (s.pad_top, s.pad_bottom) = (16.0, 8.0);
+            (s.pad_top, s.pad_bottom) = (24.0, 8.0);
             s.tracking = 0.012 * size * 1.02;
         }
         5 => {
             s.style = Style::new(Stack::Ui, size * 0.84).weight(600);
             s.lh = lh * size * 0.84;
-            (s.pad_top, s.pad_bottom) = (16.0, 8.0);
+            (s.pad_top, s.pad_bottom) = (24.0, 8.0);
             s.color = t.text_secondary;
             s.upper = true;
             s.tracking = 0.09 * size * 0.84;
@@ -217,7 +242,7 @@ pub fn line_style(d: &LineDeco, look: &Look, t: &Theme) -> LineStyle {
         6 => {
             s.style = Style::new(Stack::Code, size * 0.78).weight(500);
             s.lh = lh * size * 0.78;
-            (s.pad_top, s.pad_bottom) = (16.0, 8.0);
+            (s.pad_top, s.pad_bottom) = (24.0, 8.0);
             s.color = t.text_tertiary;
             s.upper = true;
             s.tracking = 0.09 * size * 0.78;
@@ -283,17 +308,20 @@ pub fn shape_line(g: &Gfx, cache: &mut Cache, src: &str, deco: &Deco, line: Rang
         (h.start - line.start, h.end - line.start).hash(&mut key);
     }
     for (r, w) in &widgets {
-        (r.start - line.start, r.end - line.start, format!("{w:?}")).hash(&mut key);
-        if let Widget::Image { src, .. } = w {
-            images(src).map(|(a, b)| (a.to_bits(), b.to_bits())).hash(&mut key);
+        (r.start - line.start, r.end - line.start).hash(&mut key);
+        match w {
+            // Draws nothing inside the line, and its ranges are absolute offsets.
+            Widget::CodeLang { .. } => {}
+            Widget::Image { src, .. } => (w, images(src).map(|(a, b)| (a.to_bits(), b.to_bits()))).hash(&mut key),
+            _ => w.hash(&mut key),
         }
     }
     for (r, m) in &marks {
         (r.start.saturating_sub(line.start), r.end - line.start, m).hash(&mut key);
     }
     let key = key.finish();
-    if let Some(s) = cache.map.get(&key) {
-        return Some(s.clone());
+    if let Some((at, s)) = cache.map.get(&key) {
+        return Some(s.clone().moved(*at, line.start));
     }
     if lazy {
         return None;
@@ -497,7 +525,7 @@ pub fn shape_line(g: &Gfx, cache: &mut Cache, src: &str, deco: &Deco, line: Rang
     if cache.map.len() > 20000 {
         cache.map.clear();
     }
-    cache.map.insert(key, shaped.clone());
+    cache.map.insert(key, (line.start, shaped.clone()));
     Some(shaped)
 }
 

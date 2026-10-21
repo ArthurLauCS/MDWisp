@@ -211,6 +211,18 @@ fn line_at(lines: &[Line], offset: usize) -> usize {
 }
 
 pub fn find_table_at(src: &str, offset: usize) -> Option<TableContext> {
+    // A table never spans an empty line, so only the lines between the empty
+    // lines around `offset` matter; splitting the whole document made every
+    // lookup (one per table on each keystroke) cost the document's length.
+    let base = src[..offset].rfind("\n\n").map_or(0, |i| i + 2);
+    let end = src[offset..].find("\n\n").map_or(src.len(), |i| offset + i);
+    let mut ctx = find_in_paragraph(&src[base..end], offset - base)?;
+    ctx.start += base;
+    ctx.end += base;
+    Some(ctx)
+}
+
+fn find_in_paragraph(src: &str, offset: usize) -> Option<TableContext> {
     let lines = split_lines(src);
     if lines.is_empty() {
         return None;

@@ -1,6 +1,8 @@
 #![windows_subsystem = "windows"]
 //! MDWisp: a Markdown reader and editor, native Win32 + Direct2D.
 
+#[cfg(test)]
+mod bench;
 mod actions;
 mod clipboard;
 mod dialog;
@@ -39,6 +41,12 @@ use theme::Theme;
 /// first use joins it. Only one thread ever touches it at a time.
 struct Built(gfx::Gfx);
 unsafe impl Send for Built {}
+
+impl Built {
+    fn take(self) -> gfx::Gfx {
+        self.0
+    }
+}
 
 pub struct App {
     gfx: std::cell::OnceCell<gfx::Gfx>,
@@ -82,6 +90,39 @@ impl App {
         self.gfx.get().unwrap()
     }
 
+    /// Draw with `g` from now on: the GPU once its driver has loaded, or a fresh
+    /// device after the GPU was removed or reset (driver update, TDR).
+    pub fn set_gfx(&mut self, mut g: gfx::Gfx) {
+        if let Some(old) = self.gfx.get() {
+            g.dcomp = old.dcomp.clone();
+        }
+        self.gfx = std::cell::OnceCell::from(g);
+        for &h in &self.windows {
+            if let Some(w) = win::window(h) {
+                w.adopt_device();
+            }
+        }
+    }
+
+    /// Build the GPU or the WARP device off the UI thread (the GPU takes ~170 ms);
+    /// the windows keep drawing on the current one until it arrives.
+    pub fn switch_device(&self, gpu: bool) {
+        let Some(&h) = self.windows.first() else { return };
+        let hwnd = h.0 as isize;
+        let fonts = resource_dir("fonts");
+        std::thread::spawn(move || {
+            if let Ok(g) = gfx::Gfx::new(fonts.as_deref(), gpu) {
+                let g = Built(g);
+                // The switch may have been flipped back while this one was built.
+                win::post(hwnd, move |_| {
+                    if crate::app().s().hardware_acceleration == gpu {
+                        crate::app().set_gfx(g.take());
+                    }
+                });
+            }
+        });
+    }
+
     pub fn ui_motion(&self) -> theme::Motion {
         match self.s().motion {
             mdwisp_core::settings::MotionLevel::Full => theme::Motion::Full,
@@ -96,8 +137,12 @@ impl App {
 
     /// Change settings, persist them, and bring every window up to date.
     pub fn patch(&mut self, change: impl FnOnce(&mut AppSettings)) {
+        let gpu = self.s().hardware_acceleration;
         if let Err(e) = self.settings.update(change) {
             startup_mark(&format!("settings write failed: {e}"));
+        }
+        if self.s().hardware_acceleration != gpu {
+            self.switch_device(!gpu);
         }
         self.theme = theme_for(self.settings.get());
         self.gfx().drop_layout_cache();
@@ -243,7 +288,7 @@ fn main() {
     win::register((bg.r * 255.0) as u32 | ((bg.g * 255.0) as u32) << 8 | ((bg.b * 255.0) as u32) << 16);
     let fonts = resource_dir("fonts");
     let job = std::thread::spawn(move || {
-        let g = gfx::Gfx::new(fonts.as_deref()).expect("graphics device");
+        let g = gfx::Gfx::new(fonts.as_deref(), false).expect("graphics device");
         startup_mark("gfx");
         Built(g)
     });
@@ -253,6 +298,10 @@ fn main() {
     let cwd = std::env::current_dir().unwrap_or_default();
     open_window(mdwisp_core::launch::document_arg(&args, &cwd), String::new(), true);
     startup_mark("window");
+    // WARP drew the first frames without waiting for the GPU driver to load.
+    if crate::app().s().hardware_acceleration {
+        crate::app().switch_device(true);
+    }
     unsafe {
         let mut m = MSG::default();
         while GetMessageW(&mut m, None, 0, 0).into() {
