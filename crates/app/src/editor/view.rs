@@ -109,6 +109,13 @@ impl View {
         }
     }
 
+    /// Layouts carry brushes, and images are bitmaps, of the old graphics device.
+    pub fn device_lost(&mut self) {
+        self.cache = Cache::new();
+        self.layout_key.0 = u64::MAX;
+        self.images.clear();
+    }
+
     pub fn set_look(&mut self, look: Look) {
         if look != self.look {
             self.look = look;

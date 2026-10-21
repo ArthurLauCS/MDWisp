@@ -61,6 +61,8 @@ pub struct AppSettings {
     pub language: Locale,
     pub theme: ThemeMode,
     pub motion: MotionLevel,
+    /// Draw on the GPU; off draws on the CPU (WARP), for broken graphics drivers.
+    pub hardware_acceleration: bool,
     pub plain_md_image_policy: PlainMdImagePolicy,
     /// Base reading font size in px.
     pub font_size: f64,
@@ -108,6 +110,7 @@ impl Default for AppSettings {
             language: Locale::ZhCn,
             theme: ThemeMode::Dark,
             motion: MotionLevel::Full,
+            hardware_acceleration: true,
             plain_md_image_policy: PlainMdImagePolicy::AltPlaceholder,
             font_size: 17.0,
             page_margin_left: 5.0,

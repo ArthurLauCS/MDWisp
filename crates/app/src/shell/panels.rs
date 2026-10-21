@@ -232,6 +232,7 @@ const C_AUTOSAVE: u32 = 24;
 const C_HISTORY: u32 = 25;
 const C_DEFAULT_APP: u32 = 26;
 const C_POLICY: u32 = 27;
+const C_GPU: u32 = 28;
 const C_TOGGLES: u32 = 30; // 30..=37: editor switches
 const C_NAMING: u32 = 40;
 const C_DEDUPE: u32 = 41;
@@ -303,9 +304,10 @@ fn settings_items(p: &Panel, w: &Window, section: usize) -> Vec<Item> {
                 row("主题", "深色为基础主题，浅色由同一色相提亮推导", Ctrl::Seg { id: C_THEME, options: opts(&["深色", "浅色", "跟随系统"]), current: s.theme as usize }),
                 Item::Row {
                     name: t("动效强度").into(),
-                    hint: Some(t(["入场、视差与反馈动效全部保留", "只保留表达状态变化的反馈动效", "不做过渡，但状态切换仍然可见"][s.motion as usize]).into()),
+                    hint: Some(t(["入场、视差、反馈动效与背景模糊全部保留", "只保留表达状态变化的反馈动效", "不做过渡，但状态切换仍然可见"][s.motion as usize]).into()),
                     ctrl: Ctrl::Seg { id: C_MOTION, options: opts(&["完整", "精简", "关闭动效"]), current: s.motion as usize },
                 },
+                row("硬件加速", "用显卡绘制界面；显示异常时关闭，改用处理器绘制", Ctrl::Switch { id: C_GPU, on: s.hardware_acceleration }),
                 row("正文字号", "阅读与编辑共用的基础字号", field(F_FONT_SIZE, 68.0, "px")),
                 font("界面字体", F_FONT_UI, Stack::Ui, "菜单 · 面板 · 按钮 Aa 汉字", &s.font_ui),
                 font("正文字体", F_FONT_READ, Stack::Read, "正文阅读效果 Aa 汉字排版", &s.font_read),
@@ -1293,6 +1295,7 @@ pub fn click(w: &mut Window, hit: Hit) {
         C_THEME => a.patch(|s| s.theme = [ThemeMode::Dark, ThemeMode::Light, ThemeMode::System][opt]),
         C_MOTION => a.patch(|s| s.motion = [MotionLevel::Full, MotionLevel::Reduced, MotionLevel::Off][opt]),
         C_CURSOR => a.patch(|s| s.cursor_style = [CursorStyle::Bar, CursorStyle::Block, CursorStyle::Underline][opt]),
+        C_GPU => a.patch(|s| s.hardware_acceleration = !s.hardware_acceleration),
         C_AUTOSAVE => a.patch(|s| s.auto_save = !s.auto_save),
         C_HISTORY => {
             a.patch(|s| s.history_enabled = !s.history_enabled);
@@ -1322,6 +1325,7 @@ pub fn click(w: &mut Window, hit: Hit) {
                     (s.theme, s.motion, s.font_size, s.font_ui, s.font_read, s.font_code, s.font_display) =
                         (d.theme, d.motion, d.font_size, d.font_ui.clone(), d.font_read.clone(), d.font_code.clone(), d.font_display.clone());
                     (s.code_font_size, s.line_height, s.cursor_style, s.accent_override) = (d.code_font_size, d.line_height, d.cursor_style, d.accent_override.clone());
+                    s.hardware_acceleration = d.hardware_acceleration;
                 }
                 1 => (s.plain_md_image_policy, s.auto_save, s.auto_save_delay_ms, s.history_enabled, s.history_interval_ms) = (d.plain_md_image_policy, d.auto_save, d.auto_save_delay_ms, d.history_enabled, d.history_interval_ms),
                 2 => {

@@ -142,7 +142,10 @@ fn rank(w: &Window, query: &str) -> Vec<(&'static str, String, Vec<usize>)> {
 fn scrim(w: &mut Window, g: &Gfx, k: f32) {
     let th = app().theme;
     let r = w.bounds();
-    g.blur_backdrop(6.0 * k);
+    // Blur is part of the full motion level; the reduced levels keep the plain scrim.
+    if w.ui.motion == theme::Motion::Full {
+        g.blur_backdrop(6.0 * k);
+    }
     g.fill(r, theme::with_alpha(th.bg_base, 0.55 * k));
     w.ui.region(r, Hit::Backdrop);
 }

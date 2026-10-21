@@ -6,6 +6,7 @@ use std::time::Instant;
 use mdwisp_core::session::{Session, SessionState};
 use mdwisp_core::workspace::Workspace;
 use windows::Win32::Foundation::*;
+use windows::Win32::Graphics::Dxgi::{DXGI_ERROR_DEVICE_REMOVED, DXGI_ERROR_DEVICE_RESET};
 use windows::Win32::UI::Input::Ime::*;
 use windows::Win32::UI::Input::KeyboardAndMouse::*;
 use windows::Win32::UI::Shell::HDROP;
@@ -237,9 +238,7 @@ impl Window {
         }
         let scrolling = self.doc.as_mut().is_some_and(|d| d.view.tick());
         shell::paint(self, g);
-        unsafe {
-            let _ = g.dc.EndDraw(None, None);
-        }
+        let drawn = unsafe { g.dc.EndDraw(None, None) };
         if let Some(path) = self.shot.take() {
             if let Err(e) = g.capture(&s, &path) {
                 crate::startup_mark(&format!("shot failed {e}"));
@@ -259,7 +258,7 @@ impl Window {
             }
         }
         let animating = self.ui.animating() || scrolling;
-        let _ = g.present(&s, animating);
+        let presented = g.present(&s, animating);
         if self.doc.as_ref().is_some_and(|d| d.view.pending) {
             unsafe { SetTimer(Some(self.hwnd), TIMER_LAYOUT, 1, None) };
         }
@@ -271,6 +270,28 @@ impl Window {
             win::request_frame(self.hwnd);
         }
         self.place_ime();
+        // Without a new device the window would stay frozen on its last frame.
+        let lost = |r: &windows::core::Result<()>| r.as_ref().is_err_and(|e| [D2DERR_RECREATE_TARGET, DXGI_ERROR_DEVICE_REMOVED, DXGI_ERROR_DEVICE_RESET].contains(&e.code()));
+        if lost(&drawn) || lost(&presented) {
+            let fonts = crate::resource_dir("fonts");
+            if let Ok(g) = crate::gfx::Gfx::new(fonts.as_deref(), app().s().hardware_acceleration).or_else(|_| crate::gfx::Gfx::new(fonts.as_deref(), false)) {
+                app().set_gfx(g);
+            }
+        }
+    }
+
+    /// Continue on the device `App::set_gfx` just installed.
+    pub fn adopt_device(&mut self) {
+        if let Some(d) = &mut self.doc {
+            d.view.device_lost();
+        }
+        let Some(old) = self.surface.take() else { return };
+        let (w, h) = ((self.width * self.scale).round() as u32, (self.height * self.scale).round() as u32);
+        self.surface = app().gfx().move_surface(&old, w, h).ok();
+        self.paint();
+        if let Some(s) = &self.surface {
+            let _ = app().gfx().show(s);
+        }
     }
 
     pub fn bounds(&self) -> Rect {
