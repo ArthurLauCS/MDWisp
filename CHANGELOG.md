@@ -1,5 +1,20 @@
 # 更新记录
 
+## 0.5.1 · 2026-10-21
+
+- 修复输入时随机闪退：行排版缓存沿用旧偏移、跨行选区回车、多行图片说明文字、Shift+Tab 减少缩进时光标落入上一行。
+- 打开和编辑大文档明显变快：后台排版不再卡在文档开头，移动光标不再重排全文，代码高亮与表格查找只处理改动的部分。
+- 默认用显卡绘制界面（首帧仍由处理器绘制，不拖慢启动）；外观设置新增「硬件加速」开关，显卡驱动异常或重置后自动恢复。背景模糊只在「完整」动效下开启。
+- 输入法候选文字直接排在正文里，不再弹出系统默认输入框；光标与文字等高并对齐。
+- 段落与标题间距恢复 0.4.1 的样式；当前行高亮不再包含标题上方留白。
+- 侧栏图片区拖到底部后可以再拖回来，双击分隔条恢复默认比例。
+- Fix random crashes while typing: cached line layouts kept old offsets, Enter over a multi-line selection, image alt text spanning lines, and Shift+Tab outdent moving the caret into the previous line.
+- Open and edit large documents much faster: the background layout no longer stalls at the top, caret moves no longer re-lay out the document, and code highlighting and table lookups only redo what changed.
+- Draw with the graphics card by default (the CPU still draws the first frame, so startup stays fast); a new Hardware acceleration switch in Appearance, and recovery after a graphics driver reset. Background blur only at the Full motion level.
+- Type IME compositions inline in the text instead of the system's default composition window; the caret matches the height and position of the text.
+- Restore the 0.4.1 paragraph and heading spacing; the current-line highlight no longer covers the space above a heading.
+- The sidebar image area can be dragged back after it is pulled to the bottom; double-click the split handle to restore the default.
+
 ## 0.5.0 · 2026-10-18
 
 - 用 Rust 重写为 Windows 原生应用（Win32 + Direct2D + DirectWrite）：窗口约 90 毫秒出现（原约 850 毫秒），单进程内存约 60MB（原约 450MB、4 个进程），安装包 14MB（原 102MB）。界面布局、字体与动效保持一致，设置、会话与历史记录直接沿用。

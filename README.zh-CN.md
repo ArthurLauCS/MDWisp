@@ -37,7 +37,7 @@
 
 ## 下载与安装
 
-前往 **[Releases](https://github.com/ArthurLauCS/MDWisp/releases/latest)**，下载 `MDWisp-0.5.0-setup.exe`，也可自行构建（见[开发与验证](#开发与验证)）。安装时可以选择中英文、安装目录，并创建桌面快捷方式。按当前用户安装，不需要管理员权限；已装 0.4.x 时会先移除旧版，设置与历史记录保留。
+前往 **[Releases](https://github.com/ArthurLauCS/MDWisp/releases/latest)**，下载 `MDWisp-0.5.1-setup.exe`，也可自行构建（见[开发与验证](#开发与验证)）。安装时可以选择中英文、安装目录，并创建桌面快捷方式。按当前用户安装，不需要管理员权限；已装 0.4.x 时会先移除旧版，设置与历史记录保留。
 
 需要 **Windows 10 及以上 x64**；不支持 macOS 和 Linux。安装包暂未进行代码签名，Windows SmartScreen 可能提示「Windows 已保护你的电脑」，点击 **更多信息 → 仍要运行** 即可。
 
