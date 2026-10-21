@@ -283,9 +283,12 @@ pub fn shape_line(g: &Gfx, cache: &mut Cache, src: &str, deco: &Deco, line: Rang
         (h.start - line.start, h.end - line.start).hash(&mut key);
     }
     for (r, w) in &widgets {
-        (r.start - line.start, r.end - line.start, format!("{w:?}")).hash(&mut key);
-        if let Widget::Image { src, .. } = w {
-            images(src).map(|(a, b)| (a.to_bits(), b.to_bits())).hash(&mut key);
+        (r.start - line.start, r.end - line.start).hash(&mut key);
+        match w {
+            // Draws nothing inside the line, and its ranges are absolute offsets.
+            Widget::CodeLang { .. } => {}
+            Widget::Image { src, .. } => (w, images(src).map(|(a, b)| (a.to_bits(), b.to_bits()))).hash(&mut key),
+            _ => w.hash(&mut key),
         }
     }
     for (r, m) in &marks {

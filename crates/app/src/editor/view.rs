@@ -24,7 +24,7 @@ pub struct View {
     deco_key: (u64, Sel, bool),
     pub lines: Vec<Line>,
     pub tables: Vec<TableView>,
-    layout_key: (u64, u32, u64),
+    layout_key: (u64, Option<usize>, u32, u64),
     cache: Cache,
     pub look: Look,
     pub scroll: f32,
@@ -74,7 +74,7 @@ impl View {
             deco_key: (u64::MAX, Sel::default(), false),
             lines: vec![],
             tables: vec![],
-            layout_key: (u64::MAX, 0, 0),
+            layout_key: (u64::MAX, None, 0, 0),
             cache: Cache::new(),
             look: Look::default(),
             scroll: 0.0,
@@ -133,12 +133,18 @@ impl View {
         let key = (self.buf.version, sel, self.searching);
         let mut changed = false;
         if key != self.deco_key {
-            let focus = Focus { from: sel.from(), to: sel.to(), head: sel.head, searching: self.searching };
-            self.deco = if self.look.source { source_deco(&self.buf.text) } else { deco::decorate(&self.buf.text, &focus) };
+            let old = self.deco_key.1;
+            let moved_only = key.0 == self.deco_key.0 && key.2 == self.deco_key.2 && !self.deco.reveals(old.from(), old.to(), old.head) && !self.deco.reveals(sel.from(), sel.to(), sel.head);
+            if !moved_only {
+                let focus = Focus { from: sel.from(), to: sel.to(), head: sel.head, searching: self.searching };
+                self.deco = if self.look.source { source_deco(&self.buf.text) } else { deco::decorate(&self.buf.text, &focus) };
+                changed = true;
+            }
             self.deco_key = key;
-            changed = true;
         }
-        let lk = (self.buf.version ^ (sel.head as u64) << 32 ^ sel.anchor as u64, self.content_w.to_bits(), self.look_gen ^ self.images.generation << 20);
+        // The caret only changes geometry inside a table, where its cell shows the source.
+        let table_caret = self.deco.tables.iter().any(|c| sel.head >= c.start && sel.head <= c.end).then_some(sel.head);
+        let lk = (self.buf.version, table_caret, self.content_w.to_bits(), self.look_gen ^ self.images.generation << 20);
         if !changed && lk == self.layout_key && self.fill_budget == 0 {
             return;
         }
@@ -182,14 +188,14 @@ impl View {
             let end = d.line_end(l, src);
             let ld = d.lines[l];
             let near = y >= near_top && y <= near_bottom;
-            let lazy = !near && budget == 0;
-            let shaped = match layout::shape_line(g, &mut self.cache, src, d, start..end, &ld, self.content_w, &self.look, t, &size_of, lazy) {
-                Some(s) => {
-                    if !near && budget > 0 {
-                        budget -= 1;
-                    }
-                    s
-                }
+            // The budget counts lines actually shaped: cached ones are free, or the
+            // fill would spend it on the top of the document and never finish.
+            let cached = layout::shape_line(g, &mut self.cache, src, d, start..end, &ld, self.content_w, &self.look, t, &size_of, !near);
+            let shaped = match cached.or_else(|| (budget > 0).then(|| {
+                budget -= 1;
+                layout::shape(g, &mut self.cache, src, d, start..end, &ld, self.content_w, &self.look, t, &size_of)
+            })) {
+                Some(s) => s,
                 None => {
                     pending = true;
                     layout::Shaped { text_h: layout::estimate(src, &(start..end), &ld, self.content_w, &self.look, t), ..layout::Shaped::empty() }
