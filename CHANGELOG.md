@@ -1,5 +1,10 @@
 # 更新记录
 
+## 0.5.2 · 2026-10-21
+
+- 换了应用图标：紫色文档页，右上角折角，上面是 Markdown 标志 M↓（16～32px 只画 M）。作者的几个桌面应用现在颜色和外形各不相同，在任务栏里一眼能分开。其他功能不变。
+- New app icon: a violet page with a folded corner and the Markdown mark M↓ (only the M at 16–32 px). The author's desktop apps now each have their own color and shape, so they are easy to tell apart in the taskbar. Nothing else changes.
+
 ## 0.5.1 · 2026-10-21
 
 - 修复输入时随机闪退：行排版缓存沿用旧偏移、跨行选区回车、多行图片说明文字、Shift+Tab 减少缩进时光标落入上一行。

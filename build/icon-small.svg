@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- 16-32px: the same page with only a bold M, so it stays readable. -->
+  <path d="M7.5 1 H20 L27 8 V28 A3 3 0 0 1 24 31 H7.5 A3 3 0 0 1 4.5 28 V4 A3 3 0 0 1 7.5 1 Z" fill="#9340EE"/>
+  <path d="M20 1 V6 A2 2 0 0 0 22 8 H27 Z" fill="#FFFFFF" fill-opacity="0.5"/>
+  <path d="M10 25 V14 L16 20.5 L22 14 V25" fill="none" stroke="#FFFFFF" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

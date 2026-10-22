@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="build/icon.png" width="112" height="112" alt="MDWisp 应用徽标" />
+  <img src="build/icon.svg" width="112" height="112" alt="MDWisp 应用徽标" />
 
 # MDWisp
 
@@ -9,7 +9,7 @@
 
 一款支持简体中文和 English 的 Markdown 桌面编辑器，面向写作、代码笔记与表格。
 
-原名 MDView，图标保持不变。旧设置与历史记录继续使用，仓库名称与新安装的 AI 技能统一使用 MDWisp。
+原名 MDView。旧设置与历史记录继续使用，仓库名称与新安装的 AI 技能统一使用 MDWisp。
 
 0.5 起 MDWisp 是用 Rust 编写的 Windows 原生应用：窗口约 90 毫秒出现，单进程内存约 60MB（0.4 的 Electron 版约 850 毫秒、450MB、4 个进程）。截图来自 0.4 版，0.5 保持相同布局。
 
@@ -37,7 +37,7 @@
 
 ## 下载与安装
 
-前往 **[Releases](https://github.com/ArthurLauCS/MDWisp/releases/latest)**，下载 `MDWisp-0.5.1-setup.exe`，也可自行构建（见[开发与验证](#开发与验证)）。安装时可以选择中英文、安装目录，并创建桌面快捷方式。按当前用户安装，不需要管理员权限；已装 0.4.x 时会先移除旧版，设置与历史记录保留。
+前往 **[Releases](https://github.com/ArthurLauCS/MDWisp/releases/latest)**，下载 `MDWisp-0.5.2-setup.exe`，也可自行构建（见[开发与验证](#开发与验证)）。安装时可以选择中英文、安装目录，并创建桌面快捷方式。按当前用户安装，不需要管理员权限；已装 0.4.x 时会先移除旧版，设置与历史记录保留。
 
 需要 **Windows 10 及以上 x64**；不支持 macOS 和 Linux。安装包暂未进行代码签名，Windows SmartScreen 可能提示「Windows 已保护你的电脑」，点击 **更多信息 → 仍要运行** 即可。
 
