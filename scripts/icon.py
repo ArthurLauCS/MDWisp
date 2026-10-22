@@ -1,4 +1,5 @@
-"""Build crates/app/assets/app.ico and app.res from build/icon.svg.
+"""Build crates/app/assets/app.ico and app.res from build/icon.svg (40px and up)
+and build/icon-small.svg (16-32px).
 
 Each size is rasterised separately by headless Chrome (a small icon is not a
 shrunk big one), Pillow packs the .ico, rc.exe compiles the resource with the
@@ -17,6 +18,7 @@ from PIL import Image
 ROOT = Path(__file__).resolve().parent.parent
 ASSETS = ROOT / "crates" / "app" / "assets"
 SVG = ROOT / "build" / "icon.svg"
+SMALL = ROOT / "build" / "icon-small.svg"
 CHROME = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
 SIZES = [16, 20, 24, 32, 40, 48, 64, 256]
 
@@ -25,7 +27,8 @@ def render() -> dict[int, Image.Image]:
     # Every size side by side on one page, one screenshot, then cropped apart.
     x, cells = 0, []
     for s in SIZES:
-        cells.append(f'<img src="{SVG.as_uri()}" style="position:absolute;left:{x}px;top:0;width:{s}px;height:{s}px">')
+        svg = SMALL if s <= 32 else SVG
+        cells.append(f'<img src="{svg.as_uri()}" style="position:absolute;left:{x}px;top:0;width:{s}px;height:{s}px">')
         x += s + 8
     with tempfile.TemporaryDirectory() as tmp:
         page, shot = Path(tmp) / "sheet.html", Path(tmp) / "sheet.png"

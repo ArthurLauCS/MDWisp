@@ -1,22 +1,16 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <!-- App icon (40px and up): a violet page with a folded corner carrying the Markdown mark, M and a down arrow. -->
   <defs>
-    <linearGradient id="tile" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#32312e"/>
-      <stop offset="1" stop-color="#1a1918"/>
-    </linearGradient>
-    <linearGradient id="bar" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#e88a69"/>
-      <stop offset="1" stop-color="#c96a4c"/>
-    </linearGradient>
-    <linearGradient id="glow" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0" stop-color="#d97757" stop-opacity=".26"/>
-      <stop offset="1" stop-color="#d97757" stop-opacity="0"/>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#C79BFF"/>
+      <stop offset="0.55" stop-color="#9340EE"/>
+      <stop offset="1" stop-color="#6B21C8"/>
     </linearGradient>
   </defs>
-  <rect x="64" y="64" width="896" height="896" rx="208" fill="url(#tile)"/>
-  <rect x="67" y="67" width="890" height="890" rx="205" fill="none" stroke="#f5f4ef" stroke-opacity=".09" stroke-width="6"/>
-  <!-- The app's H1: an accent bar whose glow fades into the page. -->
-  <rect x="228" y="248" width="620" height="528" rx="26" fill="url(#glow)"/>
-  <rect x="202" y="248" width="52" height="528" rx="26" fill="url(#bar)"/>
-  <path d="M388 696V328L570 568L752 328V696" fill="none" stroke="#f5f4ef" stroke-width="84" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M64 14 H164 L222 72 V218 A24 24 0 0 1 198 242 H64 A24 24 0 0 1 40 218 V38 A24 24 0 0 1 64 14 Z" fill="url(#bg)"/>
+  <path d="M164 14 V56 A16 16 0 0 0 180 72 H222 Z" fill="#FFFFFF" fill-opacity="0.45"/>
+  <g fill="none" stroke="#FFFFFF" stroke-width="22" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M72 194 V114 L102 152 L132 114 V194"/>
+    <path d="M176 114 V192 M154 170 L176 192 L198 170"/>
+  </g>
 </svg>

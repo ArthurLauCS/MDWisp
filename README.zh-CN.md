@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="build/icon.png" width="112" height="112" alt="MDWisp 应用徽标" />
+  <img src="build/icon.svg" width="112" height="112" alt="MDWisp 应用徽标" />
 
 # MDWisp
 
@@ -9,7 +9,7 @@
 
 一款支持简体中文和 English 的 Markdown 桌面编辑器，面向写作、代码笔记与表格。
 
-原名 MDView，图标保持不变。旧设置与历史记录继续使用，仓库名称与新安装的 AI 技能统一使用 MDWisp。
+原名 MDView。旧设置与历史记录继续使用，仓库名称与新安装的 AI 技能统一使用 MDWisp。
 
 0.5 起 MDWisp 是用 Rust 编写的 Windows 原生应用：窗口约 90 毫秒出现，单进程内存约 60MB（0.4 的 Electron 版约 850 毫秒、450MB、4 个进程）。截图来自 0.4 版，0.5 保持相同布局。
 

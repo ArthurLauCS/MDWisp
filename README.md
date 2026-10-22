@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="build/icon.png" width="112" height="112" alt="MDWisp icon" />
+  <img src="build/icon.svg" width="112" height="112" alt="MDWisp icon" />
 
 # MDWisp
 
@@ -18,7 +18,7 @@ A local Markdown desktop editor for writing, code notes and tables, with English
   <img src="docs/images/editor-dark.png" alt="Editor with outline, live Markdown, code highlighting and tables" width="100%" />
 </picture>
 
-Formerly **MDView**. The icon is unchanged. Existing settings and history remain compatible. The repository and new AI skill installations use MDWisp. The screenshots show the 0.4 Chinese interface; 0.5 keeps the same layout.
+Formerly **MDView**. Existing settings and history remain compatible. The repository and new AI skill installations use MDWisp. The screenshots show the 0.4 Chinese interface; 0.5 keeps the same layout.
 
 Since 0.5 MDWisp is a native Windows app written in Rust: the window appears in about 90 ms and uses about 60 MB of memory in one process (0.4 on Electron: about 850 ms, 450 MB, four processes).
 
