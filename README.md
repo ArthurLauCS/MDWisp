@@ -33,7 +33,7 @@ Since 0.5 MDWisp is a native Windows app written in Rust: the window appears in 
 
 ## Download and installation
 
-Download `MDWisp-0.5.2-setup.exe` from [Releases](https://github.com/ArthurLauCS/MDWisp/releases/latest), or build it yourself (see [Development](#development-and-verification)). It needs Windows 10 or later, x64. Installation offers English and Simplified Chinese, a directory choice and a desktop shortcut. It installs for the current user without administrator rights, and removes an installed 0.4.x version while keeping its settings and history.
+Download `MDWisp-0.5.3-setup.exe` from [Releases](https://github.com/ArthurLauCS/MDWisp/releases/latest), or build it yourself (see [Development](#development-and-verification)). It needs Windows 10 or later, x64. Installation offers English and Simplified Chinese, a directory choice and a desktop shortcut. It installs for the current user without administrator rights, and removes an installed 0.4.x version while keeping its settings and history.
 
 The installer is unsigned, so Windows SmartScreen may show "Windows protected your PC". Choose **More info → Run anyway**. macOS and Linux are not supported.
 
@@ -46,7 +46,7 @@ The installer is unsigned, so Windows SmartScreen may show "Windows protected yo
 3. Save before pasting, dropping or inserting images. Images are copied beside the document with relative links and listed in the sidebar.
 4. Organize a loose file into a document folder, then use **Ctrl+Shift+E** to export.
 
-New documents, opened files and repeated shortcut launches use independent windows, preserving the current document and its unsaved edits. After the first save, autosave and history follow **Settings → Documents & saving**. Closing a window offers Save, Don't save and Cancel for unsaved edits. A failed save keeps that window open. A stale save cannot overwrite changes made by another window.
+New documents, opened files and repeated shortcut launches use independent windows, preserving the current document and its unsaved edits. A document that is already open is not opened twice: its window comes to the front. New windows open in front, one title bar below and right of the previous window so its title bar stays in reach. After the first save, autosave and history follow **Settings → Documents & saving**. Closing a window offers Save, Don't save and Cancel for unsaved edits. A failed save keeps that window open. A stale save cannot overwrite changes made by another window.
 
 ## Editing and layout
 

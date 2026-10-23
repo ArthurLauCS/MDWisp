@@ -18,7 +18,7 @@ mod watch;
 mod win;
 mod window;
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::{Arc, OnceLock};
 use std::time::Instant;
 
@@ -28,6 +28,7 @@ use mdwisp_core::i18n::Locale;
 use mdwisp_core::settings::{AppSettings, Settings, ThemeMode};
 use windows::Win32::Foundation::*;
 use windows::Win32::Globalization::GetUserDefaultUILanguage;
+use windows::Win32::Graphics::Gdi::{GetMonitorInfoW, MONITOR_DEFAULTTONEAREST, MONITORINFO, MonitorFromWindow};
 use windows::Win32::System::Com::{COINIT_APARTMENTTHREADED, CoInitializeEx};
 use windows::Win32::System::DataExchange::COPYDATASTRUCT;
 use windows::Win32::System::Threading::CreateMutexW;
@@ -223,8 +224,16 @@ pub fn resource_dir(name: &str) -> Option<PathBuf> {
 }
 
 /// Open a window; `path` None restores the session (first window) or starts a draft.
+/// A document already open in a window brings that window forward instead.
 pub fn open_window(path: Option<PathBuf>, fragment: String, first: bool) {
     let a = app();
+    if let Some(h) = path.as_deref().and_then(window_of) {
+        if let Some(w) = win::window(h).filter(|_| !fragment.is_empty()) {
+            w.jump_to_fragment(&fragment);
+        }
+        win::to_front(h);
+        return;
+    }
     let restore = first && !a.restored;
     a.restored = true;
     let mut w = window::Window::new(restore);
@@ -233,8 +242,39 @@ pub fn open_window(path: Option<PathBuf>, fragment: String, first: bool) {
         w.error = Some(e);
         let _ = w.load_initial(None, String::new());
     }
-    let hwnd = win::create(w, CW_USEDEFAULT, CW_USEDEFAULT, scaled(1280), scaled(840), false);
+    let (cw, ch) = (scaled(1280), scaled(840));
+    let (x, y) = cascade(cw, ch);
+    let hwnd = win::create(w, x, y, cw, ch, false);
+    // A window opened from another app (Explorer, a second launch) would stay behind it.
+    // The first one shows the way it was launched (a shortcut set to run minimised).
+    if !first {
+        win::to_front(hwnd);
+    }
     a.windows.push(hwnd);
+}
+
+/// The window showing the document at `path`, compared as files on disk (case, `..`, links).
+fn window_of(path: &Path) -> Option<HWND> {
+    let want = std::fs::canonicalize(path).ok()?;
+    let shown = |h: &HWND| std::fs::canonicalize(win::window(*h)?.doc.as_ref()?.path()?).ok();
+    app().windows.iter().copied().find(|h| shown(h).as_ref() == Some(&want))
+}
+
+/// One title bar below and right of the last window on screen, so that window's title bar
+/// stays in reach for dragging; back to the work area's top-left once past its bottom-right.
+fn cascade(cw: i32, ch: i32) -> (i32, i32) {
+    let Some(&last) = app().windows.iter().rev().find(|h| unsafe { !IsIconic(**h).as_bool() }) else { return (CW_USEDEFAULT, CW_USEDEFAULT) };
+    unsafe {
+        let mut r = RECT::default();
+        let _ = GetWindowRect(last, &mut r);
+        let mut mi = MONITORINFO { cbSize: size_of::<MONITORINFO>() as u32, ..Default::default() };
+        let _ = GetMonitorInfoW(MonitorFromWindow(last, MONITOR_DEFAULTTONEAREST), &mut mi);
+        let m = mi.rcWork;
+        let d = (theme::TITLEBAR_H * win::dpi_of(last) / 96.0) as i32;
+        let (x, y) = (r.left + d, r.top + d);
+        // A window larger than the work area never fits: restart only when the last one isn't already at the corner.
+        if (x + cw > m.right || y + ch > m.bottom) && (r.left, r.top) != (m.left, m.top) { (m.left, m.top) } else { (x, y) }
+    }
 }
 
 fn scaled(px: i32) -> i32 {
