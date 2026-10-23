@@ -1,5 +1,14 @@
 # 更新记录
 
+## 0.5.3 · 2026-10-22
+
+- 打开已在窗口中的文档时不再新开窗口，而是把那个窗口切到最前（最小化的会还原，带 #标题 的链接会跳到该标题）。
+- 新打开的窗口会切到最前面，包括从资源管理器打开时。
+- 新窗口相对上一个窗口向右下错开一个标题栏的距离，露出下面窗口的标题栏便于拖动；超出屏幕时从左上角重新开始。
+- Opening a document that is already open no longer starts another window; its window comes to the front (restored if minimized, and a link's #heading is followed).
+- New windows come to the front, including ones opened from File Explorer.
+- New windows open one title bar below and right of the previous window, so its title bar stays in reach for dragging; past the screen's edge they start again at the top-left.
+
 ## 0.5.2 · 2026-10-21
 
 - 换了应用图标：紫色文档页，右上角折角，上面是 Markdown 标志 M↓（16～32px 只画 M）。作者的几个桌面应用现在颜色和外形各不相同，在任务栏里一眼能分开。其他功能不变。
