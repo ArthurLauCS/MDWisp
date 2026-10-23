@@ -83,6 +83,20 @@ pub fn is_maximized(hwnd: HWND) -> bool {
     unsafe { IsZoomed(hwnd).as_bool() }
 }
 
+/// Raise the window and give it the keyboard, restoring it if minimised.
+/// Scripted test runs never take the focus from the user.
+pub fn to_front(hwnd: HWND) {
+    if std::env::var("MDWISP_SCRIPT").is_ok() {
+        return;
+    }
+    unsafe {
+        if IsIconic(hwnd).as_bool() {
+            let _ = ShowWindow(hwnd, SW_RESTORE);
+        }
+        let _ = SetForegroundWindow(hwnd);
+    }
+}
+
 pub fn dpi_of(hwnd: HWND) -> f32 {
     unsafe { GetDpiForWindow(hwnd) as f32 }
 }

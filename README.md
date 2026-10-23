@@ -46,7 +46,7 @@ The installer is unsigned, so Windows SmartScreen may show "Windows protected yo
 3. Save before pasting, dropping or inserting images. Images are copied beside the document with relative links and listed in the sidebar.
 4. Organize a loose file into a document folder, then use **Ctrl+Shift+E** to export.
 
-New documents, opened files and repeated shortcut launches use independent windows, preserving the current document and its unsaved edits. After the first save, autosave and history follow **Settings → Documents & saving**. Closing a window offers Save, Don't save and Cancel for unsaved edits. A failed save keeps that window open. A stale save cannot overwrite changes made by another window.
+New documents, opened files and repeated shortcut launches use independent windows, preserving the current document and its unsaved edits. A document that is already open is not opened twice: its window comes to the front. New windows open in front, one title bar below and right of the previous window so its title bar stays in reach. After the first save, autosave and history follow **Settings → Documents & saving**. Closing a window offers Save, Don't save and Cancel for unsaved edits. A failed save keeps that window open. A stale save cannot overwrite changes made by another window.
 
 ## Editing and layout
 
