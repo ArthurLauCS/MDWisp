@@ -166,16 +166,16 @@ impl Images {
                 let rt: &ID2D1RenderTarget = &g.dc;
                 if let Ok(brush) = rt.CreateBitmapBrush(bmp, Some(&props), None) {
                     brush.SetTransform(&(Matrix3x2::scale(r.w / size.width, r.h / size.height) * Matrix3x2::translation(r.x, r.y)));
-                    g.dc.FillRoundedRectangle(&D2D1_ROUNDED_RECT { rect: r.d2d(), radiusX: 8.0, radiusY: 8.0 }, &brush);
+                    g.dc.FillRoundedRectangle(&D2D1_ROUNDED_RECT { rect: r.d2d(), radiusX: 0.0, radiusY: 0.0 }, &brush);
                 }
                 if e < 0.999 {
                     g.dc.PopLayer();
                 }
             },
-            Some(Entry::Loading) => g.fill_round(r, 8.0, t.bg_raised),
+            Some(Entry::Loading) => g.fill(r, t.bg_raised),
             _ => {
                 // A missing asset is a designed state, not a broken-image glyph.
-                g.fill_round(r, 8.0, t.bg_raised);
+                g.fill(r, t.bg_raised);
                 g.clip(r);
                 let mut x = r.x - r.h;
                 while x < r.right() {
@@ -183,7 +183,7 @@ impl Images {
                     x += 22.6;
                 }
                 g.unclip();
-                g.stroke_round(r, 8.0, t.border_strong, 1.0);
+                g.stroke_round(r, 0.0, t.border_strong, 1.0);
                 if !alt.is_empty() {
                     let l = g.layout(alt, Style::new(Stack::Ui, crate::theme::TEXT_SM), r.w - 16.0);
                     let m = metrics(&l);

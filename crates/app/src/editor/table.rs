@@ -180,19 +180,14 @@ pub fn paint(g: &Gfx, t: &Theme, tv: &TableView, x: f32, y: f32, caret_cell: Opt
     let y = y + PAD_Y;
     let w = tv.width();
     let h: f32 = tv.rows.iter().sum();
-    let outer = Rect::new(x, y, w, h);
-    g.fill_round(outer, 8.0, t.bg_base);
-    // Header row background, clipped to the rounded frame.
-    g.clip(Rect::new(x, y, w, tv.rows[0]));
-    g.fill_round(Rect::new(x, y, w, tv.rows[0] + 8.0), 8.0, t.bg_raised);
-    g.unclip();
+    // Booktabs: no frame, no vertical lines, no zebra; the rules are drawn below.
     let mut ry = y;
     for (row, rh) in tv.rows.iter().enumerate() {
         if row > 0 && hover_row == Some(row) {
-            g.fill(Rect::new(x + 1.0, ry, w - 2.0, *rh - 1.0), t.bg_hover);
+            g.fill(Rect::new(x, ry, w, *rh), t.bg_hover);
         }
-        if row + 1 < tv.rows.len() {
-            g.fill(Rect::new(x + 1.0, ry + rh - 1.0, w - 2.0, 1.0), if row == 0 { t.border_strong } else { t.border_soft });
+        if row == 0 && tv.rows.len() > 1 {
+            g.fill(Rect::new(x, ry + rh - 1.0, w, 1.0), t.text_primary);
         }
         let mut cx = x;
         for (col, cw) in tv.cols.iter().enumerate() {
@@ -212,7 +207,7 @@ pub fn paint(g: &Gfx, t: &Theme, tv: &TableView, x: f32, y: f32, caret_cell: Opt
             if let Some(l) = &c.shaped.layout {
                 for (r, _) in &c.shaped.backgrounds {
                     for rr in super::view::range_rects(l, r.start, r.end) {
-                        g.fill_round(Rect::new(cx + CELL_PX + rr.x - 1.0, ry + CELL_PY + rr.y + rr.h * 0.19, rr.w + 2.0, rr.h * 0.62), 5.0, t.bg_inset);
+                        g.fill_round(Rect::new(cx + CELL_PX + rr.x - 1.0, ry + CELL_PY + rr.y + rr.h * 0.19, rr.w + 2.0, rr.h * 0.62), 0.0, t.bg_inset);
                     }
                 }
                 g.text(l, cx + CELL_PX, ry + CELL_PY, t.text_primary);
@@ -221,5 +216,7 @@ pub fn paint(g: &Gfx, t: &Theme, tv: &TableView, x: f32, y: f32, caret_cell: Opt
         }
         ry += rh;
     }
-    g.stroke_round(outer, 8.0, t.border_soft, 1.0);
+    // Top and bottom rules, 1.5 px in the text colour.
+    g.fill(Rect::new(x, y - 0.75, w, 1.5), t.text_primary);
+    g.fill(Rect::new(x, y + h - 0.75, w, 1.5), t.text_primary);
 }

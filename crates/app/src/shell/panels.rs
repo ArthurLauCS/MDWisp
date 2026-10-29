@@ -17,7 +17,7 @@ use super::widgets::{BTN_H, Btn, Field, button, button_width};
 use crate::actions::{ACTIONS, GROUPS, Scope};
 use crate::gfx::{Gfx, Rect, Stack, Style, metrics};
 use crate::keys::Mods;
-use crate::theme::{self, RADIUS_MD, RADIUS_SM, RADIUS_XL, S1, S2, S3, S4, S6, S8, TEXT_BASE, TEXT_SM, TEXT_XL, TEXT_XS};
+use crate::theme::{self, RADIUS_MD, RADIUS_SM, RADIUS_XL, S1, S2, S3, S4, S6, S8, TEXT_BASE, TEXT_LG, TEXT_SM, TEXT_XS};
 use crate::ui::Hit;
 use crate::window::Window;
 use crate::{app, dialog, win};
@@ -252,6 +252,9 @@ const C_COPY_SKILL: u32 = 64; // 64..
 const C_NAV: u32 = 80; // 80..=84 settings sections
 
 const SECTIONS: [&str; 5] = ["外观与字体", "文档与保存", "编辑器", "图片", "快捷键"];
+const NAV_STYLE: Style = Style::new(Stack::Ui, TEXT_BASE);
+/// The nav row's inset plus the label's inset inside it, both sides.
+const NAV_PAD: f32 = S2 * 2.0 + S3 * 2.0;
 
 fn opts(labels: &[&str]) -> Vec<String> {
     labels.iter().map(|l| t(l).to_string()).collect()
@@ -304,7 +307,7 @@ fn settings_items(p: &Panel, w: &Window, section: usize) -> Vec<Item> {
                 row("主题", "深色为基础主题，浅色由同一色相提亮推导", Ctrl::Seg { id: C_THEME, options: opts(&["深色", "浅色", "跟随系统"]), current: s.theme as usize }),
                 Item::Row {
                     name: t("动效强度").into(),
-                    hint: Some(t(["入场、视差、反馈动效与背景模糊全部保留", "只保留表达状态变化的反馈动效", "不做过渡，但状态切换仍然可见"][s.motion as usize]).into()),
+                    hint: Some(t(["入场、反馈动效全部保留", "只保留表达状态变化的反馈动效", "不做过渡，但状态切换仍然可见"][s.motion as usize]).into()),
                     ctrl: Ctrl::Seg { id: C_MOTION, options: opts(&["完整", "精简", "关闭动效"]), current: s.motion as usize },
                 },
                 row("硬件加速", "用显卡绘制界面；显示异常时关闭，改用处理器绘制", Ctrl::Switch { id: C_GPU, on: s.hardware_acceleration }),
@@ -603,18 +606,11 @@ fn layout(ui: &mut crate::ui::Ui, g: &Gfx, items: &[Item], x: f32, y: f32, w: f3
                 if n > 0 {
                     p.y += S8;
                 }
-                let style = if *display { Style::new(Stack::Display, TEXT_BASE) } else { Style::new(Stack::Ui, TEXT_XS).weight(600) };
-                let l = p.text(&title.to_uppercase(), style, p.w);
-                if !*display {
-                    unsafe {
-                        if let Ok(l1) = windows::core::Interface::cast::<windows::Win32::Graphics::DirectWrite::IDWriteTextLayout1>(&l) {
-                            let _ = l1.SetCharacterSpacing(0.0, 0.09 * TEXT_XS, 0.0, windows::Win32::Graphics::DirectWrite::DWRITE_TEXT_RANGE { startPosition: 0, length: 1000 });
-                        }
-                    }
-                }
+                let style = if *display { Style::new(Stack::Display, TEXT_BASE).weight(700) } else { Style::new(Stack::Ui, TEXT_SM).weight(700) };
+                let l = p.text(title, style, p.w);
                 let m = metrics(&l);
                 if p.paint {
-                    g.text(&l, p.x, p.y, if *display { th.text_secondary } else { th.text_tertiary });
+                    g.text(&l, p.x, p.y, th.text_primary);
                 }
                 if let Some((id, label)) = aside.as_ref().filter(|(id, _)| *id == C_CATEGORY) {
                     let al = p.text(label, Style::new(Stack::Ui, TEXT_SM).weight(600), 400.0);
@@ -871,7 +867,7 @@ fn ctrl_height(c: &Ctrl) -> f32 {
     match c {
         Ctrl::None => 0.0,
         Ctrl::Seg { .. } => TEXT_XS * 1.5 + S1 * 2.0 + 4.0,
-        Ctrl::Switch { .. } => 20.0,
+        Ctrl::Switch { .. } => 16.0,
         Ctrl::Field { .. } => TEXT_SM * 1.5 + S1 * 2.0 + 2.0,
         Ctrl::Buttons(_) => BTN_H,
     }
@@ -881,7 +877,7 @@ fn ctrl_width(g: &Gfx, c: &Ctrl, full: f32) -> f32 {
     match c {
         Ctrl::None => 0.0,
         Ctrl::Seg { options, .. } => options.iter().map(|o| metrics(&g.layout(o, Style::new(Stack::Ui, TEXT_XS), 1000.0)).w + S3 * 2.0 + 2.0).sum::<f32>() + 4.0,
-        Ctrl::Switch { .. } => 34.0,
+        Ctrl::Switch { .. } => 16.0,
         Ctrl::Field { width, unit, .. } => {
             if *width == 0.0 {
                 full
@@ -899,6 +895,7 @@ fn paint_ctrl(ui: &mut crate::ui::Ui, g: &Gfx, c: &Ctrl, r: Rect, hits: &mut Vec
         Ctrl::None => {}
         Ctrl::Seg { id, options, current } => {
             g.fill_round(r, RADIUS_MD, th.bg_inset);
+            g.stroke_round(r, RADIUS_MD, th.border_soft, 1.0);
             let mut x = r.x + 2.0;
             for (i, o) in options.iter().enumerate() {
                 let l = g.layout(o, Style::new(Stack::Ui, TEXT_XS), 1000.0);
@@ -907,8 +904,8 @@ fn paint_ctrl(ui: &mut crate::ui::Ui, g: &Gfx, c: &Ctrl, r: Rect, hits: &mut Vec
                 let hit = Hit::PanelControl(id * 16 + i as u32);
                 let on = i == *current;
                 if on {
-                    g.shadow(cell, RADIUS_SM, 2.0, 1.0, 0.28 * th.shadow);
-                    g.fill_round(cell, RADIUS_SM, th.bg_raised);
+                    g.fill_round(cell, RADIUS_SM, th.bg_base);
+                    g.fill(Rect::new(cell.x, cell.bottom() - 2.0, cell.w, 2.0), th.text_primary);
                 }
                 let c = if on { th.text_primary } else { theme::mix(th.text_secondary, th.text_tertiary, ui.hover_t(hit)) };
                 g.text(&l, cell.x + S3, cell.y + (cell.h - m.h) / 2.0, c);
@@ -919,11 +916,13 @@ fn paint_ctrl(ui: &mut crate::ui::Ui, g: &Gfx, c: &Ctrl, r: Rect, hits: &mut Vec
         Ctrl::Switch { id, on } => {
             let hit = Hit::PanelControl(id * 16);
             let k = ui.value((hit, 3), if *on { 1.0 } else { 0.0 });
-            let track = Rect::new(r.x, r.y, 34.0, 20.0);
-            g.fill_round(track, 10.0, theme::mix(th.accent_soft, th.bg_inset, k));
-            g.stroke_round(track, 10.0, theme::mix(th.accent_line, th.border_strong, k), 1.0);
-            let knob = Rect::new(track.x + 3.0 + 14.0 * k, track.y + 3.0, 14.0, 14.0);
-            g.fill_round(knob, 7.0, theme::mix(th.accent, th.text_tertiary, k));
+            // A checkbox: the style has no toggle switch.
+            let track = Rect::new(r.x, r.y, 16.0, 16.0);
+            g.fill(track, theme::with_alpha(th.accent, k));
+            g.stroke_round(track, 0.0, theme::mix(th.accent, th.border_strong, k), 1.5);
+            let tick = theme::with_alpha(th.on_accent, k);
+            g.line(track.x + 4.0, track.y + 8.4, track.x + 6.8, track.y + 11.0, tick, 2.0);
+            g.line(track.x + 6.8, track.y + 11.0, track.x + 12.0, track.y + 5.0, tick, 2.0);
             hits.push((track, hit));
         }
         Ctrl::Field { id, width, unit, enabled, .. } => {
@@ -954,7 +953,7 @@ pub fn paint(w: &mut Window, g: &Gfx) {
     let th = app().theme;
     let Some(Modal::Panel(p)) = &w.modal else { return };
     let opened = p.opened;
-    let (fade, e) = panel_scrim(w, g, opened);
+    let (fade, _) = panel_scrim(w, g, opened);
     if let Some(Modal::Panel(Panel { kind: Kind::Image { path }, .. })) = &w.modal {
         let path = path.clone();
         image_view(w, g, path, fade);
@@ -972,31 +971,27 @@ pub fn paint(w: &mut Window, g: &Gfx) {
     let pw = (ww - S6 * 2.0).min(wide);
     let max_h = wh * 0.78;
     let x = (ww - pw) / 2.0;
-    let y = wh * 0.1 - 10.0 * (1.0 - e);
-    let head_h = S4 * 2.0 + if settings { TEXT_XL * 1.4 } else { TEXT_BASE * 1.5 };
+    let y = wh * 0.1;
+    let head_h = S4 * 2.0 + TEXT_LG * 1.5;
     // Footer content.
     let (foot_l, foot_r, foot_btn) = footer(p, w);
     let foot_h = if foot_btn.is_some() { S3 * 2.0 + BTN_H } else { S3 * 2.0 + TEXT_XS * 1.5 };
     let has_foot = !foot_l.is_empty() || foot_btn.is_some();
     // Items and their height decide the panel height (settings is fixed at 78vh).
-    let nav_w = if settings { 160.0 } else { 0.0 };
+    // At least 160, and wide enough that no section name wraps (the English ones run longest).
+    let nav_w = if settings { SECTIONS.iter().map(|l| metrics(&g.layout(t(l), NAV_STYLE, 1.0e4)).w + NAV_PAD).fold(160.0, f32::max) } else { 0.0 };
     let body_w = pw - nav_w - S6 * 2.0;
     let items = items_for(p, w);
     let mut scratch = vec![];
     let content_h = layout(&mut w.ui, g, &items, 0.0, 0.0, body_w, false, &mut scratch) + S6 * 2.0;
     let ph = if settings { max_h } else { (head_h + content_h + if has_foot { foot_h } else { 0.0 }).min(max_h) };
-    let scale = 0.985 + 0.015 * e;
-    let r = Rect::new(x + pw * (1.0 - scale) / 2.0, y, pw * scale, ph);
+    let r = Rect::new(x, y, pw, ph);
     let focused = w.focused;
     g.with_opacity(fade, || {
-        g.shadow(r, RADIUS_XL, 32.0, 24.0, 0.55 * th.shadow);
         g.fill_round(r, RADIUS_XL, th.bg_overlay);
         g.stroke_round(r, RADIUS_XL, th.border_strong, 1.0);
-        let clear = crate::theme::Color { a: 0.0, ..th.accent };
-        let rule = g.gradient(r.x, r.right(), r.y, &[(0.0, clear), (0.5, theme::with_alpha(th.accent, 0.7)), (1.0, clear)]);
-        g.fill_with(Rect::new(r.x + RADIUS_XL, r.y, r.w - RADIUS_XL * 2.0, 1.0), 0.0, &rule.into());
         // Head.
-        let tl = g.layout(title, Style::new(Stack::Display, if settings { TEXT_XL } else { TEXT_BASE }).weight(620), r.w);
+        let tl = g.layout(title, Style::new(Stack::Display, TEXT_LG).weight(620), r.w);
         let tm = metrics(&tl);
         g.text(&tl, r.x + S6, r.y + (head_h - tm.h) / 2.0, th.text_primary);
         g.fill(Rect::new(r.x, r.y + head_h - 1.0, r.w, 1.0), th.border_soft);
@@ -1044,16 +1039,17 @@ pub fn paint(w: &mut Window, g: &Gfx) {
             g.fill(Rect::new(nav.right() - 1.0, nav.y, 1.0, nav.h), th.border_soft);
             let mut y = nav.y + S4;
             for (i, label) in SECTIONS.iter().enumerate() {
-                let l = g.layout(t(label), Style::new(Stack::Ui, TEXT_BASE), nav.w - S2 * 2.0 - S3 * 2.0);
+                let l = g.layout(t(label), NAV_STYLE, nav.w - NAV_PAD);
                 let row = Rect::new(nav.x + S2, y, nav.w - S2 * 2.0, metrics(&l).h + S3 * 2.0);
                 let hit = Hit::PanelControl((C_NAV + i as u32) * 16);
                 let on = i == section;
                 if on {
                     g.fill_round(row, RADIUS_SM, th.accent_soft);
+                    g.fill(Rect::new(row.x, row.y, 2.0, row.h), th.text_primary);
                 } else {
                     g.fill_round(row, RADIUS_SM, theme::with_alpha(th.bg_hover, ui.hover_t(hit)));
                 }
-                g.text(&l, row.x + S3, row.y + S3, if on { th.accent } else { th.text_secondary });
+                g.text(&l, row.x + S3, row.y + S3, if on { th.text_primary } else { th.text_secondary });
                 ui.region(row, hit);
                 y += row.h;
             }
@@ -1092,7 +1088,7 @@ pub fn paint(w: &mut Window, g: &Gfx) {
         g.with_opacity(fade, || {
             g.stroke_round(*fr, RADIUS_SM, if on { th.accent_line } else { th.border_soft }, 1.0);
             let placeholder = match *id {
-                F_ACCENT => "#d97757",
+                F_ACCENT => "#6a4c9c",
                 F_SEARCH => t("搜索命令或按键…"),
                 F_FONT_UI..=F_FONT_CODE => t("输入本机字体名称；留空使用默认"),
                 _ => "",

@@ -133,7 +133,7 @@ pub fn paint(w: &mut Window, g: &Gfx) {
     let (x, y) = place(m.x, m.y, mw, mh, ww, wh);
     let k = (m.opened.elapsed().as_secs_f32() * 1000.0 / Dur::Fast.ms(w.ui.motion)).min(1.0);
     let e = Ease::Out.at(k);
-    let r = Rect::new(x, y - 4.0 * (1.0 - e), mw, mh);
+    let r = Rect::new(x, y, mw, mh);
     let rects = paint_list(g, r, &m.entries, m.active, e);
     m.rects = rects;
     w.ui.region(Rect::new(0.0, 0.0, ww, wh), Hit::Backdrop);
@@ -165,7 +165,6 @@ fn paint_list(g: &Gfx, r: Rect, entries: &[Entry], active: Option<usize>, opacit
     let th = app().theme;
     let mut rects = vec![];
     g.with_opacity(opacity, || {
-        g.shadow(r, RADIUS_LG, 24.0, 10.0, 0.46 * th.shadow);
         g.fill_round(r, RADIUS_LG, th.bg_overlay);
         g.stroke_round(r, RADIUS_LG, th.border_strong, 1.0);
         g.clip(r.inset(1.0));

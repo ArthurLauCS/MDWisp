@@ -1,6 +1,5 @@
 //! Design tokens — the single source of every colour, space and motion value,
-//! ported from `tokens.css`. Dark is the primary theme; light lifts lightness
-//! in the same hue. No colour literal belongs anywhere else in the app.
+//! ported from `tokens.css`, in the `paper` style (light is the primary theme). No colour literal belongs anywhere else in the app.
 
 use windows::Win32::Graphics::Direct2D::Common::D2D1_COLOR_F;
 
@@ -39,6 +38,8 @@ pub struct Theme {
     pub text_tertiary: Color,
     pub text_disabled: Color,
     pub accent: Color,
+    /// Text and glyphs on a filled accent.
+    pub on_accent: Color,
     pub accent_hover: Color,
     pub accent_press: Color,
     pub accent_soft: Color,
@@ -55,76 +56,82 @@ pub struct Theme {
     pub hl_type: Color,
     pub hl_punct: Color,
     pub hl_attr: Color,
-    pub shadow: f32,
 }
 
+/// Style `paper` (LaTeX paper), see the ui-style catalog: warm off-white
+/// stock, ink text, booktabs rules, radius 0, no shadows. The accent is
+/// MDWisp's own hue (muted grape); links share it, so there is one accent.
 pub const DARK: Theme = Theme {
     dark: true,
-    bg_base: hex(0x1f1e1d),
-    bg_raised: hex(0x262624),
-    bg_overlay: hex(0x30302e),
-    bg_inset: hex(0x191918),
-    bg_hover: rgba(245, 244, 239, 0.045),
-    bg_active: rgba(245, 244, 239, 0.075),
-    border_soft: hex(0x33322f),
-    border_strong: hex(0x45443f),
-    text_primary: hex(0xf5f4ef),
-    text_secondary: hex(0xb8b5ad),
-    text_tertiary: hex(0x8a877e),
-    text_disabled: hex(0x5c5a54),
-    accent: hex(0xd97757),
-    accent_hover: hex(0xe08263),
-    accent_press: hex(0xc96a4c),
-    accent_soft: rgba(217, 119, 87, 0.14),
-    accent_line: rgba(217, 119, 87, 0.35),
-    success: hex(0x7ba88a),
-    warning: hex(0xd9a95c),
-    danger: hex(0xc9645c),
-    link: hex(0x8ab4c4),
-    hl_keyword: hex(0xc98a6b),
-    hl_string: hex(0x9cb380),
-    hl_number: hex(0xd9a95c),
-    hl_comment: hex(0x6e6b64),
-    hl_func: hex(0x7fb3c8),
-    hl_type: hex(0xb79bd1),
-    hl_punct: hex(0x8a877e),
-    hl_attr: hex(0xd9a95c),
-    shadow: 1.0,
+    bg_base: hex(0x1a1a18),
+    bg_raised: hex(0x212120),
+    bg_overlay: hex(0x2a2a27),
+    bg_inset: hex(0x212120),
+    bg_hover: rgba(232, 230, 223, 0.045),
+    bg_active: rgba(232, 230, 223, 0.08),
+    border_soft: hex(0x3d3d39),
+    border_strong: hex(0x56564f),
+    text_primary: hex(0xe8e6df),
+    text_secondary: hex(0xc4c2b9),
+    text_tertiary: hex(0xa09e95),
+    text_disabled: hex(0x989689),
+    accent: hex(0xb49ddc),
+    on_accent: hex(0x111111),
+    accent_hover: hex(0xbda9e0),
+    accent_press: hex(0x9e8ac2),
+    accent_soft: rgba(180, 157, 220, SEL_DARK),
+    accent_line: rgba(180, 157, 220, 0.34),
+    success: hex(0x8cc28e),
+    warning: hex(0xe09a5a),
+    danger: hex(0xea7a72),
+    link: hex(0xb49ddc),
+    hl_keyword: hex(0x80b2e2),
+    hl_string: hex(0xea7a72),
+    hl_number: hex(0xe09a5a),
+    hl_comment: hex(0x8a8880),
+    hl_func: hex(0xe8e6df),
+    hl_type: hex(0x8cc28e),
+    hl_punct: hex(0xa09e95),
+    hl_attr: hex(0xd9bd62),
 };
 
 pub const LIGHT: Theme = Theme {
     dark: false,
-    bg_base: hex(0xfaf9f5),
-    bg_raised: hex(0xffffff),
-    bg_overlay: hex(0xffffff),
-    bg_inset: hex(0xf2f0ea),
-    bg_hover: rgba(31, 30, 29, 0.04),
-    bg_active: rgba(31, 30, 29, 0.07),
-    border_soft: hex(0xe6e3da),
-    border_strong: hex(0xd3cfc4),
-    text_primary: hex(0x1f1e1d),
-    text_secondary: hex(0x5c5a54),
-    text_tertiary: hex(0x8a877e),
-    text_disabled: hex(0xb8b5ad),
-    accent: hex(0xc2603f),
-    accent_hover: hex(0xd97757),
-    accent_press: hex(0xa94f33),
-    accent_soft: rgba(194, 96, 63, 0.12),
-    accent_line: rgba(194, 96, 63, 0.32),
-    success: hex(0x7ba88a),
-    warning: hex(0xd9a95c),
-    danger: hex(0xc9645c),
-    link: hex(0x3f6f85),
-    hl_keyword: hex(0xa8502c),
-    hl_string: hex(0x4f7a3a),
-    hl_number: hex(0x95681c),
-    hl_comment: hex(0x9a968c),
-    hl_func: hex(0x2f6d8c),
-    hl_type: hex(0x7a53a8),
-    hl_punct: hex(0x6e6b64),
-    hl_attr: hex(0x95681c),
-    shadow: 0.33,
+    bg_base: hex(0xfdfdfb),
+    bg_raised: hex(0xf5f5f0),
+    bg_overlay: hex(0xfdfdfb),
+    bg_inset: hex(0xf5f5f0),
+    bg_hover: rgba(17, 17, 17, 0.04),
+    bg_active: rgba(17, 17, 17, 0.07),
+    border_soft: hex(0xd4d4d0),
+    border_strong: hex(0xb0b0aa),
+    text_primary: hex(0x111111),
+    text_secondary: hex(0x45453f),
+    text_tertiary: hex(0x66665f),
+    text_disabled: hex(0x6e6e67),
+    accent: hex(0x6a4c9c),
+    on_accent: hex(0xffffff),
+    accent_hover: hex(0x7c61a8),
+    accent_press: hex(0x5d4389),
+    accent_soft: rgba(106, 76, 156, SEL_LIGHT),
+    accent_line: rgba(106, 76, 156, 0.34),
+    success: hex(0x2e6b30),
+    warning: hex(0xa85010),
+    danger: hex(0xb0231f),
+    link: hex(0x6a4c9c),
+    hl_keyword: hex(0x0b5394),
+    hl_string: hex(0xb0231f),
+    hl_number: hex(0xa85010),
+    hl_comment: hex(0x66665f),
+    hl_func: hex(0x111111),
+    hl_type: hex(0x2e6b30),
+    hl_punct: hex(0x66665f),
+    hl_attr: hex(0x856600),
 };
+
+/// Selection alpha of the style: `#RRGGBB24` in light, `#RRGGBB47` in dark.
+const SEL_LIGHT: f32 = 0x24 as f32 / 255.0;
+const SEL_DARK: f32 = 0x47 as f32 / 255.0;
 
 /// The Windows close button: the one place a system colour is correct.
 pub const CLOSE_HOVER: Color = hex(0xc42b1c);
@@ -140,7 +147,7 @@ impl Theme {
         self.accent = accent;
         self.accent_hover = mix(accent, white, 0.88);
         self.accent_press = mix(accent, black, 0.88);
-        self.accent_soft = mix(accent, clear, 0.16);
+        self.accent_soft = mix(accent, clear, if self.dark { SEL_DARK } else { SEL_LIGHT });
         self.accent_line = mix(accent, clear, 0.34);
         self
     }
@@ -157,11 +164,10 @@ pub fn parse_hex(s: &str) -> Option<Color> {
 }
 
 // ---- type scale (px at 96 DPI) ---------------------------------------------
-pub const TEXT_XS: f32 = 11.5;
+pub const TEXT_XS: f32 = 12.0;
 pub const TEXT_SM: f32 = 13.0;
-pub const TEXT_BASE: f32 = 15.0;
-pub const TEXT_LG: f32 = 19.0;
-pub const TEXT_XL: f32 = 24.0;
+pub const TEXT_BASE: f32 = 14.0;
+pub const TEXT_LG: f32 = 20.0;
 
 // ---- space -------------------------------------------------------------------
 pub const S1: f32 = 4.0;
@@ -172,10 +178,11 @@ pub const S6: f32 = 24.0;
 pub const S8: f32 = 32.0;
 pub const S16: f32 = 64.0;
 
-pub const RADIUS_SM: f32 = 5.0;
-pub const RADIUS_MD: f32 = 8.0;
-pub const RADIUS_LG: f32 = 12.0;
-pub const RADIUS_XL: f32 = 16.0;
+/// Paper has no rounded corners; the names stay so a shape can be given one later.
+pub const RADIUS_SM: f32 = 0.0;
+pub const RADIUS_MD: f32 = 0.0;
+pub const RADIUS_LG: f32 = 0.0;
+pub const RADIUS_XL: f32 = 0.0;
 
 pub const TITLEBAR_H: f32 = 44.0;
 pub const NAV_ROW_H: f32 = 32.0;
@@ -203,12 +210,12 @@ impl Dur {
     pub fn ms(self, motion: Motion) -> f32 {
         match (motion, self) {
             (Motion::Off, _) => 1.0,
+            // Paper: colour and opacity changes of 150 ms at most.
             (_, Dur::Instant) => 90.0,
-            (_, Dur::Fast) => 160.0,
-            (Motion::Reduced, Dur::Base) => 140.0,
-            (_, Dur::Base) => 240.0,
-            (Motion::Reduced, Dur::Slow) => 200.0,
-            (_, Dur::Slow) => 420.0,
+            (_, Dur::Fast) => 120.0,
+            (Motion::Reduced, Dur::Base) => 120.0,
+            (_, Dur::Base) => 150.0,
+            (_, Dur::Slow) => 150.0,
         }
     }
 }
@@ -216,14 +223,12 @@ impl Dur {
 #[derive(Clone, Copy)]
 pub enum Ease {
     Out,
-    Spring,
 }
 
 impl Ease {
     pub fn at(self, t: f32) -> f32 {
         let (x1, y1, x2, y2) = match self {
             Ease::Out => (0.16, 1.0, 0.3, 1.0),
-            Ease::Spring => (0.34, 1.56, 0.64, 1.0),
         };
         cubic_bezier(x1, y1, x2, y2, t.clamp(0.0, 1.0))
     }
@@ -249,18 +254,26 @@ mod tests {
     use super::*;
 
     #[test]
-    fn easing_hits_the_ends_and_overshoots_only_for_spring() {
-        for e in [Ease::Out, Ease::Spring] {
-            assert!(e.at(0.0).abs() < 1e-4 && (e.at(1.0) - 1.0).abs() < 1e-4);
-        }
+    fn easing_hits_the_ends_and_never_overshoots() {
+        assert!(Ease::Out.at(0.0).abs() < 1e-4 && (Ease::Out.at(1.0) - 1.0).abs() < 1e-4);
         assert!(Ease::Out.at(0.5) > 0.8);
-        assert!((0..100).any(|i| Ease::Spring.at(i as f32 / 100.0) > 1.0));
+        assert!((0..100).all(|i| Ease::Out.at(i as f32 / 100.0) <= 1.0 + 1e-4));
     }
 
     #[test]
     fn parses_short_and_long_hex() {
         assert_eq!(parse_hex("#fff").map(|c| c.r), Some(1.0));
-        assert_eq!(parse_hex("#d97757").map(|c| (c.r * 255.0).round()), Some(217.0));
+        assert_eq!(parse_hex("#6a4c9c").map(|c| (c.r * 255.0).round()), Some(106.0));
         assert!(parse_hex("red").is_none());
+    }
+
+    #[test]
+    fn base_accent_tokens_follow_with_accent() {
+        for th in [DARK, LIGHT] {
+            let d = th.with_accent(th.accent);
+            for (a, b) in [(th.accent_hover, d.accent_hover), (th.accent_press, d.accent_press), (th.accent_soft, d.accent_soft), (th.accent_line, d.accent_line)] {
+                assert!([a.r - b.r, a.g - b.g, a.b - b.b, a.a - b.a].iter().all(|v| v.abs() <= 0.5 / 255.0 + 1e-6));
+            }
+        }
     }
 }

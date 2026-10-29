@@ -196,7 +196,7 @@ impl Window {
     pub fn toast(&mut self, text: &str) {
         self.toast_text = Some((text.to_string(), Instant::now()));
         self.ui.set((Hit::Panel, 7), 0.0);
-        self.ui.animate((Hit::Panel, 7), 1.0, crate::theme::Dur::Base, crate::theme::Ease::Spring);
+        self.ui.animate((Hit::Panel, 7), 1.0, crate::theme::Dur::Base, crate::theme::Ease::Out);
         unsafe { SetTimer(Some(self.hwnd), TIMER_TOAST, 2200, None) };
         win::request_frame(self.hwnd);
     }

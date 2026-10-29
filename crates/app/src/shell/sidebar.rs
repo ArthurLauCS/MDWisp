@@ -10,7 +10,7 @@ use mdwisp_core::workspace::{NodeKind, TreeNode};
 use mdwisp_text::outline::{Heading, extract_headings, heading_at};
 
 use crate::gfx::{Gfx, Rect, Stack, Style, metrics};
-use crate::theme::{self, NAV_ROW_H, RADIUS_MD, RADIUS_SM, S1, S2, S3, S4, S6, S8, SIDE_PANEL_HEAD_H, TEXT_SM, TEXT_XS};
+use crate::theme::{self, NAV_ROW_H, RADIUS_MD, RADIUS_SM, S1, S2, S3, S4, S6, SIDE_PANEL_HEAD_H, TEXT_SM, TEXT_XS};
 use crate::ui::Hit;
 use crate::window::Window;
 use crate::{app, dialog};
@@ -61,7 +61,6 @@ pub fn paint(w: &mut Window, g: &Gfx, r: Rect) {
     let head = body.cut_top(SIDE_PANEL_HEAD_H);
     g.fill(Rect::new(head.x, head.bottom() - 1.0, head.w, 1.0), th.border_soft);
     let tabs = Rect::new(head.x + S4, head.y + S4, head.w - S4 * 2.0, TEXT_SM * 1.5 + S1 * 2.0 + S1 * 2.0);
-    g.fill_round(tabs, RADIUS_MD, th.bg_inset);
     let inner = tabs.inset(S1);
     let tw = (inner.w - S1) / 2.0;
     for (i, id) in ["view.showFiles", "view.showOutline"].iter().enumerate() {
@@ -69,9 +68,9 @@ pub fn paint(w: &mut Window, g: &Gfx, r: Rect) {
         let on = (i == 1) == s.outline_visible;
         let hit = Hit::SidebarTab(i as u8);
         if on {
-            g.fill_round(cell, RADIUS_SM, th.bg_overlay);
+            g.fill(Rect::new(cell.x, cell.bottom() - 2.0, cell.w, 2.0), th.text_primary);
         }
-        let l = g.layout(&crate::actions::title(id), Style::new(Stack::Ui, TEXT_SM), cell.w);
+        let l = g.layout(&crate::actions::title(id), Style::new(Stack::Ui, TEXT_SM).weight(if on { 700 } else { 400 }), cell.w);
         let m = metrics(&l);
         let c = if on { th.text_primary } else { theme::mix(th.text_primary, th.text_tertiary, w.ui.hover_t(hit)) };
         g.text(&l, cell.x + (cell.w - m.w) / 2.0, cell.y + (cell.h - m.h) / 2.0, c);
@@ -87,8 +86,9 @@ pub fn paint(w: &mut Window, g: &Gfx, r: Rect) {
         w.workspace.current().map_or_else(|| t("未打开目录").to_string(), |ws| ws.name.clone())
     };
     let sl = g.layout(&subtitle, Style::new(Stack::Ui, TEXT_XS), head.w - S4 * 2.0);
-    g.clip(Rect::new(head.x + S4, tabs.bottom(), head.w - S4 * 2.0, head.bottom() - tabs.bottom()));
-    g.text(&sl, head.x + S4, tabs.bottom() + S1, th.text_tertiary);
+    let gap = head.bottom() - 1.0 - tabs.bottom();
+    g.clip(Rect::new(head.x + S4, tabs.bottom(), head.w - S4 * 2.0, gap));
+    g.text(&sl, head.x + S4, tabs.bottom() + (gap - metrics(&sl).h) / 2.0, th.text_tertiary);
     g.unclip();
 
     // ---- split between navigation and images
@@ -172,7 +172,7 @@ fn nav_row(w: &mut Window, g: &Gfx, r: Rect, hit: Hit, active: bool) -> crate::t
     let h = w.ui.hover_t(hit);
     if active {
         g.fill_round(r, RADIUS_SM, th.accent_soft);
-        g.fill_round(Rect::new(r.x, r.y + 5.0, 2.0, r.h - 10.0), 1.0, th.accent);
+        g.fill(Rect::new(r.x, r.y, 2.0, r.h), th.text_primary);
     } else if h > 0.0 {
         g.fill_round(r, RADIUS_SM, theme::with_alpha(th.bg_hover, h));
     }
@@ -201,9 +201,9 @@ fn scroll_list(g: &Gfx, r: Rect, scroll: &mut f32, content_h: f32) -> f32 {
 fn tree(w: &mut Window, g: &Gfx, r: Rect) {
     let th = app().theme;
     let Some(info) = w.workspace.current().cloned() else {
-        let l = g.layout(&format!("{}\n{}", t("还没有打开目录。"), t("用上方「打开目录」选一个装满 markdown 的文件夹。")), Style::new(Stack::Ui, TEXT_SM), r.w - S3 * 2.0 - S2 * 2.0);
+        let l = g.layout(&format!("{}\n{}", t("还没有打开目录。"), t("用上方「打开目录」选一个装满 markdown 的文件夹。")), Style::new(Stack::Ui, TEXT_SM), r.w - S4 * 2.0);
         line_height(&l, TEXT_SM * 1.7);
-        g.text(&l, r.x + S2 + S3, r.y + S6, th.text_tertiary);
+        g.text(&l, r.x + S4, r.y + S6, th.text_tertiary);
         return;
     };
     let mut flat: Vec<(TreeNode, usize)> = vec![];
@@ -234,14 +234,14 @@ fn tree(w: &mut Window, g: &Gfx, r: Rect) {
         let is_dir = node.kind == NodeKind::Dir;
         let on = !is_dir && active.as_ref() == Some(&node.path);
         let c = nav_row(w, g, row, Hit::TreeRow(idx), on);
-        let indent = *depth as f32 * S3;
-        let mut x = row.x + if is_dir { S2 } else { S8 } + indent;
+        // Same columns as the outline: a chevron slot, then every label at one x per depth.
+        let cx = row.x + S2 + *depth as f32 * S3;
+        let x = cx + S6;
         let label = if is_dir { node.name.clone() } else { strip_md(&node.name) };
         if is_dir {
             let open = open_dir(&w.shell.sidebar, &node.path, *depth);
             let k = w.ui.value((Hit::TreeRow(idx), 4), if open { 1.0 } else { 0.0 });
-            chevron(g, x + 3.0, row.y + row.h / 2.0, k, c);
-            x += 6.0 + S2;
+            chevron(g, cx + S6 / 2.0 + 1.0, row.y + row.h / 2.0, k, c);
             w.shell.sidebar.rows.push(Row::Dir(node.path.clone()));
         } else {
             w.shell.sidebar.rows.push(Row::File(node.path.clone()));
@@ -277,9 +277,9 @@ fn outline(w: &mut Window, g: &Gfx, r: Rect) {
     }
     let headings = w.shell.sidebar.headings.as_ref().unwrap().1.clone();
     if headings.is_empty() {
-        let l = g.layout(t("这份文档还没有标题。添加标题后会在这里按层级显示。"), Style::new(Stack::Ui, TEXT_SM), r.w - S3 * 2.0 - S2 * 2.0);
+        let l = g.layout(t("这份文档还没有标题。添加标题后会在这里按层级显示。"), Style::new(Stack::Ui, TEXT_SM), r.w - S4 * 2.0);
         line_height(&l, TEXT_SM * 1.7);
-        g.text(&l, r.x + S2 + S3, r.y + S6, th.text_tertiary);
+        g.text(&l, r.x + S4, r.y + S6, th.text_tertiary);
         return;
     }
     let cursor = d.view.buf.sel.head;
@@ -380,12 +380,7 @@ fn assets_panel(w: &mut Window, g: &Gfx, r: Rect, doc: &PathBuf) {
     }
     let refs = w.shell.sidebar.assets.as_ref().unwrap().2.clone();
     // Head.
-    let title = g.layout(&t("本文图片").to_uppercase(), Style::new(Stack::Ui, TEXT_XS), 400.0);
-    unsafe {
-        if let Ok(l1) = windows::core::Interface::cast::<windows::Win32::Graphics::DirectWrite::IDWriteTextLayout1>(&title) {
-            let _ = l1.SetCharacterSpacing(0.0, 0.09 * TEXT_XS, 0.0, windows::Win32::Graphics::DirectWrite::DWRITE_TEXT_RANGE { startPosition: 0, length: 100 });
-        }
-    }
+    let title = g.layout(t("本文图片"), Style::new(Stack::Ui, TEXT_XS).weight(700), 400.0);
     let tm = metrics(&title);
     let hy = r.y + 1.0 + S4;
     g.text(&title, r.x + S4, hy, th.text_tertiary);
@@ -393,22 +388,24 @@ fn assets_panel(w: &mut Window, g: &Gfx, r: Rect, doc: &PathBuf) {
     g.text(&count, r.x + S4 + tm.w + S2, hy, th.text_disabled);
     // Filters.
     let fy = hy + tm.h + S2;
-    let filters = Rect::new(r.x + S3, fy, r.w - S3 * 2.0, TEXT_XS * 1.5 + S1 * 2.0 + 4.0);
+    let filters = Rect::new(r.x + S4, fy, r.w - S4 * 2.0, TEXT_XS * 1.5 + S1 * 2.0 + 4.0);
     g.fill_round(filters, RADIUS_MD, th.bg_inset);
     let inner = filters.inset(2.0);
-    let fw = (inner.w - 4.0) / 3.0;
-    for (i, label) in [t("全部"), t("缺失"), t("文件夹外")].iter().enumerate() {
-        let cell = Rect::new(inner.x + (fw + 2.0) * i as f32, inner.y, fw, inner.h);
+    // Each segment is its label plus an even share of the room left, so no label wraps.
+    let labels = [t("全部"), t("缺失"), t("文件夹外")].map(|s| g.layout(s, Style::new(Stack::Ui, TEXT_XS), 1.0e4));
+    let spare = (inner.w - 4.0 - labels.iter().map(|l| metrics(l).w).sum::<f32>()) / 3.0;
+    let mut cx = inner.x;
+    for (i, l) in labels.iter().enumerate() {
+        let m = metrics(l);
+        let cell = Rect::new(cx, inner.y, m.w + spare, inner.h);
+        cx = cell.right() + 2.0;
         let hit = Hit::AssetFilter(i as u8);
         let on = w.shell.sidebar.filter == i as u8;
         if on {
-            g.shadow(cell, RADIUS_SM, 2.0, 1.0, 0.28 * th.shadow);
             g.fill_round(cell, RADIUS_SM, th.bg_overlay);
         }
-        let l = g.layout(label, Style::new(Stack::Ui, TEXT_XS), cell.w);
-        let m = metrics(&l);
         let c = if on { th.text_primary } else { theme::mix(th.text_primary, th.text_tertiary, w.ui.hover_t(hit)) };
-        g.text(&l, cell.x + (cell.w - m.w) / 2.0, cell.y + (cell.h - m.h) / 2.0, c);
+        g.text(l, cell.x + (cell.w - m.w) / 2.0, cell.y + (cell.h - m.h) / 2.0, c);
         w.ui.region(cell, hit);
     }
     // List.
@@ -428,10 +425,10 @@ fn assets_panel(w: &mut Window, g: &Gfx, r: Rect, doc: &PathBuf) {
             2 => t("没有引用文档文件夹以外的图片。"),
             _ => t("这篇文档还没有图片。把图片拖进编辑器，或按 Ctrl+Shift+I 插入。"),
         };
-        let l = g.layout(msg, Style::new(Stack::Ui, TEXT_SM), list.w - S2 * 2.0 - S3 * 2.0);
+        let l = g.layout(msg, Style::new(Stack::Ui, TEXT_SM), list.w - S4 * 2.0);
         line_height(&l, TEXT_SM * 1.7);
         g.clip(list);
-        g.text(&l, list.x + S2 + S3, list.y + S4, th.text_tertiary);
+        g.text(&l, list.x + S4, list.y + S4, th.text_tertiary);
         g.unclip();
         return;
     }
@@ -470,16 +467,13 @@ fn assets_panel(w: &mut Window, g: &Gfx, r: Rect, doc: &PathBuf) {
         let bw = (row.right() - S2 - bx).max(1.0);
         let decoded = mdwisp_core::paths::decode_uri(&a.rel_path);
         let name = decoded.rsplit('/').next().unwrap_or(&decoded).to_string();
-        let nl = g.layout(&name, Style::new(Stack::Ui, TEXT_SM), 1.0e4);
-        let pl = g.layout(&a.rel_path, Style::new(Stack::Code, TEXT_XS), 1.0e4);
+        let nl = g.elide(&name, Style::new(Stack::Ui, TEXT_SM), bw, false);
+        // Long paths keep their end visible.
+        let pl = g.elide(&a.rel_path, Style::new(Stack::Code, TEXT_XS), bw, true);
         let (nm, pm) = (metrics(&nl), metrics(&pl));
         let ty = row.y + (row.h - nm.h - pm.h - 1.0) / 2.0;
-        g.clip(Rect::new(bx, row.y, bw, row.h));
         g.text(&nl, bx, ty, if a.exists { th.text_primary } else { th.text_secondary });
-        // Long paths keep their end visible.
-        let px = if pm.w > bw { bx + bw - pm.w } else { bx };
-        g.text(&pl, px, ty + nm.h + 1.0, th.text_tertiary);
-        g.unclip();
+        g.text(&pl, bx, ty + nm.h + 1.0, th.text_tertiary);
         w.shell.sidebar.rows.push(Row::Asset(a.abs_path.clone()));
     }
     g.unclip();

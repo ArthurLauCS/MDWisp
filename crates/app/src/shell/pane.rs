@@ -26,8 +26,8 @@ pub fn paint(w: &mut Window, g: &Gfx, mut r: Rect) {
     let mid = bar.y + (bar.h - 1.0) / 2.0;
     let xs = Style::new(Stack::Ui, TEXT_XS);
     if d.dirty() {
-        g.fill_round(Rect::new(x, mid - 3.0, 6.0, 6.0), 3.0, th.accent);
-        x += 6.0 + S2;
+        super::widgets::dirty_dot(g, x, mid);
+        x += super::widgets::DIRTY_W;
     }
     let state = if d.meta.is_none() { t("尚未保存") } else if d.dirty() { t("有未保存修改") } else { t("已保存") };
     let sl = g.layout(state, xs, 400.0);
@@ -43,16 +43,13 @@ pub fn paint(w: &mut Window, g: &Gfx, mut r: Rect) {
     let loose_l = loose.then(|| g.layout(t("散装文件 · 整理为文档文件夹"), xs, 1000.0));
     let loose_w = loose_l.as_ref().map_or(0.0, |l| metrics(l).w + S2 * 2.0 + S2);
     avail -= loose_w;
-    let pl = g.layout(&path, xs, 10000.0);
-    let pm = metrics(&pl);
     // Long paths keep their end visible: the document name matters more than the folder.
-    g.clip(Rect::new(x, bar.y, avail.max(0.0), bar.h));
-    let px = if pm.w > avail { x + avail - pm.w } else { x };
-    g.text(&pl, px, mid - pm.h / 2.0, th.text_tertiary);
-    g.unclip();
+    let pl = g.elide(&path, xs, avail, true);
+    let pm = metrics(&pl);
+    g.text(&pl, x, mid - pm.h / 2.0, th.text_tertiary);
     if let Some(l) = loose_l {
         let lm = metrics(&l);
-        let bx = x + pm.w.min(avail) + S2;
+        let bx = x + pm.w + S2;
         let br = Rect::new(bx, mid - lm.h / 2.0 - 1.0, lm.w + S2 * 2.0, lm.h + 2.0);
         g.fill_round(br, RADIUS_SM, th.accent_soft);
         let c = theme::mix(th.accent_hover, th.accent, w.ui.hover_t(Hit::Breadcrumb(1)));
@@ -69,16 +66,17 @@ pub fn paint(w: &mut Window, g: &Gfx, mut r: Rect) {
     let words = d.words();
     let sel = buf.sel;
     let count = if sel.empty() { tf("{0} 字", &[&words]) } else { tf("已选 {0} / 共 {1} 字", &[&count_words(&buf.text[sel.from()..sel.to()]), &words]) };
+    let mid = status.y + 1.0 + (status.h - 1.0) / 2.0;
     let mut sx = status.x + S4;
     for s in [tf("第 {0} 行", &[&line]), count] {
         let l = g.layout(&s, xs, 1000.0);
-        g.text(&l, sx, status.y + 1.0 + S1, th.text_tertiary);
+        g.text(&l, sx, mid - metrics(&l).h / 2.0, th.text_tertiary);
         sx += metrics(&l).w + S4;
     }
     let s = app().s();
     let mode = if s.read_only { t("只读") } else if s.source_mode { t("源码模式") } else { t("直接编辑") };
     let l = g.layout(mode, xs, 1000.0);
-    g.text(&l, status.right() - S4 - metrics(&l).w, status.y + 1.0 + S1, th.text_tertiary);
+    g.text(&l, status.right() - S4 - metrics(&l).w, mid - metrics(&l).h / 2.0, th.text_tertiary);
 
     // ---- find bar
     if w.doc.as_ref().is_some_and(|d| d.view.search.is_some()) {
@@ -124,7 +122,7 @@ fn search_bar_h() -> f32 {
 
 /// CodeMirror's search panel: find row, replace row, option toggles, close.
 fn search_bar(w: &mut Window, g: &Gfx, bar: Rect) {
-    use crate::shell::widgets::{BTN_H, Btn, button, button_width};
+    use crate::shell::widgets::{Btn, button, button_width};
     let th = app().theme;
     g.fill(bar, th.bg_raised);
     g.fill(Rect::new(bar.x, bar.bottom() - 1.0, bar.w, 1.0), th.border_soft);
@@ -135,7 +133,8 @@ fn search_bar(w: &mut Window, g: &Gfx, bar: Rect) {
     let sm = Style::new(Stack::Ui, TEXT_SM);
     let count = if s.invalid { "✕".to_string() } else { s.matches.len().to_string() };
     let mut regions: Vec<(Rect, Hit)> = vec![];
-    let mut y = bar.y + S2 + S1;
+    let top = bar.y + S2 + S1;
+    let mut y = top;
     for row in 0..if read_only { 1 } else { 2 } {
         let mut x = bar.x + S3 + S1;
         let fw = 220.0f32.min(bar.w * 0.35);
@@ -154,7 +153,7 @@ fn search_bar(w: &mut Window, g: &Gfx, bar: Rect) {
         };
         for (label, id) in buttons {
             let bw = button_width(g, label) - S2;
-            let br = Rect::new(x, y + (FIELD_H - BTN_H + 4.0) / 2.0, bw, BTN_H - 4.0);
+            let br = Rect::new(x, y, bw, FIELD_H);
             button(&mut w.ui, g, br, Hit::Status(id), label, Btn::Normal, true);
             x += bw + S1 * 2.0;
         }
@@ -162,11 +161,11 @@ fn search_bar(w: &mut Window, g: &Gfx, bar: Rect) {
             for (label, on, id) in [(t("区分大小写"), s.case, 30u8), (t("正则表达式"), s.regex, 31), (t("全字匹配"), s.word, 32)] {
                 let bx = Rect::new(x + S1, y + (FIELD_H - 13.0) / 2.0, 13.0, 13.0);
                 if on {
-                    g.fill_round(bx, 3.0, th.accent);
-                    g.line(bx.x + 3.0, bx.y + 6.8, bx.x + 5.4, bx.y + 9.2, crate::theme::WHITE, 1.6);
-                    g.line(bx.x + 5.4, bx.y + 9.2, bx.x + 10.0, bx.y + 4.0, crate::theme::WHITE, 1.6);
+                    g.fill(bx, th.accent);
+                    g.line(bx.x + 3.0, bx.y + 6.8, bx.x + 5.4, bx.y + 9.2, app().theme.on_accent, 1.6);
+                    g.line(bx.x + 5.4, bx.y + 9.2, bx.x + 10.0, bx.y + 4.0, app().theme.on_accent, 1.6);
                 } else {
-                    g.stroke_round(bx, 3.0, th.border_strong, 1.2);
+                    g.stroke_round(bx, 0.0, th.border_strong, 1.2);
                 }
                 let l = g.layout(label, sm, 400.0);
                 let lm = metrics(&l);
@@ -182,7 +181,7 @@ fn search_bar(w: &mut Window, g: &Gfx, bar: Rect) {
     }
     let close = g.layout("×", Style::new(Stack::Ui, TEXT_SM), 40.0);
     let cm = metrics(&close);
-    let cr = Rect::new(bar.right() - S2 - cm.w - S2 * 2.0, bar.y + S2, cm.w + S2 * 2.0, FIELD_H);
+    let cr = Rect::new(bar.right() - S2 - cm.w - S2 * 2.0, top, cm.w + S2 * 2.0, FIELD_H);
     let hv = w.ui.hover_t(Hit::Status(40));
     g.text(&close, cr.x + S2, cr.y + (cr.h - cm.h) / 2.0, crate::theme::mix(th.text_primary, th.text_secondary, hv));
     regions.push((cr, Hit::Status(40)));
@@ -273,7 +272,6 @@ fn table_toolbar(w: &mut Window, g: &Gfx, area: Rect) {
     let bw = total.min(area.w - S6);
     let bh = 24.0 + S1 * 2.0 + 2.0;
     let bar = Rect::new(area.x + (area.w - bw) / 2.0, area.y + S2, bw, bh);
-    g.shadow(bar, crate::theme::RADIUS_LG, 24.0, 10.0, 0.46 * th.shadow);
     g.fill_round(bar, crate::theme::RADIUS_LG, th.bg_overlay);
     g.stroke_round(bar, crate::theme::RADIUS_LG, th.border_strong, 1.0);
     w.ui.region(bar, Hit::Widget(TABLE_BAR));
@@ -359,16 +357,13 @@ pub fn toast(w: &mut Window, g: &Gfx) {
     let m = metrics(&l);
     let bw = m.w + S3 + S4 + 3.0;
     let bh = (m.h + S2 * 2.0).max(36.0);
-    let x = w.width - S6 - bw + (1.0 - k) * 16.0;
+    let x = w.width - S6 - bw;
     let y = w.height - S6 - bh;
     g.with_opacity(k.clamp(0.0, 1.0), || {
         let r = Rect::new(x, y, bw, bh);
-        g.shadow(r, RADIUS_MD, 14.0, 4.0, 0.34 * th.shadow);
         g.fill_round(r, RADIUS_MD, th.bg_overlay);
         g.stroke_round(r, RADIUS_MD, th.border_strong, 1.0);
-        g.clip(Rect::new(x, y, 3.0, bh));
-        g.fill_round(Rect::new(x, y, 12.0, bh), RADIUS_MD, th.accent);
-        g.unclip();
+        g.fill(Rect::new(x, y, 3.0, bh), th.accent);
         g.text(&l, x + 3.0 + S3, y + (bh - m.h) / 2.0, th.text_primary);
     });
 }

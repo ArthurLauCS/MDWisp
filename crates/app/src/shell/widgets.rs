@@ -207,16 +207,17 @@ pub fn button(ui: &mut Ui, g: &Gfx, r: Rect, hit: Hit, label: &str, kind: Btn, e
     let (bg, border, fg) = match kind {
         _ if !enabled => (Color { a: 0.0, ..th.bg_base }, th.border_soft, th.text_disabled),
         Btn::Primary => {
-            let bg = if ui.pressed(hit) { th.accent_press } else { theme::mix(th.accent_hover, th.accent, h) };
-            (bg, bg, theme::WHITE)
+            // Paper: the primary action is solid ink, not a coloured button.
+            let bg = if ui.pressed(hit) { th.text_secondary } else { theme::mix(th.text_primary, th.text_secondary, h) };
+            (bg, bg, th.bg_base)
         }
         Btn::Danger => (theme::with_alpha(theme::mix(th.danger, Color { a: 0.0, ..th.danger }, 0.16), h), th.danger, theme::mix(th.text_primary, th.danger, h)),
         Btn::Pressed => (Color { a: 0.0, ..th.bg_base }, th.accent_line, th.accent),
-        Btn::Normal => (Color { a: 0.0, ..th.bg_base }, theme::mix(th.accent_line, th.border_strong, h), theme::mix(th.text_primary, th.text_secondary, h)),
+        Btn::Normal => (Color { a: 0.0, ..th.bg_base }, theme::mix(th.text_secondary, th.border_strong, h), theme::mix(th.text_primary, th.text_secondary, h)),
     };
     g.fill_round(r, crate::theme::RADIUS_MD, bg);
     g.stroke_round(r, crate::theme::RADIUS_MD, border, 1.0);
-    let style = Style::new(crate::gfx::Stack::Ui, crate::theme::TEXT_SM).weight(if kind == Btn::Primary { 550 } else { 400 });
+    let style = Style::new(crate::gfx::Stack::Ui, crate::theme::TEXT_SM).weight(400);
     let l = g.layout(label, style, r.w);
     let m = metrics(&l);
     g.text(&l, r.x + (r.w - m.w) / 2.0, r.y + (r.h - m.h) / 2.0, fg);
@@ -229,4 +230,12 @@ pub const BTN_H: f32 = crate::theme::TEXT_SM * 1.5 + crate::theme::S2 * 2.0 + 2.
 
 pub fn button_width(g: &Gfx, label: &str) -> f32 {
     metrics(&g.layout(label, Style::new(crate::gfx::Stack::Ui, crate::theme::TEXT_SM), 1.0e4)).w + crate::theme::S4 * 2.0 + 2.0
+}
+
+/// Unsaved changes: the same accent dot in the title bar and the path bar.
+/// `DIRTY_W` is the dot plus the gap before the text.
+pub const DIRTY_W: f32 = 6.0 + crate::theme::S2;
+
+pub fn dirty_dot(g: &Gfx, x: f32, cy: f32) {
+    g.fill_round(Rect::new(x, cy - 3.0, 6.0, 6.0), 3.0, app().theme.accent);
 }

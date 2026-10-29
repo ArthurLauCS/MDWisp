@@ -80,7 +80,7 @@ pub fn paint(w: &mut Window, g: &Gfx, body: &mut Rect) -> Rect {
     let btn = Rect::new(rail.x + 1.0, rail.y, rail.w - 1.0, S3 * 2.0 + S6 + S1 + lm.h);
     let fg = if open {
         g.fill(btn, th.accent_soft);
-        th.accent
+        th.text_primary
     } else {
         g.fill(btn, theme::with_alpha(th.bg_hover, h));
         theme::mix(th.text_primary, th.text_tertiary, h)
@@ -97,7 +97,6 @@ pub fn paint(w: &mut Window, g: &Gfx, body: &mut Rect) -> Rect {
     let overlay = w.width <= 1100.0;
     let r = if overlay { Rect::new(rail.x - width, rail.y, width, rail.h) } else { body.cut_right(width) };
     if overlay {
-        g.shadow(r, 0.0, 14.0, 4.0, 0.34 * th.shadow);
     }
     panel(w, g, r);
     rail
@@ -118,7 +117,7 @@ fn panel(w: &mut Window, g: &Gfx, r: Rect) {
     // ---- head
     let head = body.cut_top(SIDE_PANEL_HEAD_H);
     g.fill(Rect::new(head.x, head.bottom() - 1.0, head.w, 1.0), th.border_soft);
-    let title = g.layout(t("历史版本"), Style::new(Stack::Ui, TEXT_SM).weight(600), head.w);
+    let title = g.layout(t("历史版本"), Style::new(Stack::Ui, TEXT_SM).weight(700), head.w);
     let tm = metrics(&title);
     let sub = match &w.doc {
         Some(d) => d.name(),
@@ -235,7 +234,7 @@ fn panel(w: &mut Window, g: &Gfx, r: Rect) {
         let h = w.ui.hover_t(hit);
         if on {
             g.fill_round(rr, RADIUS_MD, th.accent_soft);
-            g.stroke_round(rr, RADIUS_MD, th.accent_line, 1.0);
+            g.fill(Rect::new(rr.x, rr.y, 2.0, rr.h), th.text_primary);
         } else if h > 0.0 {
             g.fill_round(rr, RADIUS_MD, theme::with_alpha(th.bg_hover, h));
         }
@@ -258,8 +257,8 @@ fn panel(w: &mut Window, g: &Gfx, r: Rect) {
             RevisionKind::Manual => (th.accent_line, th.accent),
             RevisionKind::Restore => (th.border_strong, th.link),
         };
-        g.fill_round(tag_r, 3.0, th.bg_overlay);
-        g.stroke_round(tag_r, 3.0, border, 1.0);
+        g.fill(tag_r, th.bg_overlay);
+        g.stroke_round(tag_r, 0.0, border, 1.0);
         g.text(&tag, tag_r.x + S2, tag_r.y, fg);
         let mut mx = tag_r.right() + S2;
         let bytes = g.layout(&format_bytes(rev.bytes as u64), Style::new(Stack::Code, TEXT_XS), 200.0);
@@ -338,12 +337,12 @@ fn panel(w: &mut Window, g: &Gfx, r: Rect) {
         let c = g.layout(if prev.is_empty() { t("起始版本") } else { t("与上一还原点比较") }, Style::new(Stack::Ui, TEXT_XS), detail.w);
         g.text(&c, detail.x, y, th.text_tertiary);
         y += metrics(&c).h + S2 * 2.0;
-        // +N 新增 −N 删除
+        // +N 新增 −N 移除 (not 删除: that key is the Delete button's verb)
         let mut sx = detail.x;
-        for (n, label) in [(format!("+{}", diff.added), t("新增")), (format!("−{}", diff.removed), t("删除"))] {
+        for (n, label, tone) in [(format!("+{}", diff.added), t("新增"), th.success), (format!("−{}", diff.removed), t("移除"), th.danger)] {
             let nl = g.layout(&n, Style::new(Stack::Code, TEXT_LG), 200.0);
             let nm = metrics(&nl);
-            g.text(&nl, sx, y, th.accent);
+            g.text(&nl, sx, y, tone);
             sx += nm.w + S3;
             let ll = g.layout(label, Style::new(Stack::Ui, TEXT_SM), 200.0);
             let lm = metrics(&ll);

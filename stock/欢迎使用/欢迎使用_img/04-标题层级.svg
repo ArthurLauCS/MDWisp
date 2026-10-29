@@ -1,26 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="960" height="600" viewBox="0 0 960 600" role="img" aria-label="六级标题的排版标本：每一级用不同的字体与形态，只看轮廓就能分辨层级">
-  <defs>
-    <linearGradient id="wash4" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#d97757" stop-opacity="0.06"/>
-      <stop offset="0.6" stop-color="#d97757" stop-opacity="0"/>
-    </linearGradient>
-    <linearGradient id="rule" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0" stop-color="#8A877E" stop-opacity="0.5"/>
-      <stop offset="1" stop-color="#8A877E" stop-opacity="0"/>
-    </linearGradient>
-  </defs>
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="600" viewBox="0 0 960 600" role="img" aria-label="六级标题的排版标本：一二三级为大小递减的粗体衬线，四级正文粗体，五级斜体，六级灰色">
+  <rect width="960" height="600" fill="#1A1A18"/>
 
-  <rect width="960" height="600" fill="#1F1E1D"/>
-  <rect width="960" height="600" fill="url(#wash4)"/>
+  <g font-family="'Microsoft YaHei UI', 'Segoe UI', sans-serif">
+    <text x="36" y="50" fill="#B49DDC" font-size="12">排版标本</text>
+    <text x="36" y="84" fill="#E8E6DF" font-size="26" font-weight="700" font-family="SimSun, Georgia, serif">六级标题，层级靠字号与字重</text>
+    <text x="36" y="111" fill="#A09E95" font-size="13">先看大小，再看粗细。本文档本身就是这份标本。</text>
 
-  <g font-family="'Segoe UI Variable Text', 'Segoe UI', Inter, 'PingFang SC', 'Microsoft YaHei UI', 'Noto Sans SC', sans-serif">
-    <text x="36" y="50" fill="#D97757" font-size="11.5" letter-spacing="1.9">排版标本</text>
-    <text x="36" y="84" fill="#F5F4EF" font-size="25" letter-spacing="-0.3">六级标题，六种轮廓</text>
-    <text x="36" y="111" fill="#8A877E" font-size="12.5">遮住文字只看形状，也应该能说出这是第几级。本文档本身就是这份标本。</text>
+    <rect x="36" y="136" width="888" height="420" fill="#212120" stroke="#3D3D39"/>
 
-    <rect x="36" y="136" width="888" height="420" rx="12" fill="#262624" stroke="#45443F"/>
-
-    <g stroke="#33322F">
+    <g stroke="#3D3D39">
       <line x1="48" y1="218" x2="912" y2="218"/>
       <line x1="48" y1="284" x2="912" y2="284"/>
       <line x1="48" y1="350" x2="912" y2="350"/>
@@ -28,7 +16,7 @@
       <line x1="48" y1="482" x2="912" y2="482"/>
     </g>
 
-    <g font-family="'Cascadia Code', Consolas, 'Sarasa Mono SC', monospace" font-size="11" fill="#5C5A54" letter-spacing="0.6">
+    <g font-family="Consolas, monospace" font-size="12" fill="#A09E95">
       <text x="60" y="196">H1</text>
       <text x="60" y="262">H2</text>
       <text x="60" y="328">H3</text>
@@ -37,35 +25,26 @@
       <text x="60" y="526">H6</text>
     </g>
 
-    <!-- H1 : serif on a tinted plate -->
-    <rect x="134" y="160" width="248" height="48" rx="7" fill="#30302E" stroke="#45443F"/>
-    <text x="152" y="195" fill="#F5F4EF" font-size="33" font-family="'Newsreader', 'Source Serif 4', Georgia, 'Songti SC', 'Noto Serif SC', serif" letter-spacing="-0.4">文档即文件夹</text>
-    <text x="900" y="196" fill="#5C5A54" font-size="11" text-anchor="end">衬线体 + 浅色衬底</text>
+    <g font-family="SimSun, Georgia, serif" font-weight="700" fill="#E8E6DF">
+      <text x="134" y="195" font-size="26">文档即文件夹</text>
+      <text x="134" y="262" font-size="20">图片跟着文档一起走</text>
+      <text x="134" y="328" font-size="16">相对路径由代码保证</text>
+    </g>
+    <g font-family="SimSun, Georgia, serif">
+      <text x="134" y="394" fill="#E8E6DF" font-size="14" font-weight="700">导出之前先把要删的行列出来</text>
+      <text x="134" y="460" fill="#C4C2B9" font-size="14" font-style="italic">快捷键 · 命令面板</text>
+      <text x="134" y="526" fill="#A09E95" font-size="14">markdown/detect.ts</text>
+    </g>
 
-    <!-- H2 : serif with a fading baseline -->
-    <text x="134" y="262" fill="#F5F4EF" font-size="26" font-family="'Newsreader', 'Source Serif 4', Georgia, 'Songti SC', 'Noto Serif SC', serif">图片跟着文档一起走</text>
-    <line x1="134" y1="276" x2="560" y2="276" stroke="url(#rule)" stroke-width="1.5"/>
-    <text x="900" y="262" fill="#5C5A54" font-size="11" text-anchor="end">渐隐的基线</text>
+    <g fill="#A09E95" font-size="12" text-anchor="end">
+      <text x="900" y="196">26 px，粗体</text>
+      <text x="900" y="262">20 px，粗体</text>
+      <text x="900" y="328">16 px，粗体</text>
+      <text x="900" y="394">正文字号，粗体</text>
+      <text x="900" y="460">正文字号，斜体</text>
+      <text x="900" y="526">正文字号，灰色</text>
+    </g>
 
-    <!-- H3 : sans, the workhorse -->
-    <text x="134" y="328" fill="#F5F4EF" font-size="21" font-weight="620">相对路径由代码保证</text>
-    <text x="900" y="328" fill="#5C5A54" font-size="11" text-anchor="end">无衬线，正文主力</text>
-
-    <!-- H4 -->
-    <text x="134" y="394" fill="#F5F4EF" font-size="17" font-weight="620" letter-spacing="0.06em">导出之前先把要删的行列出来</text>
-    <text x="900" y="394" fill="#5C5A54" font-size="11" text-anchor="end">加宽字距</text>
-
-    <!-- H5 -->
-    <rect x="134" y="442" width="3" height="17" rx="1.5" fill="#D97757"/>
-    <text x="148" y="456" fill="#B8B5AD" font-size="13" letter-spacing="0.09em">快捷键 · 命令面板</text>
-    <text x="900" y="460" fill="#5C5A54" font-size="11" text-anchor="end">小标签，左侧强调条</text>
-
-    <!-- H6 -->
-    <text x="134" y="526" fill="#8A877E" font-size="12.5" font-family="'Cascadia Code', Consolas, 'Sarasa Mono SC', monospace" letter-spacing="0.09em">markdown/detect.ts</text>
-    <text x="900" y="526" fill="#5C5A54" font-size="11" text-anchor="end">等宽，像一条系统注记</text>
-  </g>
-
-  <g font-family="'Segoe UI Variable Text', 'Segoe UI', Inter, 'PingFang SC', 'Microsoft YaHei UI', 'Noto Sans SC', sans-serif">
-    <text x="36" y="584" fill="#8A877E" font-size="11.5">正文用衬线体，行长上限 72ch；一屏之内强调色不超过两处。</text>
+    <text x="36" y="584" fill="#A09E95" font-size="12">正文用衬线体，行长上限 680 px；强调色只用于链接、选中和主要操作。</text>
   </g>
 </svg>

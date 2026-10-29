@@ -142,10 +142,6 @@ fn rank(w: &Window, query: &str) -> Vec<(&'static str, String, Vec<usize>)> {
 fn scrim(w: &mut Window, g: &Gfx, k: f32) {
     let th = app().theme;
     let r = w.bounds();
-    // Blur is part of the full motion level; the reduced levels keep the plain scrim.
-    if w.ui.motion == theme::Motion::Full {
-        g.blur_backdrop(6.0 * k);
-    }
     g.fill(r, theme::with_alpha(th.bg_base, 0.55 * k));
     w.ui.region(r, Hit::Backdrop);
 }
@@ -165,7 +161,7 @@ pub fn opening(opened: Instant, w: &Window) -> (f32, f32) {
     if k < 1.0 {
         win::request_frame(w.hwnd);
     }
-    (k, Ease::Spring.at(k))
+    (k, Ease::Out.at(k))
 }
 
 pub fn panel_scrim(w: &mut Window, g: &Gfx, opened: Instant) -> (f32, f32) {
@@ -181,7 +177,7 @@ fn paint_palette(w: &mut Window, g: &Gfx) {
         Some(Modal::Palette(p)) => p.opened,
         _ => return,
     };
-    let (fade, e) = panel_scrim(w, g, opened);
+    let (fade, _) = panel_scrim(w, g, opened);
     // Results are ranked when the query changes, not every frame.
     let query = match &w.modal {
         Some(Modal::Palette(p)) => p.field.text.clone(),
@@ -206,17 +202,12 @@ fn paint_palette(w: &mut Window, g: &Gfx) {
     let list_h = if p.results.is_empty() { 80.0 } else { p.results.len() as f32 * row + S2 * 2.0 };
     let ph = (field_h + list_h + 1.0).min(wh * 0.6);
     let x = (ww - pw) / 2.0;
-    let y = wh * 0.18 - 10.0 * (1.0 - e);
-    let scale = 0.985 + 0.015 * e;
-    let r = Rect::new(x + pw * (1.0 - scale) / 2.0, y, pw * scale, ph);
+    let y = wh * 0.18;
+    let r = Rect::new(x, y, pw, ph);
     let mut rows_hit = vec![];
     g.with_opacity(fade, || {
-        g.shadow(r, RADIUS_XL, 32.0, 24.0, 0.55 * th.shadow);
         g.fill_round(r, RADIUS_XL, th.bg_overlay);
         g.stroke_round(r, RADIUS_XL, th.border_strong, 1.0);
-        let clear = crate::theme::Color { a: 0.0, ..th.accent };
-        let rule = g.gradient(r.x, r.right(), r.y, &[(0.0, clear), (0.5, theme::with_alpha(th.accent, 0.7)), (1.0, clear)]);
-        g.fill_with(Rect::new(r.x + RADIUS_XL, r.y, r.w - RADIUS_XL * 2.0, 1.0), 0.0, &rule.into());
         // Field.
         let fr = Rect::new(r.x + S4, r.y + S4, r.w - S4 * 2.0, TEXT_LG * 1.5);
         let hint = g.layout("Esc", Style::new(Stack::Code, TEXT_XS), 100.0);
@@ -251,6 +242,7 @@ fn paint_palette(w: &mut Window, g: &Gfx) {
             let on = i == p.active;
             if on {
                 g.fill_round(rr, RADIUS_MD, th.accent_soft);
+                g.fill(Rect::new(rr.x, rr.y, 2.0, rr.h), th.text_primary);
             }
             let key = actions::find(id).map(|a| a.key).unwrap_or("");
             let mut right = rr.right() - S3;
