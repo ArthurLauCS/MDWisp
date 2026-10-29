@@ -1,32 +1,52 @@
-/* Bundled CJK faces keep typography consistent on clean installations. */
+/* The app's type roles (see crates/app/src/gfx.rs), bundled so the file reads the same everywhere.
+   css.rs swaps each font file reference for a data URI: the two CJK faces cut down to the
+   characters the document uses, Latin Modern whole. A missing file becomes local('__missing'),
+   so the stacks below fall through to the Windows faces. */
 @font-face {
-  font-family: 'MDView Rounded';
-  src: url('./fonts/GenSenRounded2TC-R.otf') format('opentype');
+  font-family: 'MDWisp Latin';
+  src: url('./fonts/lmroman10-regular.otf') format('opentype'), local('Latin Modern Roman 10');
   font-weight: 400;
-  font-display: swap;
+  font-style: normal;
 }
 @font-face {
-  font-family: 'MDView Display';
-  src: url('./fonts/ZCOOLXiaoWei-Regular.ttf') format('truetype');
-  font-weight: 400;
-  font-display: swap;
+  font-family: 'MDWisp Latin';
+  src: url('./fonts/lmroman10-bold.otf') format('opentype'), local('Latin Modern Roman 10 Bold');
+  font-weight: 700;
+  font-style: normal;
 }
 @font-face {
-  font-family: 'MDView Latin';
-  src: local('Consolas'), local('Cascadia Code'), local('Liberation Mono'), local('Courier New');
-  unicode-range: U+0000-024F;
+  font-family: 'MDWisp Latin';
+  src: url('./fonts/lmroman10-italic.otf') format('opentype'), local('Latin Modern Roman 10 Italic');
+  font-weight: 400;
+  font-style: italic;
+}
+@font-face {
+  font-family: 'MDWisp Latin';
+  src: url('./fonts/lmroman10-bolditalic.otf') format('opentype'), local('Latin Modern Roman 10 Bold Italic');
+  font-weight: 700;
+  font-style: italic;
+}
+/* Noto Serif SC, variable weight: body and headings (宋体). */
+@font-face {
+  font-family: 'MDWisp CJK';
+  src: url('./fonts/NotoSerifSC-VF.ttf') format('truetype'), local('Noto Serif SC');
+  font-weight: 200 900;
+  font-style: normal;
+}
+/* LXGW WenKai: blockquotes and CJK emphasis (楷体). */
+@font-face {
+  font-family: 'MDWisp Kai';
+  src: url('./fonts/LXGWWenKai-Regular.ttf') format('truetype'), local('LXGW WenKai');
+  font-weight: 400;
+  font-style: normal;
 }
 :root {
-  --font-rounded: 'MDView Rounded', 'YouYuan', 'Microsoft YaHei', sans-serif;
-  --font-ui-default: 'MDView Latin', var(--font-rounded);
-  --font-read-default: 'Segoe UI', 'Microsoft YaHei', var(--font-rounded);
-  --font-display-default: 'MDView Latin', 'MDView Display', 'KaiTi', serif;
-  --font-code-default: 'Consolas', 'Cascadia Code', 'Liberation Mono', 'Courier New', monospace;
-  --font-ui: var(--font-ui-default);
-  --font-read: var(--font-read-default);
-  --font-display: var(--font-display-default);
-  --font-code: var(--font-code-default);
-  --tracking-display: -0.018em;
+  --font-ui: 'Microsoft YaHei UI', 'Segoe UI', sans-serif;
+  --font-read: 'MDWisp Latin', 'MDWisp CJK', 'Sitka Text', 'Songti SC', 'SimSun', serif;
+  --font-display: var(--font-read);
+  --font-kai: 'MDWisp Latin', 'MDWisp Kai', 'KaiTi', 'Kaiti SC', 'MDWisp CJK', 'SimSun', serif;
+  --font-code: 'Consolas', 'Cascadia Code', 'Liberation Mono', 'Courier New', monospace;
+  --tracking-display: 0;
   --tracking-body: 0;
-  --tracking-label: 0.09em;
+  --tracking-label: 0;
 }

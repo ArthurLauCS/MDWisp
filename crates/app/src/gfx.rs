@@ -33,10 +33,11 @@ pub struct Gfx {
     pub dc: ID2D1DeviceContext,
     pub brush: ID2D1SolidColorBrush,
     pub dw: IDWriteFactory5,
-    /// The two bundled CJK faces only. Merging them into the system font set
-    /// measured 117 ms at startup; a two-file collection is nearly free.
+    /// The bundled faces only. Merging them into the system font set measured
+    /// 117 ms at startup; a small separate collection is nearly free.
     bundled: IDWriteFontCollection1,
     system: IDWriteFontCollection,
+    faces: Faces,
     formats: RefCell<HashMap<(Stack, u32, i32, bool), IDWriteTextFormat>>,
     layouts: RefCell<HashMap<LayoutKey, IDWriteTextLayout>>,
     brushes: RefCell<HashMap<[u32; 4], ID2D1SolidColorBrush>>,
@@ -82,21 +83,45 @@ pub struct Surface {
     visual: IDCompositionVisual,
 }
 
-/// The four font stacks of `fonts.css`.
+/// The four font stacks (style `paper`, typeset by role like a ctex document).
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 pub enum Stack {
-    /// Latin in Consolas, CJK in the bundled rounded face.
+    /// Chrome (menus, panels, buttons): Microsoft YaHei UI covers Latin and CJK.
     Ui,
+    /// Body text: Latin Modern Roman, CJK in Noto Serif SC.
     Read,
-    /// Latin in Consolas, CJK in the bundled decorative face.
+    /// Headings: the same two faces, bold.
     Display,
     Code,
 }
 
-const ROUNDED: &str = "GenSenRounded2 TC";
-// The face only carries its Chinese family name; "ZCOOL XiaoWei" is not found.
-const DISPLAY: &str = "站酷小薇体";
-const LATIN: &str = "Consolas";
+const UI: &str = "Microsoft YaHei UI";
+const CODE: &str = "Consolas";
+/// Bundled faces, each with the family names DirectWrite may report for it (a
+/// font-set collection groups by typographic or by RIBBI family name).
+const LATIN_MODERN: &[&str] = &["Latin Modern Roman 10", "Latin Modern Roman", "LM Roman 10"];
+const NOTO_SERIF: &[&str] = &["Noto Serif SC"];
+const WENKAI: &[&str] = &["LXGW WenKai", "霞鹜文楷"];
+/// Windows faces used when the font file is missing.
+const FALLBACK_BODY: &str = "Sitka Text";
+const FALLBACK_HEADING: &str = "Sitka Heading";
+const FALLBACK_CJK: &str = "SimSun";
+
+/// The families the stacks resolved to at startup: bundled when the file loaded,
+/// the Windows face otherwise.
+struct Faces {
+    body: String,
+    heading: String,
+    /// CJK runs of body text and headings.
+    cjk: String,
+    /// CJK runs of blockquotes and emphasis (楷体 beside 宋体).
+    kai: String,
+}
+
+/// YaHei UI has 400 and 700 only, and the style uses two weights.
+fn snap_weight(w: i32) -> i32 {
+    if w >= 500 { 700 } else { 400 }
+}
 
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub struct Style {
@@ -158,6 +183,15 @@ impl Gfx {
             let mut system = None;
             dw.GetSystemFontCollection(false, &mut system, false)?;
             let system: IDWriteFontCollection = system.unwrap().cast()?;
+            let find = |names: &[&str]| names.iter().find(|n| family_in(&bundled, n)).map(|n| n.to_string());
+            let cjk = find(NOTO_SERIF).unwrap_or_else(|| FALLBACK_CJK.into());
+            let latin = find(LATIN_MODERN);
+            let faces = Faces {
+                body: latin.clone().unwrap_or_else(|| FALLBACK_BODY.into()),
+                heading: latin.unwrap_or_else(|| FALLBACK_HEADING.into()),
+                kai: find(WENKAI).unwrap_or_else(|| cjk.clone()),
+                cjk,
+            };
             Ok(Gfx {
                 dxgi: CreateDXGIFactory2(DXGI_CREATE_FACTORY_FLAGS(0))?,
                 dcomp: DCompositionCreateDevice(&dxgi_dev)?,
@@ -168,6 +202,7 @@ impl Gfx {
                 dw,
                 bundled,
                 system,
+                faces,
                 formats: RefCell::default(),
                 layouts: RefCell::default(),
                 brushes: RefCell::default(),
@@ -300,17 +335,13 @@ impl Gfx {
     }
 
     pub fn format(&self, style: Style) -> IDWriteTextFormat {
+        let style = Style { weight: snap_weight(style.weight), ..style };
         let key = (style.stack, style.size.to_bits(), style.weight, style.italic);
         if let Some(f) = self.formats.borrow().get(&key) {
             return f.clone();
         }
-        let family = match style.stack {
-            Stack::Ui => ROUNDED,
-            Stack::Read => "Segoe UI",
-            Stack::Display => DISPLAY,
-            Stack::Code => LATIN,
-        };
-        let collection: IDWriteFontCollection = if matches!(style.stack, Stack::Ui | Stack::Display) { self.bundled.cast().unwrap() } else { self.system.clone() };
+        let family = self.primary_family(style.stack);
+        let collection: IDWriteFontCollection = if family_in(&self.bundled, family) { self.bundled.cast().unwrap() } else { self.system.clone() };
         let f = unsafe {
             self.dw
                 .CreateTextFormat(
@@ -349,6 +380,23 @@ impl Gfx {
         l
     }
 
+    /// `text` on one line, cut to `max_w` with an ellipsis: at the end, or at
+    /// the start when `keep_end` (paths, where the file name matters most).
+    pub fn elide(&self, text: &str, style: Style, max_w: f32, keep_end: bool) -> IDWriteTextLayout {
+        let l = self.layout(text, style, 1.0e4);
+        let w = metrics(&l).w;
+        if w <= max_w {
+            return l;
+        }
+        let room = max_w - metrics(&self.layout("…", style, 1.0e4)).w;
+        let (mut trailing, mut inside, mut m) = (BOOL(0), BOOL(0), DWRITE_HIT_TEST_METRICS::default());
+        // The character under the cut would be clipped mid-glyph: it goes too.
+        unsafe { l.HitTestPoint(if keep_end { w - room } else { room }, 1.0, &mut trailing, &mut inside, &mut m).unwrap() };
+        let u: Vec<u16> = text.encode_utf16().collect();
+        let cut = if keep_end { format!("…{}", String::from_utf16_lossy(&u[(m.textPosition + m.length) as usize..])) } else { format!("{}…", String::from_utf16_lossy(&u[..m.textPosition as usize])) };
+        self.layout(&cut, style, 1.0e4)
+    }
+
     /// An uncached layout: for editor lines, which own their layouts.
     pub fn new_layout(&self, text: &str, style: Style, max_w: f32, family: Option<&str>) -> IDWriteTextLayout {
         let w = wide(text);
@@ -357,9 +405,17 @@ impl Gfx {
             if let Some(f) = family {
                 self.set_family(&l, f, whole(&w));
             }
-            // A user-chosen face still sits behind `MDView Latin` in every stack but code.
-            if matches!(style.stack, Stack::Ui | Stack::Display) || (family.is_some() && style.stack != Stack::Code) {
-                self.latin_runs(&l, &w);
+            // Serif stacks hand their CJK runs to the CJK serif (italic text to the kai face,
+            // which has no italic to fake), unless the user chose a face.
+            if family.is_none() && matches!(style.stack, Stack::Read | Stack::Display) {
+                self.cjk_runs(&l, &w, whole(&w), if style.italic { &self.faces.kai } else { &self.faces.cjk });
+            }
+            // The Sitka fallback's default figures are old-style; text and tables want lining figures.
+            if matches!(style.stack, Stack::Read | Stack::Display) {
+                if let Ok(ty) = self.dw.CreateTypography() {
+                    let _ = ty.AddFontFeature(DWRITE_FONT_FEATURE { nameTag: DWRITE_FONT_FEATURE_TAG_LINING_FIGURES, parameter: 1 });
+                    let _ = l.SetTypography(&ty, whole(&w));
+                }
             }
             l
         }
@@ -378,20 +434,39 @@ impl Gfx {
         }
     }
 
-    /// `MDView Latin` in `fonts.css`: U+0000–024F in Consolas, the rest in the stack's face.
-    fn latin_runs(&self, l: &IDWriteTextLayout, w: &[u16]) {
-        let mut i = 0;
-        while i < w.len() {
-            if w[i] <= 0x024f {
+    /// The Latin face has no CJK glyphs: everything from U+2E80 up, and the general
+    /// punctuation Chinese text borrows (quotes, dashes, ellipsis) when it touches
+    /// CJK, goes to `family`. Only `within` is touched; a kai run is upright.
+    fn cjk_runs(&self, l: &IDWriteTextLayout, w: &[u16], within: DWRITE_TEXT_RANGE, family: &str) {
+        // Mark ranges can reach past text that was hidden or cut.
+        let end = ((within.startPosition + within.length) as usize).min(w.len());
+        let cjk = |c: u16| c >= 0x2e80;
+        let borrowed = |c: u16| matches!(c, 0x2014 | 0x2015 | 0x2018..=0x201f | 0x2026);
+        let is = |i: usize| {
+            let c = w[i];
+            cjk(c) || (borrowed(c) && ((i > 0 && cjk(w[i - 1])) || (i + 1 < w.len() && cjk(w[i + 1]))))
+        };
+        let mut i = within.startPosition as usize;
+        while i < end {
+            if is(i) {
                 let start = i;
-                while i < w.len() && w[i] <= 0x024f {
+                while i < end && is(i) {
                     i += 1;
                 }
-                self.set_family(l, LATIN, DWRITE_TEXT_RANGE { startPosition: start as u32, length: (i - start) as u32 });
+                let range = DWRITE_TEXT_RANGE { startPosition: start as u32, length: (i - start) as u32 };
+                self.set_family(l, family, range);
+                unsafe {
+                    let _ = l.SetFontStyle(DWRITE_FONT_STYLE_NORMAL, range);
+                }
             } else {
                 i += 1;
             }
         }
+    }
+
+    /// Re-face the CJK runs inside `range` with the kai face (blockquotes, emphasis).
+    pub fn kai_runs(&self, l: &IDWriteTextLayout, w: &[u16], range: DWRITE_TEXT_RANGE) {
+        self.cjk_runs(l, w, range, &self.faces.kai);
     }
 
     pub fn drop_layout_cache(&self) {
@@ -464,12 +539,12 @@ impl Gfx {
         v
     }
 
-    pub fn primary_family(stack: Stack) -> &'static str {
+    pub fn primary_family(&self, stack: Stack) -> &str {
         match stack {
-            Stack::Ui => ROUNDED,
-            Stack::Read => "Segoe UI",
-            Stack::Display => DISPLAY,
-            Stack::Code => LATIN,
+            Stack::Ui => UI,
+            Stack::Read => &self.faces.body,
+            Stack::Display => &self.faces.heading,
+            Stack::Code => CODE,
         }
     }
 
@@ -746,12 +821,28 @@ fn whole(w: &[u16]) -> DWRITE_TEXT_RANGE {
     DWRITE_TEXT_RANGE { startPosition: 0, length: w.len() as u32 }
 }
 
-/// The bundled CJK faces as their own small collection.
+/// Font files loaded from the `fonts` directory at startup (scripts/fonts.ps1
+/// fetches them). A missing file leaves its role on the Windows fallback.
+const BUNDLED_FONTS: &[&str] = &[
+    "NotoSerifSC-VF.ttf",
+    "LXGWWenKai-Regular.ttf",
+    "lmroman10-regular.otf",
+    "lmroman10-bold.otf",
+    "lmroman10-italic.otf",
+    "lmroman10-bolditalic.otf",
+];
+
+fn family_in(c: &IDWriteFontCollection1, name: &str) -> bool {
+    let (mut index, mut exists) = (0, BOOL(0));
+    unsafe { c.FindFamilyName(PCWSTR(wide_z(name).as_ptr()), &mut index, &mut exists).is_ok() && exists.as_bool() }
+}
+
+/// The bundled faces as their own small collection.
 fn font_collection(dw: &IDWriteFactory5, dir: Option<&Path>) -> Result<IDWriteFontCollection1> {
     unsafe {
         let builder = dw.CreateFontSetBuilder()?;
         if let Some(dir) = dir {
-            for name in ["GenSenRounded2TC-R.otf", "ZCOOLXiaoWei-Regular.ttf"] {
+            for name in BUNDLED_FONTS {
                 let path = dir.join(name);
                 if path.exists() {
                     let file = dw.CreateFontFileReference(PCWSTR(wide_z(&path.to_string_lossy()).as_ptr()), None)?;

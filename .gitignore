@@ -4,3 +4,6 @@ target/
 Thumbs.db
 design-review/
 CLAUDE.local.md
+# Fetched by scripts/fonts.ps1
+crates/export/assets/fonts/*.ttf
+crates/export/assets/fonts/*.otf
