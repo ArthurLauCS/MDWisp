@@ -33,7 +33,7 @@ Since 0.5 MDWisp is a native Windows app written in Rust: the window appears in 
 
 ## Download and installation
 
-Download `MDWisp-0.5.3-setup.exe` from [Releases](https://github.com/ArthurLauCS/MDWisp/releases/latest), or build it yourself (see [Development](#development-and-verification)). It needs Windows 10 or later, x64. Installation offers English and Simplified Chinese, a directory choice and a desktop shortcut. It installs for the current user without administrator rights, and removes an installed 0.4.x version while keeping its settings and history.
+Download `MDWisp-0.6.0-setup.exe` from [Releases](https://github.com/ArthurLauCS/MDWisp/releases/latest), or build it yourself (see [Development](#development-and-verification)). It needs Windows 10 or later, x64. Installation offers English and Simplified Chinese, a directory choice and a desktop shortcut. It installs for the current user without administrator rights, and removes an installed 0.4.x version while keeping its settings and history.
 
 The installer is unsigned, so Windows SmartScreen may show "Windows protected your PC". Choose **More info → Run anyway**. macOS and Linux are not supported.
 
@@ -180,4 +180,4 @@ See [AGENTS.md](AGENTS.md) (Chinese) for development rules. Report issues in the
 
 ## License and fonts
 
-Code uses [MIT](LICENSE). Bundled fonts retain their open licenses: [GenSen Rounded](crates/export/assets/fonts/OFL-GenSen.txt) and [ZCOOL XiaoWei](crates/export/assets/fonts/OFL-ZCOOLXiaoWei.txt).
+Code uses [MIT](LICENSE). Bundled fonts retain their open licenses (details in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)): [Noto Serif SC](crates/export/assets/fonts/OFL-NotoSerifSC.txt) and [LXGW WenKai](crates/export/assets/fonts/OFL-LXGWWenKai.txt) under the SIL OFL 1.1, and [Latin Modern Roman](crates/export/assets/fonts/GUST-FONT-LICENSE-LatinModern.txt) under the GUST Font License. The font files are not in git: run `scripts/fonts.ps1` to fetch them before running from source.

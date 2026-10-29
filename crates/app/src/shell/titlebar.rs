@@ -2,6 +2,7 @@
 //! own controls on the left, the caption in the middle, and the window
 //! buttons hard against the top-right corner.
 
+use super::widgets::{DIRTY_W, dirty_dot};
 use crate::gfx::{Gfx, Rect, Stack, Style, metrics};
 use crate::theme::{self, CLOSE_HOVER, CLOSE_PRESS, RADIUS_SM, S1, S2, S3, S4, TEXT_SM, TEXT_XS, WHITE, mix};
 use crate::ui::Hit;
@@ -43,7 +44,7 @@ pub fn paint(w: &mut Window, g: &Gfx, bar: Rect) {
     let toggle = lead.cut_left(28.0);
     let tr = Rect::new(toggle.x, bar.y + (bar.h - 28.0) / 2.0, 28.0, 28.0);
     button_bg(w, g, tr, Hit::SidebarToggle);
-    let tc = mix(th.accent, th.text_secondary, w.ui.hover_t(Hit::SidebarToggle));
+    let tc = mix(th.text_primary, th.text_secondary, w.ui.hover_t(Hit::SidebarToggle));
     rail_icon(g, tr, tc);
     w.ui.region(tr, Hit::SidebarToggle);
     lead.cut_left(S1);
@@ -66,33 +67,39 @@ pub fn paint(w: &mut Window, g: &Gfx, bar: Rect) {
     }
 
     // ---- centre: which document — the one thing people look at the chrome to find out
+    let (left, right) = (lead.x + S4, rest.right() - S4);
+    // Centred on the window when that clears the buttons, else in the space between them.
+    let start = |total: f32| {
+        let x = bar.x + (bar.w - total) / 2.0;
+        if x >= left && x + total <= right { x } else { left + ((right - left) - total).max(0.0) / 2.0 }
+    };
     match &w.doc {
         Some(d) => {
-            let name = format!("{}{}", if d.dirty() { "● " } else { "" }, d.name());
             let dir = d.meta.as_ref().and_then(|m| m.parent_dir.file_name()).map(|n| n.to_string_lossy().into_owned()).unwrap_or_default();
-            let nl = g.layout(&name, Style::new(Stack::Ui, TEXT_SM), 600.0);
+            let nl = g.layout(&d.name(), Style::new(Stack::Ui, TEXT_SM), 600.0);
             let dl = g.layout(&dir, Style::new(Stack::Ui, TEXT_XS), 400.0);
             let (nm, dm) = (metrics(&nl), metrics(&dl));
             // The folder name drops out on narrow windows, like the CSS breakpoint.
             let show_dir = w.width > 900.0 && !dir.is_empty();
-            let total = nm.w + if show_dir { S2 + dm.w } else { 0.0 };
-            let (left, right) = (lead.x + S4, rest.right() - S4);
-            let cx = left + ((right - left) - total).max(0.0) / 2.0;
+            let dot = if d.dirty() { DIRTY_W } else { 0.0 };
+            let total = dot + nm.w + if show_dir { S2 + dm.w } else { 0.0 };
+            let cx = start(total);
             if total <= right - left {
                 let base = bar.y + (bar.h - nm.h) / 2.0;
-                g.text(&nl, cx, base, th.text_secondary);
+                if d.dirty() {
+                    dirty_dot(g, cx, base + nm.h / 2.0);
+                }
+                g.text(&nl, cx + dot, base, th.text_secondary);
                 if show_dir {
-                    g.text(&dl, cx + nm.w + S2, base + nm.h - dm.h - 1.0, th.text_disabled);
+                    g.text(&dl, cx + dot + nm.w + S2, base + nm.h - dm.h - 1.0, th.text_disabled);
                 }
             }
         }
         None => {
             let name = g.layout("MDWISP", Style::new(Stack::Ui, TEXT_XS), 1000.0);
             let m = metrics(&name);
-            let (left, right) = (lead.x + S4, rest.right() - S4);
-            let cx = left + ((right - left) - m.w).max(0.0) / 2.0;
             if m.w <= right - left {
-                g.text(&name, cx, bar.y + (bar.h - m.h) / 2.0, th.text_tertiary);
+                g.text(&name, start(m.w), bar.y + (bar.h - m.h) / 2.0, th.text_tertiary);
             }
         }
     }

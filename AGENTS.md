@@ -101,6 +101,7 @@ app  →  export  →  text  →  core
 ## 测试与验证
 
 ```bash
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/fonts.ps1   # 下载内置字体（不进 git；缺字体时回退到系统字体，导出测试跳过嵌入检查）
 cargo test --workspace          # 单元测试
 cargo build --release -p mdwisp # 发布构建，target/release/mdwisp.exe
 claude plugin validate plugin   # 改过 plugin/ 之后

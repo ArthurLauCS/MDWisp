@@ -152,6 +152,8 @@ pub struct LineStyle {
     pub tracking: f32,
     pub upper: bool,
     pub center: bool,
+    /// Blockquote line: its CJK runs are set in the kai face.
+    pub quote: bool,
 }
 
 pub fn line_style(d: &LineDeco, look: &Look, t: &Theme) -> LineStyle {
@@ -168,6 +170,7 @@ pub fn line_style(d: &LineDeco, look: &Look, t: &Theme) -> LineStyle {
         tracking: 0.0,
         upper: false,
         center: false,
+        quote: d.quote,
     };
     if look.source {
         s.style = Style::new(Stack::Code, look.code_size());
@@ -182,7 +185,7 @@ pub fn line_style(d: &LineDeco, look: &Look, t: &Theme) -> LineStyle {
     }
     if d.table > 0 {
         let size = size * 0.92;
-        s.style = Style::new(Stack::Ui, size).weight(if d.table == 1 { 620 } else { 400 });
+        s.style = Style::new(Stack::Read, size).weight(if d.table == 1 { 700 } else { 400 });
         s.lh = size * 1.55;
         return s;
     }
@@ -205,47 +208,36 @@ pub fn line_style(d: &LineDeco, look: &Look, t: &Theme) -> LineStyle {
     if d.para_end {
         s.pad_bottom = 8.0;
     }
+    // Paper scale on a 14 px body: 26 / 20 / 16, then body size. Bold and italic only.
     match d.heading {
         1 => {
-            s.style = Style::new(Stack::Display, size * 2.15).weight(500);
-            s.lh = size * 2.15 * 1.16;
-            (s.pad_top, s.pad_bottom) = (24.0, 24.0);
-            s.tracking = -0.018 * size * 2.15;
+            s.style = Style::new(Stack::Display, size * 26.0 / 14.0).weight(700);
+            s.lh = size * 26.0 / 14.0 * 1.25;
+            (s.pad_top, s.pad_bottom) = (24.0, 16.0);
         }
         2 => {
-            s.style = Style::new(Stack::Read, size * 1.55).weight(600);
-            s.lh = size * 1.55 * 1.24;
-            (s.pad_top, s.pad_bottom) = (36.0, 16.0);
-            s.tracking = -0.008 * size * 1.55;
+            s.style = Style::new(Stack::Display, size * 20.0 / 14.0).weight(700);
+            s.lh = size * 20.0 / 14.0 * 1.3;
+            (s.pad_top, s.pad_bottom) = (28.0, 12.0);
         }
         3 => {
-            s.style = Style::new(Stack::Ui, size * 1.2).weight(640);
-            s.lh = size * 1.2 * 1.32;
-            (s.pad_top, s.pad_bottom) = (28.0, 12.0);
-            s.tracking = -0.004 * size * 1.2;
+            s.style = Style::new(Stack::Display, size * 16.0 / 14.0).weight(700);
+            s.lh = size * 16.0 / 14.0 * 1.4;
+            (s.pad_top, s.pad_bottom) = (20.0, 8.0);
         }
         4 => {
-            s.style = Style::new(Stack::Ui, size * 1.02).weight(640);
-            s.lh = lh * size * 1.02;
-            (s.pad_top, s.pad_bottom) = (24.0, 8.0);
-            s.tracking = 0.012 * size * 1.02;
+            s.style = Style::new(Stack::Read, size).weight(700);
+            (s.pad_top, s.pad_bottom) = (16.0, 4.0);
         }
         5 => {
-            s.style = Style::new(Stack::Ui, size * 0.84).weight(600);
-            s.lh = lh * size * 0.84;
-            (s.pad_top, s.pad_bottom) = (24.0, 8.0);
+            s.style = Style { italic: true, ..Style::new(Stack::Read, size) };
+            (s.pad_top, s.pad_bottom) = (16.0, 4.0);
             s.color = t.text_secondary;
-            s.upper = true;
-            s.tracking = 0.09 * size * 0.84;
-            s.indent = 12.0 + 2.0;
         }
         6 => {
-            s.style = Style::new(Stack::Code, size * 0.78).weight(500);
-            s.lh = lh * size * 0.78;
-            (s.pad_top, s.pad_bottom) = (24.0, 8.0);
+            s.style = Style::new(Stack::Read, size);
+            (s.pad_top, s.pad_bottom) = (16.0, 4.0);
             s.color = t.text_tertiary;
-            s.upper = true;
-            s.tracking = 0.09 * size * 0.78;
         }
         _ => {}
     }
@@ -426,8 +418,11 @@ pub fn shape_line(g: &Gfx, cache: &mut Cache, src: &str, deco: &Deco, line: Rang
     let layout = (!skip_text).then(|| {
         let text = String::from_utf16_lossy(&disp);
         let l = g.new_layout(&text, ls.style, text_w, family);
+        if ls.quote && family.is_none() && matches!(ls.style.stack, Stack::Read | Stack::Display) {
+            g.kai_runs(&l, &disp, whole(&disp));
+        }
         unsafe {
-            let fam = family.unwrap_or(Gfx::primary_family(ls.style.stack));
+            let fam = family.unwrap_or(g.primary_family(ls.style.stack));
             let (a, d) = g.ascent(fam);
             let baseline = (ls.lh - (a + d) * size) / 2.0 + a * size;
             // Uniform spacing would let a tall image overflow upwards; such lines grow to fit.
@@ -458,8 +453,14 @@ pub fn shape_line(g: &Gfx, cache: &mut Cache, src: &str, deco: &Deco, line: Rang
             let range = DWRITE_TEXT_RANGE { startPosition: dr.start, length: dr.end - dr.start };
             unsafe {
                 match m {
-                    Mark::Strong => l.SetFontWeight(DWRITE_FONT_WEIGHT(650), range).unwrap(),
-                    Mark::Em => l.SetFontStyle(DWRITE_FONT_STYLE_ITALIC, range).unwrap(),
+                    Mark::Strong => l.SetFontWeight(DWRITE_FONT_WEIGHT(700), range).unwrap(),
+                    Mark::Em => {
+                        l.SetFontStyle(DWRITE_FONT_STYLE_ITALIC, range).unwrap();
+                        // Latin italics are Latin Modern Italic; CJK has none, so it takes the kai face.
+                        if family.is_none() && matches!(ls.style.stack, Stack::Read | Stack::Display) {
+                            g.kai_runs(l, &disp, range);
+                        }
+                    }
                     Mark::Strike => {
                         l.SetStrikethrough(true, range).unwrap();
                         l.SetDrawingEffect(&g.solid(t.text_tertiary), range).unwrap();
@@ -468,7 +469,7 @@ pub fn shape_line(g: &Gfx, cache: &mut Cache, src: &str, deco: &Deco, line: Rang
                     Mark::Code => {
                         g.set_family(l, code_family, range);
                         l.SetFontSize(size * 0.88, range).unwrap();
-                        l.SetDrawingEffect(&g.solid(t.accent), range).unwrap();
+                        l.SetDrawingEffect(&g.solid(t.text_primary), range).unwrap();
                         backgrounds.push((dr.clone(), Bg::Code));
                     }
                     Mark::Math => {
@@ -482,7 +483,7 @@ pub fn shape_line(g: &Gfx, cache: &mut Cache, src: &str, deco: &Deco, line: Rang
                         l.SetUnderline(true, range).unwrap();
                         l.SetDrawingEffect(&g.solid(t.link), range).unwrap();
                     }
-                    Mark::ListMarker => l.SetDrawingEffect(&g.solid(t.accent), range).unwrap(),
+                    Mark::ListMarker => l.SetDrawingEffect(&g.solid(t.text_secondary), range).unwrap(),
                     Mark::Hl(tok) => {
                         use mdwisp_text::highlight::Token as K;
                         let c = match tok {
@@ -510,9 +511,9 @@ pub fn shape_line(g: &Gfx, cache: &mut Cache, src: &str, deco: &Deco, line: Rang
     let marker = marker.map(|(text, end)| {
         let l = g.new_layout(&text, Style::new(ls.style.stack, size), 1.35 * size, family);
         unsafe {
-            let (a, d) = g.ascent(family.unwrap_or(Gfx::primary_family(ls.style.stack)));
+            let (a, d) = g.ascent(family.unwrap_or(g.primary_family(ls.style.stack)));
             l.SetLineSpacing(DWRITE_LINE_SPACING_METHOD_UNIFORM, ls.lh, (ls.lh - (a + d) * size) / 2.0 + a * size).unwrap();
-            l.SetDrawingEffect(&g.solid(t.accent), DWRITE_TEXT_RANGE { startPosition: 0, length: text.encode_utf16().count() as u32 }).unwrap();
+            l.SetDrawingEffect(&g.solid(t.text_secondary), DWRITE_TEXT_RANGE { startPosition: 0, length: text.encode_utf16().count() as u32 }).unwrap();
         }
         (l, end)
     });

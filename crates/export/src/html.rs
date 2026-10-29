@@ -156,7 +156,7 @@ pub fn build_html(doc_path: &Path, source: &str, theme: Theme) -> io::Result<Htm
 </html>
 "#,
         title = escape(&stem(doc_path)),
-        css = crate::css::document_styles()?,
+        css = crate::css::document_styles(source)?,
     );
     let bytes = html.len();
     Ok(HtmlBuild { html, inlined, missing, external, bytes })
@@ -261,9 +261,14 @@ mod tests {
         assert!(!r.html.contains("<script"));
         assert!(!r.html.contains("<link"));
         assert!(!Regex::new(r#"https?://[^"' ]*\.(css|js)"#).unwrap().is_match(&r.html));
-        assert!(r.html.contains("data:font/otf;base64,"));
-        assert!(r.html.contains("data:font/ttf;base64,"));
         assert!(!r.html.contains("url('./fonts/"));
+        // The bundled faces are embedded when fetched (scripts/fonts.ps1); the CJK ones are cut
+        // down to this document's characters, so the file stays small.
+        if crate::css::fonts_fetched() {
+            assert!(r.html.contains("data:font/otf;base64,"));
+            assert!(r.html.contains("data:font/ttf;base64,"));
+            assert!(r.html.len() < 2_000_000, "{} bytes", r.html.len());
+        }
         assert!(!r.html.contains("*:hover >"));
         assert!(!Regex::new(r"body,\s*\{").unwrap().is_match(&r.html));
     }

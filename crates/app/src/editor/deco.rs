@@ -403,9 +403,10 @@ pub fn decorate(src: &str, focus: &Focus) -> Deco {
             hidden.push(s..s + ind);
         }
     }
+    // An empty document's one line holds the placeholder and the caret: it keeps its full height.
     for l in 0..d.lines.len() {
         let s = d.starts[l];
-        if s >= body && src[s..d.line_end(l, src)].trim().is_empty() && d.lines[l].code == Code::None {
+        if s >= body && !src.is_empty() && src[s..d.line_end(l, src)].trim().is_empty() && d.lines[l].code == Code::None {
             d.lines[l].blank = true;
         }
     }
@@ -604,6 +605,7 @@ mod tests {
         let d = decorate(src, &focus_none());
         assert_eq!(d.lines[0].heading, 1);
         assert!(d.lines[1].blank);
+        assert!(!decorate("", &focus_none()).lines[0].blank);
         assert_eq!(visible(src, &d), "Title\n\nSome bold and em and code hi.");
         assert!(d.marks.iter().any(|(_, s)| *s == Style::Mark));
     }

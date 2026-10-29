@@ -1,140 +1,135 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="960" height="600" viewBox="0 0 960 600" role="img" aria-label="表格引擎能力：排序、合并、移动行列，以及转 CSV 与 JSON 的往返">
   <defs>
-    <linearGradient id="wash3" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#d97757" stop-opacity="0.06"/>
-      <stop offset="0.6" stop-color="#d97757" stop-opacity="0"/>
-    </linearGradient>
     <marker id="tip3" viewBox="0 0 8 8" refX="6.4" refY="4" markerWidth="7" markerHeight="7" orient="auto">
-      <path d="M0 0.6 L7 4 L0 7.4 z" fill="#d97757"/>
+      <path d="M0 0.6 L7 4 L0 7.4 z" fill="#B49DDC"/>
     </marker>
   </defs>
 
-  <rect width="960" height="600" fill="#1F1E1D"/>
-  <rect width="960" height="600" fill="url(#wash3)"/>
+  <rect width="960" height="600" fill="#1A1A18"/>
 
-  <g font-family="'Segoe UI Variable Text', 'Segoe UI', Inter, 'PingFang SC', 'Microsoft YaHei UI', 'Noto Sans SC', sans-serif">
-    <text x="36" y="50" fill="#D97757" font-size="11.5" letter-spacing="1.9">表格引擎</text>
-    <text x="36" y="84" fill="#F5F4EF" font-size="25" letter-spacing="-0.3">表格不是排版，是数据</text>
-    <text x="36" y="111" fill="#8A877E" font-size="12.5">增删行列、排序、合并、转置，都在同一套纯函数引擎里，界面只是调用方。</text>
+  <g font-family="'Microsoft YaHei UI', 'Segoe UI', sans-serif">
+    <text x="36" y="50" fill="#B49DDC" font-size="11.5">表格引擎</text>
+    <text x="36" y="84" fill="#E8E6DF" font-size="25">表格不是排版，是数据</text>
+    <text x="36" y="111" fill="#A09E95" font-size="12.5">增删行列、排序、合并、转置，都在同一套纯函数引擎里，界面只是调用方。</text>
 
     <!-- ================= left panel : the table ================= -->
-    <rect x="36" y="140" width="596" height="432" rx="12" fill="#262624" stroke="#45443F"/>
+    <rect x="36" y="140" width="596" height="432" fill="#212120" stroke="#56564F"/>
 
     <!-- row handles stand in the left gutter -->
-    <g fill="#33322F">
-      <rect x="52" y="254" width="7" height="26" rx="3.5"/>
-      <rect x="52" y="322" width="7" height="26" rx="3.5"/>
+    <g fill="#3D3D39">
+      <rect x="52" y="254" width="7" height="26"/>
+      <rect x="52" y="322" width="7" height="26"/>
     </g>
-    <rect x="52" y="288" width="7" height="26" rx="3.5" fill="#D97757" fill-opacity="0.8"/>
-    <path d="M55.5 318 v-4 M55.5 286 v-4" stroke="#D97757" stroke-width="1.3" marker-end="url(#tip3)"/>
+    <rect x="52" y="288" width="7" height="26" fill="#B49DDC" fill-opacity="0.8"/>
+    <path d="M55.5 318 v-4 M55.5 286 v-4" stroke="#B49DDC" stroke-width="1.3" marker-end="url(#tip3)"/>
 
     <g transform="translate(6,0)">
       <!-- drag handle row, above the header -->
-      <g fill="#33322F">
-        <rect x="76" y="192" width="102" height="6" rx="3"/>
-        <rect x="186" y="192" width="122" height="6" rx="3"/>
-        <rect x="434" y="192" width="146" height="6" rx="3"/>
+      <g fill="#3D3D39">
+        <rect x="76" y="192" width="102" height="6"/>
+        <rect x="186" y="192" width="122" height="6"/>
+        <rect x="434" y="192" width="146" height="6"/>
       </g>
-      <rect x="316" y="192" width="110" height="6" rx="3" fill="#D97757" fill-opacity="0.75"/>
+      <rect x="316" y="192" width="110" height="6" fill="#B49DDC" fill-opacity="0.75"/>
 
       <!-- the sorted column gets a wash so the sort target is unambiguous -->
-      <rect x="316" y="206" width="110" height="228" fill="#D97757" fill-opacity="0.05"/>
+      <rect x="316" y="206" width="110" height="228" fill="#B49DDC" fill-opacity="0.05"/>
 
-      <g stroke="#33322F">
+      <g stroke="#3D3D39">
         <line x1="76" y1="250" x2="580" y2="250"/>
         <line x1="76" y1="284" x2="580" y2="284"/>
         <line x1="76" y1="318" x2="580" y2="318"/>
         <line x1="76" y1="352" x2="580" y2="352"/>
         <line x1="76" y1="386" x2="580" y2="386"/>
       </g>
-      <line x1="76" y1="422" x2="580" y2="422" stroke="#8A877E" stroke-opacity="0.6"/>
+      <line x1="76" y1="422" x2="580" y2="422" stroke="#A09E95" stroke-opacity="0.6"/>
 
-      <g font-size="11.5" fill="#8A877E" letter-spacing="0.4">
+      <g font-size="11.5" fill="#A09E95">
         <text x="76" y="234">操作</text>
         <text x="186" y="234">分类</text>
-        <text x="316" y="234" fill="#D97757">次数</text>
+        <text x="316" y="234" fill="#B49DDC">次数</text>
         <text x="434" y="234">最近使用</text>
       </g>
-      <path d="M396 232 l6 0 l-3 -6 z" fill="#D97757"/>
+      <path d="M396 232 l6 0 l-3 -6 z" fill="#B49DDC"/>
 
-      <g font-size="13" fill="#B8B5AD">
+      <g font-size="13" fill="#C4C2B9">
         <text x="76" y="272">转置</text>
         <text x="186" y="272">结构</text>
-        <text x="418" y="272" fill="#F5F4EF" text-anchor="end">12</text>
-        <text x="580" y="272" text-anchor="end" fill="#8A877E" font-size="12">09-28</text>
+        <text x="418" y="272" fill="#E8E6DF" text-anchor="end">12</text>
+        <text x="580" y="272" text-anchor="end" fill="#A09E95" font-size="12">09-28</text>
 
         <text x="76" y="306">排序</text>
         <text x="186" y="306">数据</text>
-        <text x="418" y="306" fill="#F5F4EF" text-anchor="end">48</text>
-        <text x="580" y="306" text-anchor="end" fill="#8A877E" font-size="12">10-01</text>
+        <text x="418" y="306" fill="#E8E6DF" text-anchor="end">48</text>
+        <text x="580" y="306" text-anchor="end" fill="#A09E95" font-size="12">10-01</text>
 
         <text x="76" y="340">合并</text>
         <text x="186" y="340">单元格</text>
-        <text x="418" y="340" fill="#F5F4EF" text-anchor="end">7</text>
-        <text x="580" y="340" text-anchor="end" fill="#8A877E" font-size="12">10-02</text>
+        <text x="418" y="340" fill="#E8E6DF" text-anchor="end">7</text>
+        <text x="580" y="340" text-anchor="end" fill="#A09E95" font-size="12">10-02</text>
 
         <text x="76" y="374">求和</text>
         <text x="186" y="374">数据</text>
-        <text x="418" y="374" fill="#F5F4EF" text-anchor="end">31</text>
-        <text x="580" y="374" text-anchor="end" fill="#8A877E" font-size="12">10-03</text>
+        <text x="418" y="374" fill="#E8E6DF" text-anchor="end">31</text>
+        <text x="580" y="374" text-anchor="end" fill="#A09E95" font-size="12">10-03</text>
 
         <text x="76" y="408">转 CSV</text>
         <text x="186" y="408">结构</text>
-        <text x="418" y="408" fill="#F5F4EF" text-anchor="end">9</text>
-        <text x="580" y="408" text-anchor="end" fill="#8A877E" font-size="12">10-03</text>
+        <text x="418" y="408" fill="#E8E6DF" text-anchor="end">9</text>
+        <text x="580" y="408" text-anchor="end" fill="#A09E95" font-size="12">10-03</text>
       </g>
 
       <!-- the two cells that are about to become one -->
-      <rect x="70" y="360" width="222" height="28" rx="6" fill="#D97757" fill-opacity="0.06" stroke="#D97757" stroke-opacity="0.45" stroke-dasharray="4 4"/>
+      <rect x="70" y="360" width="222" height="28" fill="#B49DDC" fill-opacity="0.06" stroke="#B49DDC" stroke-opacity="0.45" stroke-dasharray="4 4"/>
     </g>
 
-    <text x="70" y="446" fill="#5C5A54" font-size="10.5">虚线框：两个单元格已选中，合并后写成 colspan / rowspan，仍是一个标准 markdown 表格</text>
+    <text x="70" y="446" fill="#6E6D66" font-size="10.5">虚线框：两个单元格已选中，合并后写成 colspan / rowspan，仍是一个标准 markdown 表格</text>
 
     <!-- operation groups -->
-    <line x1="64" y1="450" x2="604" y2="450" stroke="#33322F"/>
+    <line x1="64" y1="450" x2="604" y2="450" stroke="#3D3D39"/>
     <g font-size="11.5">
-      <rect x="64" y="468" width="66" height="26" rx="7" fill="#30302E" stroke="#45443F"/>
-      <text x="97" y="485" fill="#B8B5AD" text-anchor="middle">行列</text>
-      <rect x="138" y="468" width="80" height="26" rx="7" fill="#30302E" stroke="#45443F"/>
-      <text x="178" y="485" fill="#B8B5AD" text-anchor="middle">单元格</text>
-      <rect x="226" y="468" width="66" height="26" rx="7" fill="#D97757" fill-opacity="0.14" stroke="#D97757" stroke-opacity="0.36"/>
-      <text x="259" y="485" fill="#D97757" text-anchor="middle">数据</text>
-      <rect x="300" y="468" width="66" height="26" rx="7" fill="#30302E" stroke="#45443F"/>
-      <text x="333" y="485" fill="#B8B5AD" text-anchor="middle">结构</text>
+      <rect x="64" y="468" width="66" height="26" fill="#2A2A27" stroke="#56564F"/>
+      <text x="97" y="485" fill="#C4C2B9" text-anchor="middle">行列</text>
+      <rect x="138" y="468" width="80" height="26" fill="#2A2A27" stroke="#56564F"/>
+      <text x="178" y="485" fill="#C4C2B9" text-anchor="middle">单元格</text>
+      <rect x="226" y="468" width="66" height="26" fill="#B49DDC" fill-opacity="0.14" stroke="#B49DDC" stroke-opacity="0.36"/>
+      <text x="259" y="485" fill="#B49DDC" text-anchor="middle">数据</text>
+      <rect x="300" y="468" width="66" height="26" fill="#2A2A27" stroke="#56564F"/>
+      <text x="333" y="485" fill="#C4C2B9" text-anchor="middle">结构</text>
     </g>
-    <text x="386" y="485" fill="#5C5A54" font-size="11">四组操作，快捷键 / 右键 / 命令面板同源</text>
+    <text x="386" y="485" fill="#6E6D66" font-size="11">四组操作，快捷键 / 右键 / 命令面板同源</text>
 
-    <text x="64" y="524" fill="#8A877E" font-size="11.5">排序自动识别数字、日期与字符串；空值恒排末尾，同值保持原来的顺序。</text>
-    <text x="64" y="546" fill="#8A877E" font-size="11.5">从 Excel 直接粘贴，制表符与引号都按 CSV 规则处理。</text>
+    <text x="64" y="524" fill="#A09E95" font-size="11.5">排序自动识别数字、日期与字符串；空值恒排末尾，同值保持原来的顺序。</text>
+    <text x="64" y="546" fill="#A09E95" font-size="11.5">从 Excel 直接粘贴，制表符与引号都按 CSV 规则处理。</text>
 
     <!-- ================= right rail ================= -->
-    <text x="660" y="146" fill="#D97757" font-size="11.5" letter-spacing="1.7">往返不丢信息</text>
+    <text x="660" y="146" fill="#B49DDC" font-size="11.5">往返不丢信息</text>
 
-    <rect x="660" y="162" width="264" height="140" rx="12" fill="#191918" stroke="#33322F"/>
-    <g font-size="11" font-family="'Cascadia Code', Consolas, 'Sarasa Mono SC', monospace">
-      <text x="680" y="190" fill="#9CB380">操作,分类,次数</text>
-      <text x="680" y="208" fill="#9CB380">转置,结构,12</text>
-      <text x="680" y="226" fill="#9CB380">排序,数据,48</text>
+    <rect x="660" y="162" width="264" height="140" fill="#1A1A18" stroke="#3D3D39"/>
+    <g font-size="11" font-family="Consolas, monospace">
+      <text x="680" y="190" fill="#EA7A72">操作,分类,次数</text>
+      <text x="680" y="208" fill="#EA7A72">转置,结构,12</text>
+      <text x="680" y="226" fill="#EA7A72">排序,数据,48</text>
     </g>
-    <line x1="680" y1="244" x2="904" y2="244" stroke="#33322F"/>
-    <text x="680" y="264" fill="#8A877E" font-size="10.5">转成 JSON</text>
-    <text x="680" y="286" fill="#F5F4EF" font-size="10.5" font-family="'Cascadia Code', Consolas, 'Sarasa Mono SC', monospace">[{"操作":"转置","次数":12}, …]</text>
+    <line x1="680" y1="244" x2="904" y2="244" stroke="#3D3D39"/>
+    <text x="680" y="264" fill="#A09E95" font-size="10.5">转成 JSON</text>
+    <text x="680" y="286" fill="#E8E6DF" font-size="10.5" font-family="Consolas, monospace">[{"操作":"转置","次数":12}, …]</text>
 
-    <rect x="660" y="318" width="264" height="118" rx="12" fill="#262624" stroke="#45443F"/>
-    <text x="680" y="372" fill="#D97757" font-size="34" letter-spacing="-1">121</text>
-    <text x="680" y="396" fill="#F5F4EF" font-size="12.5">个单元测试覆盖表格引擎</text>
-    <text x="680" y="416" fill="#8A877E" font-size="10">转义管道符 · 代码块内管道符 · 参差行 · CRLF</text>
+    <rect x="660" y="318" width="264" height="118" fill="#212120" stroke="#56564F"/>
+    <text x="680" y="372" fill="#B49DDC" font-size="34">121</text>
+    <text x="680" y="396" fill="#E8E6DF" font-size="12.5">个单元测试覆盖表格引擎</text>
+    <text x="680" y="416" fill="#A09E95" font-size="10">转义管道符 · 代码块内管道符 · 参差行 · CRLF</text>
 
-    <rect x="660" y="452" width="264" height="120" rx="12" fill="#262624" stroke="#45443F"/>
-    <text x="680" y="482" fill="#F5F4EF" font-size="13">一处定义，三处同步</text>
+    <rect x="660" y="452" width="264" height="120" fill="#212120" stroke="#56564F"/>
+    <text x="680" y="482" fill="#E8E6DF" font-size="13">一处定义，三处同步</text>
     <g font-size="11.5">
-      <rect x="680" y="496" width="70" height="24" rx="6" fill="#30302E" stroke="#45443F"/>
-      <text x="715" y="512" fill="#B8B5AD" text-anchor="middle">快捷键</text>
-      <rect x="758" y="496" width="70" height="24" rx="6" fill="#30302E" stroke="#45443F"/>
-      <text x="793" y="512" fill="#B8B5AD" text-anchor="middle">右键菜单</text>
-      <rect x="836" y="496" width="70" height="24" rx="6" fill="#30302E" stroke="#45443F"/>
-      <text x="871" y="512" fill="#B8B5AD" text-anchor="middle">命令面板</text>
+      <rect x="680" y="496" width="70" height="24" fill="#2A2A27" stroke="#56564F"/>
+      <text x="715" y="512" fill="#C4C2B9" text-anchor="middle">快捷键</text>
+      <rect x="758" y="496" width="70" height="24" fill="#2A2A27" stroke="#56564F"/>
+      <text x="793" y="512" fill="#C4C2B9" text-anchor="middle">右键菜单</text>
+      <rect x="836" y="496" width="70" height="24" fill="#2A2A27" stroke="#56564F"/>
+      <text x="871" y="512" fill="#C4C2B9" text-anchor="middle">命令面板</text>
     </g>
-    <text x="680" y="546" fill="#8A877E" font-size="11">都由 actions/registry.ts 生成，不会脱节</text>
+    <text x="680" y="546" fill="#A09E95" font-size="11">都由 actions/registry.ts 生成，不会脱节</text>
   </g>
 </svg>

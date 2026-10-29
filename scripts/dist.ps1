@@ -4,6 +4,9 @@ $root = "$PSScriptRoot\.."
 $out = "$root\target\installer"
 # Only this version's installer is kept; older ones live on GitHub Releases.
 Remove-Item -Recurse -Force $out -ErrorAction SilentlyContinue
+# The installer ships crates\export\assets\fonts; fetch the (git-ignored) font files first.
+& "$PSScriptRoot\fonts.ps1"
+if (-not $?) { exit 1 }
 cargo build --release -p mdwisp --manifest-path "$root\Cargo.toml"
 if ($LASTEXITCODE) { exit $LASTEXITCODE }
 $version = (Select-String -Path "$root\crates\app\Cargo.toml" -Pattern '^version = "(.+)"' | Select-Object -First 1).Matches[0].Groups[1].Value

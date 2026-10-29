@@ -5,44 +5,44 @@
    ========================================================================= */
 
 :root {
-  /* ---- surfaces (warm neutrals: this is paper, not glass) --------------- */
-  --bg-base: #1f1e1d;
-  --bg-raised: #262624;
-  --bg-overlay: #30302e;
-  --bg-inset: #191918;
-  --bg-hover: rgba(245, 244, 239, 0.045);
-  --bg-active: rgba(245, 244, 239, 0.075);
+  /* ---- surfaces (paper style: warm off-white, ink text) --------------- */
+  --bg-base: #1a1a18;
+  --bg-raised: #212120;
+  --bg-overlay: #2a2a27;
+  --bg-inset: #212120;
+  --bg-hover: rgba(232, 230, 223, 0.045);
+  --bg-active: rgba(232, 230, 223, 0.08);
 
-  --border-soft: #33322f;
-  --border-strong: #45443f;
+  --border-soft: #3d3d39;
+  --border-strong: #56564f;
 
   /* ---- text ------------------------------------------------------------- */
-  --text-primary: #f5f4ef;
-  --text-secondary: #b8b5ad;
-  --text-tertiary: #8a877e;
-  --text-disabled: #5c5a54;
+  --text-primary: #e8e6df;
+  --text-secondary: #c4c2b9;
+  --text-tertiary: #a09e95;
+  --text-disabled: #989689;
 
-  /* ---- the one accent. Never more than two accents on screen. ----------- */
-  --accent: #d97757;
-  --accent-hover: #e08263;
-  --accent-press: #c96a4c;
-  --accent-soft: rgba(217, 119, 87, 0.14);
-  --accent-line: rgba(217, 119, 87, 0.35);
+  /* ---- the one accent (muted grape), also used for links ----------------- */
+  --accent: #b49ddc;
+  --accent-hover: #bda9e0;
+  --accent-press: #9e8ac2;
+  --accent-soft: rgba(180, 157, 220, 0.278);
+  --accent-line: rgba(180, 157, 220, 0.34);
 
-  --success: #7ba88a;
-  --warning: #d9a95c;
-  --danger: #c9645c;
-  --link: #8ab4c4;
+  --success: #8cc28e;
+  --warning: #e09a5a;
+  --danger: #ea7a72;
+  --link: #b49ddc;
 
-  /* ---- code highlight (desaturated to sit on a warm ground) ------------- */
-  --hl-keyword: #c98a6b;
-  --hl-string: #9cb380;
-  --hl-number: #d9a95c;
-  --hl-comment: #6e6b64;
-  --hl-func: #7fb3c8;
-  --hl-type: #b79bd1;
-  --hl-punct: #8a877e;
-  --hl-attr: #d9a95c;
+  /* ---- code highlight ---------------------------------------------------- */
+  --hl-keyword: #80b2e2;
+  --hl-string: #ea7a72;
+  --hl-number: #e09a5a;
+  --hl-comment: #8a8880;
+  --hl-func: #e8e6df;
+  --hl-type: #8cc28e;
+  --hl-punct: #a09e95;
+  --hl-attr: #d9bd62;
 
   /* ---- type scale ------------------------------------------------------- */
   --text-xs: 11.5px;
@@ -106,37 +106,40 @@
 }
 
 [data-theme='light'] {
-  --bg-base: #faf9f5;
-  --bg-raised: #ffffff;
-  --bg-overlay: #ffffff;
-  --bg-inset: #f2f0ea;
-  --bg-hover: rgba(31, 30, 29, 0.04);
-  --bg-active: rgba(31, 30, 29, 0.07);
+  --bg-base: #fdfdfb;
+  --bg-raised: #f5f5f0;
+  --bg-overlay: #fdfdfb;
+  --bg-inset: #f5f5f0;
+  --bg-hover: rgba(17, 17, 17, 0.04);
+  --bg-active: rgba(17, 17, 17, 0.07);
 
-  --border-soft: #e6e3da;
-  --border-strong: #d3cfc4;
+  --border-soft: #d4d4d0;
+  --border-strong: #b0b0aa;
 
-  --text-primary: #1f1e1d;
-  --text-secondary: #5c5a54;
-  --text-tertiary: #8a877e;
-  --text-disabled: #b8b5ad;
+  --text-primary: #111111;
+  --text-secondary: #45453f;
+  --text-tertiary: #66665f;
+  --text-disabled: #6e6e67;
 
-  --accent: #c2603f;
-  --accent-hover: #d97757;
-  --accent-press: #a94f33;
-  --accent-soft: rgba(194, 96, 63, 0.12);
-  --accent-line: rgba(194, 96, 63, 0.32);
+  --accent: #6a4c9c;
+  --accent-hover: #7c61a8;
+  --accent-press: #5d4389;
+  --accent-soft: rgba(106, 76, 156, 0.141);
+  --accent-line: rgba(106, 76, 156, 0.34);
 
-  --link: #3f6f85;
+  --success: #2e6b30;
+  --warning: #a85010;
+  --danger: #b0231f;
+  --link: #6a4c9c;
 
-  --hl-keyword: #a8502c;
-  --hl-string: #4f7a3a;
-  --hl-number: #95681c;
-  --hl-comment: #9a968c;
-  --hl-func: #2f6d8c;
-  --hl-type: #7a53a8;
-  --hl-punct: #6e6b64;
-  --hl-attr: #95681c;
+  --hl-keyword: #0b5394;
+  --hl-string: #b0231f;
+  --hl-number: #a85010;
+  --hl-comment: #66665f;
+  --hl-func: #111111;
+  --hl-type: #2e6b30;
+  --hl-punct: #66665f;
+  --hl-attr: #856600;
 
   --shadow-sm: 0 1px 2px rgba(31, 30, 29, 0.06);
   --shadow-md: 0 4px 14px rgba(31, 30, 29, 0.09);

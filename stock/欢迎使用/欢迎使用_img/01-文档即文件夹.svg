@@ -1,116 +1,111 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="960" height="620" viewBox="0 0 960 620" role="img" aria-label="两种图片存放方式的对比：文件夹随文档一起走，或上传到服务器">
   <defs>
-    <linearGradient id="wash" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#d97757" stop-opacity="0.07"/>
-      <stop offset="0.62" stop-color="#d97757" stop-opacity="0"/>
-    </linearGradient>
     <marker id="tip" viewBox="0 0 8 8" refX="6.4" refY="4" markerWidth="7" markerHeight="7" orient="auto">
-      <path d="M0 0.6 L7 4 L0 7.4 z" fill="#8a877e"/>
+      <path d="M0 0.6 L7 4 L0 7.4 z" fill="#A09E95"/>
     </marker>
     <marker id="tip-warn" viewBox="0 0 8 8" refX="6.4" refY="4" markerWidth="7" markerHeight="7" orient="auto">
-      <path d="M0 0.6 L7 4 L0 7.4 z" fill="#c9645c"/>
+      <path d="M0 0.6 L7 4 L0 7.4 z" fill="#EA7A72"/>
     </marker>
   </defs>
 
-  <rect width="960" height="620" fill="#1F1E1D"/>
-  <rect width="960" height="620" fill="url(#wash)"/>
+  <rect width="960" height="620" fill="#1A1A18"/>
 
-  <g font-family="'Segoe UI Variable Text', 'Segoe UI', Inter, 'PingFang SC', 'Microsoft YaHei UI', 'Noto Sans SC', sans-serif">
-    <text x="36" y="50" fill="#D97757" font-size="11.5" letter-spacing="1.9">两种存图方式</text>
-    <text x="36" y="84" fill="#F5F4EF" font-size="25" letter-spacing="-0.3">图片到底该存在哪儿</text>
-    <text x="36" y="111" fill="#8A877E" font-size="12.5">同一份文档，两种存法。差别不在你写的时候，在别人打开的时候。</text>
+  <g font-family="'Microsoft YaHei UI', 'Segoe UI', sans-serif">
+    <text x="36" y="50" fill="#B49DDC" font-size="11.5">两种存图方式</text>
+    <text x="36" y="84" fill="#E8E6DF" font-size="25">图片到底该存在哪儿</text>
+    <text x="36" y="111" fill="#A09E95" font-size="12.5">同一份文档，两种存法。差别不在你写的时候，在别人打开的时候。</text>
 
     <!-- ============ LEFT : folder ============ -->
-    <rect x="36" y="140" width="522" height="440" rx="12" fill="#262624" stroke="#45443F"/>
-    <text x="62" y="176" fill="#F5F4EF" font-size="14.5">文档即文件夹</text>
-    <text x="62" y="197" fill="#7BA88A" font-size="12">图片与 md 在同一个文件夹里</text>
-    <rect x="446" y="160" width="88" height="24" rx="6" fill="#7BA88A" fill-opacity="0.15"/>
-    <text x="490" y="176.5" fill="#7BA88A" font-size="11" text-anchor="middle">随文件夹走</text>
+    <rect x="36" y="140" width="522" height="440" fill="#212120" stroke="#56564F"/>
+    <text x="62" y="176" fill="#E8E6DF" font-size="14.5">文档即文件夹</text>
+    <text x="62" y="197" fill="#8CC28E" font-size="12">图片与 md 在同一个文件夹里</text>
+    <rect x="446" y="160" width="88" height="24" fill="#8CC28E" fill-opacity="0.15"/>
+    <text x="490" y="176.5" fill="#8CC28E" font-size="11" text-anchor="middle">随文件夹走</text>
 
-    <rect x="56" y="218" width="482" height="250" rx="10" fill="#191918" stroke="#33322F"/>
+    <rect x="56" y="218" width="482" height="250" fill="#1A1A18" stroke="#3D3D39"/>
     <g font-size="13" dominant-baseline="middle">
-      <rect x="72" y="234" width="8" height="8" rx="2" fill="#D9A95C"/>
-      <text x="92" y="239" fill="#F5F4EF" font-family="'Cascadia Code', Consolas, 'Sarasa Mono SC', monospace">我的笔记/</text>
-      <text x="522" y="239" fill="#5C5A54" font-size="11" text-anchor="end">打包发人</text>
+      <rect x="72" y="234" width="8" height="8" fill="#E09A5A"/>
+      <text x="92" y="239" fill="#E8E6DF" font-family="Consolas, monospace">我的笔记/</text>
+      <text x="522" y="239" fill="#6E6D66" font-size="11" text-anchor="end">打包发人</text>
 
-      <path d="M100 250 v14" stroke="#45443F"/>
-      <rect x="92" y="264" width="8" height="8" rx="2" fill="#8A877E"/>
-      <text x="112" y="269" fill="#B8B5AD" font-family="'Cascadia Code', Consolas, 'Sarasa Mono SC', monospace">我的笔记.md</text>
-      <text x="522" y="269" fill="#D97757" font-size="11" text-anchor="end">入口文件</text>
+      <path d="M100 250 v14" stroke="#56564F"/>
+      <rect x="92" y="264" width="8" height="8" fill="#A09E95"/>
+      <text x="112" y="269" fill="#C4C2B9" font-family="Consolas, monospace">我的笔记.md</text>
+      <text x="522" y="269" fill="#B49DDC" font-size="11" text-anchor="end">入口文件</text>
 
-      <path d="M100 282 v14" stroke="#45443F"/>
-      <rect x="92" y="296" width="8" height="8" rx="2" fill="#D97757"/>
-      <text x="112" y="301" fill="#F5F4EF" font-family="'Cascadia Code', Consolas, 'Sarasa Mono SC', monospace">我的笔记_img/</text>
-      <text x="522" y="301" fill="#8A877E" font-size="11" text-anchor="end">本文档专属</text>
+      <path d="M100 282 v14" stroke="#56564F"/>
+      <rect x="92" y="296" width="8" height="8" fill="#B49DDC"/>
+      <text x="112" y="301" fill="#E8E6DF" font-family="Consolas, monospace">我的笔记_img/</text>
+      <text x="522" y="301" fill="#A09E95" font-size="11" text-anchor="end">本文档专属</text>
 
-      <path d="M124 314 v14" stroke="#33322F"/>
-      <rect x="116" y="328" width="7" height="7" rx="2" fill="#8A877E"/>
-      <text x="136" y="332" fill="#B8B5AD" font-family="'Cascadia Code', Consolas, 'Sarasa Mono SC', monospace">架构图.svg</text>
+      <path d="M124 314 v14" stroke="#3D3D39"/>
+      <rect x="116" y="328" width="7" height="7" fill="#A09E95"/>
+      <text x="136" y="332" fill="#C4C2B9" font-family="Consolas, monospace">架构图.svg</text>
 
-      <path d="M124 346 v14" stroke="#33322F"/>
-      <rect x="116" y="360" width="7" height="7" rx="2" fill="#8A877E"/>
-      <text x="136" y="364" fill="#B8B5AD" font-family="'Cascadia Code', Consolas, 'Sarasa Mono SC', monospace">时间线.svg</text>
+      <path d="M124 346 v14" stroke="#3D3D39"/>
+      <rect x="116" y="360" width="7" height="7" fill="#A09E95"/>
+      <text x="136" y="364" fill="#C4C2B9" font-family="Consolas, monospace">时间线.svg</text>
 
-      <path d="M124 378 v14" stroke="#33322F"/>
-      <rect x="116" y="392" width="7" height="7" rx="2" fill="#8A877E"/>
-      <text x="136" y="396" fill="#B8B5AD" font-family="'Cascadia Code', Consolas, 'Sarasa Mono SC', monospace">表格操作.svg</text>
+      <path d="M124 378 v14" stroke="#3D3D39"/>
+      <rect x="116" y="392" width="7" height="7" fill="#A09E95"/>
+      <text x="136" y="396" fill="#C4C2B9" font-family="Consolas, monospace">表格操作.svg</text>
 
-      <path d="M100 414 v14" stroke="#33322F"/>
-      <rect x="92" y="428" width="8" height="8" rx="2" fill="#45443F"/>
-      <text x="112" y="433" fill="#8A877E" font-family="'Cascadia Code', Consolas, 'Sarasa Mono SC', monospace">.mdview/</text>
-      <text x="522" y="433" fill="#5C5A54" font-size="11" text-anchor="end">编辑器状态，可删</text>
+      <path d="M100 414 v14" stroke="#3D3D39"/>
+      <rect x="92" y="428" width="8" height="8" fill="#56564F"/>
+      <text x="112" y="433" fill="#A09E95" font-family="Consolas, monospace">.mdview/</text>
+      <text x="522" y="433" fill="#6E6D66" font-size="11" text-anchor="end">编辑器状态，可删</text>
     </g>
 
-    <rect x="56" y="484" width="482" height="76" rx="8" fill="#191918" stroke="#33322F"/>
-    <text x="74" y="508" fill="#8A877E" font-size="11" letter-spacing="0.5">写进 markdown 的路径</text>
-    <text x="74" y="538" fill="#F5F4EF" font-size="12.5" font-family="'Cascadia Code', Consolas, 'Sarasa Mono SC', monospace">![架构图](./我的笔记_img/架构图.svg)</text>
+    <rect x="56" y="484" width="482" height="76" fill="#1A1A18" stroke="#3D3D39"/>
+    <text x="74" y="508" fill="#A09E95" font-size="11">写进 markdown 的路径</text>
+    <text x="74" y="538" fill="#E8E6DF" font-size="12.5" font-family="Consolas, monospace">![架构图](./我的笔记_img/架构图.svg)</text>
 
     <!-- ============ RIGHT : server ============ -->
-    <rect x="588" y="140" width="336" height="440" rx="12" fill="#262624" stroke="#45443F"/>
-    <text x="614" y="176" fill="#F5F4EF" font-size="14.5">上传到服务器</text>
-    <text x="614" y="197" fill="#C9645C" font-size="12">图片只属于你这台机器</text>
-    <rect x="822" y="160" width="76" height="24" rx="6" fill="#C9645C" fill-opacity="0.16"/>
-    <text x="860" y="176.5" fill="#C9645C" font-size="11" text-anchor="middle">换机即断</text>
+    <rect x="588" y="140" width="336" height="440" fill="#212120" stroke="#56564F"/>
+    <text x="614" y="176" fill="#E8E6DF" font-size="14.5">上传到服务器</text>
+    <text x="614" y="197" fill="#EA7A72" font-size="12">图片只属于你这台机器</text>
+    <rect x="822" y="160" width="76" height="24" fill="#EA7A72" fill-opacity="0.16"/>
+    <text x="860" y="176.5" fill="#EA7A72" font-size="11" text-anchor="middle">换机即断</text>
 
-    <rect x="608" y="218" width="296" height="72" rx="8" fill="#191918" stroke="#33322F"/>
-    <text x="624" y="244" fill="#8A877E" font-size="11">你的文档</text>
-    <text x="624" y="270" fill="#F5F4EF" font-size="12" font-family="'Cascadia Code', Consolas, 'Sarasa Mono SC', monospace">![](https://…/a9f3c1.png)</text>
+    <rect x="608" y="218" width="296" height="72" fill="#1A1A18" stroke="#3D3D39"/>
+    <text x="624" y="244" fill="#A09E95" font-size="11">你的文档</text>
+    <text x="624" y="270" fill="#E8E6DF" font-size="12" font-family="Consolas, monospace">![](https://…/a9f3c1.png)</text>
 
-    <path d="M756 294 v30" stroke="#8A877E" stroke-width="1.4" marker-end="url(#tip)"/>
-    <text x="772" y="314" fill="#8A877E" font-size="11">发之前先上传</text>
+    <path d="M756 294 v30" stroke="#A09E95" stroke-width="1.4" marker-end="url(#tip)"/>
+    <text x="772" y="314" fill="#A09E95" font-size="11">发之前先上传</text>
 
-    <rect x="652" y="328" width="208" height="58" rx="8" fill="#30302E" stroke="#45443F"/>
-    <text x="756" y="353" fill="#B8B5AD" font-size="12" text-anchor="middle">对方的图床服务器</text>
-    <text x="756" y="372" fill="#8A877E" font-size="10.5" text-anchor="middle">登录态 · 权限 · 过期策略</text>
+    <rect x="652" y="328" width="208" height="58" fill="#2A2A27" stroke="#56564F"/>
+    <text x="756" y="353" fill="#C4C2B9" font-size="12" text-anchor="middle">对方的图床服务器</text>
+    <text x="756" y="372" fill="#A09E95" font-size="10.5" text-anchor="middle">登录态 · 权限 · 过期策略</text>
 
-    <path d="M756 390 v30" stroke="#C9645C" stroke-width="1.4" marker-end="url(#tip-warn)"/>
-    <text x="772" y="410" fill="#C9645C" font-size="11">对方打开</text>
+    <path d="M756 390 v30" stroke="#EA7A72" stroke-width="1.4" marker-end="url(#tip-warn)"/>
+    <text x="772" y="410" fill="#EA7A72" font-size="11">对方打开</text>
 
-    <rect x="608" y="424" width="296" height="136" rx="8" fill="#191918" stroke="#332F2E"/>
+    <rect x="608" y="424" width="296" height="136" fill="#1A1A18" stroke="#3D3D39"/>
 
     <g>
-      <rect x="636" y="440" width="22" height="22" rx="5" fill="#30302E" stroke="#45443F"/>
-      <path d="M641.5 451 l4.5 4 l7 -9" stroke="#5C5A54" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-      <rect x="668" y="446.5" width="112" height="9" rx="4.5" fill="#33322F"/>
-      <rect x="792" y="445" width="34" height="12" rx="6" fill="#C9645C" fill-opacity="0.2"/>
-      <text x="809" y="454" fill="#C9645C" font-size="9" text-anchor="middle">404</text>
+      <rect x="636" y="440" width="22" height="22" fill="#2A2A27" stroke="#56564F"/>
+      <path d="M641.5 451 l4.5 4 l7 -9" stroke="#6E6D66" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <rect x="668" y="446.5" width="112" height="9" fill="#3D3D39"/>
+      <rect x="792" y="445" width="34" height="12" fill="#EA7A72" fill-opacity="0.2"/>
+      <text x="809" y="454" fill="#EA7A72" font-size="9" text-anchor="middle">404</text>
     </g>
     <g>
-      <rect x="636" y="468" width="22" height="22" rx="5" fill="#30302E" stroke="#45443F"/>
-      <path d="M641.5 479 l4.5 4 l7 -9" stroke="#5C5A54" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-      <rect x="668" y="474.5" width="88" height="9" rx="4.5" fill="#33322F"/>
-      <rect x="792" y="473" width="34" height="12" rx="6" fill="#C9645C" fill-opacity="0.2"/>
-      <text x="809" y="482" fill="#C9645C" font-size="9" text-anchor="middle">404</text>
+      <rect x="636" y="468" width="22" height="22" fill="#2A2A27" stroke="#56564F"/>
+      <path d="M641.5 479 l4.5 4 l7 -9" stroke="#6E6D66" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <rect x="668" y="474.5" width="88" height="9" fill="#3D3D39"/>
+      <rect x="792" y="473" width="34" height="12" fill="#EA7A72" fill-opacity="0.2"/>
+      <text x="809" y="482" fill="#EA7A72" font-size="9" text-anchor="middle">404</text>
     </g>
     <g>
-      <rect x="636" y="496" width="22" height="22" rx="5" fill="#30302E" stroke="#45443F"/>
-      <path d="M641.5 507 l4.5 4 l7 -9" stroke="#5C5A54" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-      <rect x="668" y="502.5" width="126" height="9" rx="4.5" fill="#33322F"/>
-      <rect x="792" y="501" width="34" height="12" rx="6" fill="#C9645C" fill-opacity="0.2"/>
-      <text x="809" y="510" fill="#C9645C" font-size="9" text-anchor="middle">404</text>
+      <rect x="636" y="496" width="22" height="22" fill="#2A2A27" stroke="#56564F"/>
+      <path d="M641.5 507 l4.5 4 l7 -9" stroke="#6E6D66" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <rect x="668" y="502.5" width="126" height="9" fill="#3D3D39"/>
+      <rect x="792" y="501" width="34" height="12" fill="#EA7A72" fill-opacity="0.2"/>
+      <text x="809" y="510" fill="#EA7A72" font-size="9" text-anchor="middle">404</text>
     </g>
 
-    <text x="756" y="536" fill="#C9645C" font-size="11.5" text-anchor="middle">图床关了、链接过期、临时目录被清理</text>
-    <text x="756" y="556" fill="#8A877E" font-size="11.5" text-anchor="middle">对方拿到的是一份只剩文字的文档</text>
+    <text x="756" y="536" fill="#EA7A72" font-size="11.5" text-anchor="middle">图床关了、链接过期、临时目录被清理</text>
+    <text x="756" y="556" fill="#A09E95" font-size="11.5" text-anchor="middle">对方拿到的是一份只剩文字的文档</text>
   </g>
 </svg>

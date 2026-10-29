@@ -13,9 +13,9 @@
 
 0.5 起 MDWisp 是用 Rust 编写的 Windows 原生应用：窗口约 90 毫秒出现，单进程内存约 60MB（0.4 的 Electron 版约 850 毫秒、450MB、4 个进程）。截图来自 0.4 版，0.5 保持相同布局。
 
-[![Release](https://img.shields.io/github/v/release/ArthurLauCS/MDWisp?color=d97757&label=release)](https://github.com/ArthurLauCS/MDWisp/releases/latest)
-![Windows x64](https://img.shields.io/badge/Windows-x64-30302e)
-[![License: MIT](https://img.shields.io/badge/license-MIT-30302e)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/ArthurLauCS/MDWisp?color=6a4c9c&label=release)](https://github.com/ArthurLauCS/MDWisp/releases/latest)
+![Windows x64](https://img.shields.io/badge/Windows-x64-111111)
+[![License: MIT](https://img.shields.io/badge/license-MIT-111111)](LICENSE)
 
 [下载应用](https://github.com/ArthurLauCS/MDWisp/releases/latest) · [安装 AI 插件](#安装-ai-插件) · [开始写作](#开始写作) · [更新记录](CHANGELOG.md)
 
@@ -37,7 +37,7 @@
 
 ## 下载与安装
 
-前往 **[Releases](https://github.com/ArthurLauCS/MDWisp/releases/latest)**，下载 `MDWisp-0.5.3-setup.exe`，也可自行构建（见[开发与验证](#开发与验证)）。安装时可以选择中英文、安装目录，并创建桌面快捷方式。按当前用户安装，不需要管理员权限；已装 0.4.x 时会先移除旧版，设置与历史记录保留。
+前往 **[Releases](https://github.com/ArthurLauCS/MDWisp/releases/latest)**，下载 `MDWisp-0.6.0-setup.exe`，也可自行构建（见[开发与验证](#开发与验证)）。安装时可以选择中英文、安装目录，并创建桌面快捷方式。按当前用户安装，不需要管理员权限；已装 0.4.x 时会先移除旧版，设置与历史记录保留。
 
 需要 **Windows 10 及以上 x64**；不支持 macOS 和 Linux。安装包暂未进行代码签名，Windows SmartScreen 可能提示「Windows 已保护你的电脑」，点击 **更多信息 → 仍要运行** 即可。
 
@@ -226,4 +226,4 @@ MDWISP_USER_DATA=<临时目录> MDWISP_SCRIPT=<脚本> target/release/mdwisp.exe
 
 ## 许可证与字体
 
-应用代码采用 [MIT License](LICENSE)。内置字体使用各自的开源授权，授权文本随源码与安装包分发：[源泉圆体](crates/export/assets/fonts/OFL-GenSen.txt)、[站酷小薇体](crates/export/assets/fonts/OFL-ZCOOLXiaoWei.txt)。
+应用代码采用 [MIT License](LICENSE)。内置字体使用各自的开源授权，授权文本随源码与安装包分发，明细见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)：[思源宋体 Noto Serif SC](crates/export/assets/fonts/OFL-NotoSerifSC.txt)、[霞鹜文楷 LXGW WenKai](crates/export/assets/fonts/OFL-LXGWWenKai.txt)（均为 SIL OFL 1.1），以及 [Latin Modern Roman](crates/export/assets/fonts/GUST-FONT-LICENSE-LatinModern.txt)（GUST 字体许可证）。字体文件不进 git，从源码运行前先执行 `scripts/fonts.ps1` 下载。

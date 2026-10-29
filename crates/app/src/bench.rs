@@ -234,3 +234,122 @@ fn fuzz() {
         }
     }
 }
+
+/// Which face DirectWrite really picked for each run of a layout, read from the glyph runs.
+mod face_probe {
+    use std::ffi::c_void;
+    use super::*;
+    use windows_core::AsImpl;
+
+    #[windows_core::implement(windows::Win32::Graphics::DirectWrite::IDWriteTextRenderer)]
+    struct RunFaces(std::cell::RefCell<Vec<(u32, u32, String)>>);
+
+    use windows::Win32::Foundation::E_NOTIMPL;
+    use windows_core::BOOL;
+    use windows::Win32::Graphics::DirectWrite::*;
+    use windows_core::{Interface, Ref, Result};
+
+    impl IDWritePixelSnapping_Impl for RunFaces_Impl {
+        fn IsPixelSnappingDisabled(&self, _: *const c_void) -> Result<BOOL> {
+            Ok(BOOL(0))
+        }
+        fn GetCurrentTransform(&self, _: *const c_void, m: *mut DWRITE_MATRIX) -> Result<()> {
+            unsafe { *m = DWRITE_MATRIX { m11: 1.0, m12: 0.0, m21: 0.0, m22: 1.0, dx: 0.0, dy: 0.0 } };
+            Ok(())
+        }
+        fn GetPixelsPerDip(&self, _: *const c_void) -> Result<f32> {
+            Ok(1.0)
+        }
+    }
+
+    impl IDWriteTextRenderer_Impl for RunFaces_Impl {
+        fn DrawGlyphRun(&self, _: *const c_void, _: f32, _: f32, _: DWRITE_MEASURING_MODE, run: *const DWRITE_GLYPH_RUN, desc: *const DWRITE_GLYPH_RUN_DESCRIPTION, _: Ref<windows_core::IUnknown>) -> Result<()> {
+            unsafe {
+                let face = (*run).fontFace.as_ref().ok_or(E_NOTIMPL)?;
+                let face3: IDWriteFontFace3 = face.cast()?;
+                let names = face3.GetFamilyNames()?;
+                let len = names.GetStringLength(0)?;
+                let mut buf = vec![0u16; len as usize + 1];
+                names.GetString(0, &mut buf)?;
+                let name = String::from_utf16_lossy(&buf[..len as usize]);
+                let wn = face3.GetFaceNames()?;
+                let l2 = wn.GetStringLength(0)?;
+                let mut b2 = vec![0u16; l2 as usize + 1];
+                wn.GetString(0, &mut b2)?;
+                let style = String::from_utf16_lossy(&b2[..l2 as usize]);
+                self.0.borrow_mut().push(((*desc).textPosition, (*desc).stringLength, format!("{name} / {style}")));
+            }
+            Ok(())
+        }
+        fn DrawUnderline(&self, _: *const c_void, _: f32, _: f32, _: *const DWRITE_UNDERLINE, _: Ref<windows_core::IUnknown>) -> Result<()> {
+            Ok(())
+        }
+        fn DrawStrikethrough(&self, _: *const c_void, _: f32, _: f32, _: *const DWRITE_STRIKETHROUGH, _: Ref<windows_core::IUnknown>) -> Result<()> {
+            Ok(())
+        }
+        fn DrawInlineObject(&self, _: *const c_void, _: f32, _: f32, _: Ref<IDWriteInlineObject>, _: BOOL, _: BOOL, _: Ref<windows_core::IUnknown>) -> Result<()> {
+            Ok(())
+        }
+    }
+
+/// Mixed Chinese / English text resolves to Noto Serif SC and Latin Modern Roman, quotes and
+/// emphasis to LXGW WenKai. Skipped when the font files have not been fetched.
+#[test]
+fn bundled_faces_resolve() {
+    use crate::gfx::{Stack, Style};
+    use windows::Win32::Graphics::DirectWrite::*;
+    let Some(dir) = crate::resource_dir("fonts") else { return };
+    if !dir.join("NotoSerifSC-VF.ttf").exists() {
+        eprintln!("fonts not fetched: skipped");
+        return;
+    }
+    let g = Gfx::new(Some(&dir), false).unwrap();
+    let probe = |text: &str, style: Style, kai: bool| -> Vec<String> {
+        let l = g.new_layout(text, style, 800.0, None);
+        let w: Vec<u16> = text.encode_utf16().collect();
+        if kai {
+            g.kai_runs(&l, &w, DWRITE_TEXT_RANGE { startPosition: 0, length: w.len() as u32 });
+        }
+        let r: IDWriteTextRenderer = RunFaces(Default::default()).into();
+        unsafe { l.Draw(None, &r, 0.0, 0.0).unwrap() };
+        let inner: &RunFaces = unsafe { r.as_impl() };
+        let mut v: Vec<String> = inner.0.borrow().iter().map(|(p, n, f)| format!("{}", {
+            let s: Vec<u16> = w[*p as usize..(*p + *n) as usize].to_vec();
+            format!("{:?} -> {f}", String::from_utf16_lossy(&s))
+        })).collect();
+        v.sort();
+        v
+    };
+    let body = Style::new(Stack::Read, 17.0);
+    let mixed = probe("在 Rust 里写 hello world，“引号”和——破折号。", body, false);
+    eprintln!("{mixed:#?}");
+    let joined = mixed.join("\n");
+    assert!(joined.contains("\"hello world\"") || joined.contains("hello world"), "{joined}");
+    for line in &mixed {
+        let cjk = line.chars().next() == Some('"') && line.chars().nth(1).is_some_and(|c| c as u32 >= 0x2e80);
+        if cjk {
+            assert!(line.contains("Noto Serif SC"), "{line}");
+        } else if line.contains("Rust") || line.contains("hello") {
+            assert!(line.contains("Latin Modern Roman") || line.contains("LM Roman"), "{line}");
+        }
+    }
+    let heading = probe("标题 Heading 一", Style::new(Stack::Display, 26.0).weight(700), false);
+    eprintln!("{heading:#?}");
+    let quote = probe("引用 quote 文字", body, true);
+    eprintln!("{quote:#?}");
+    assert!(quote.iter().any(|l| l.contains("WenKai")), "{quote:?}");
+    let italic = probe("斜体 italic 文字", Style { italic: true, ..body }, false);
+    eprintln!("{italic:#?}");
+    assert!(italic.iter().any(|l| l.contains("WenKai")) && italic.iter().any(|l| l.contains("Italic")), "{italic:?}");
+
+    // Without the files the roles fall back to the Windows faces, silently.
+    let g = Gfx::new(None, false).unwrap();
+    let l = g.new_layout("在 Rust 里", body, 800.0, None);
+    let r: IDWriteTextRenderer = RunFaces(Default::default()).into();
+    unsafe { l.Draw(None, &r, 0.0, 0.0).unwrap() };
+    let inner: &RunFaces = unsafe { r.as_impl() };
+    let fell: Vec<String> = inner.0.borrow().iter().map(|(_, _, f)| f.clone()).collect();
+    eprintln!("fallback: {fell:?}");
+    assert!(fell.iter().any(|f| f.starts_with("Sitka")) && fell.iter().any(|f| f.starts_with("SimSun")), "{fell:?}");
+}
+}

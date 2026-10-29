@@ -1,130 +1,125 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="960" height="632" viewBox="0 0 960 632" role="img" aria-label="本地代码语言检测的三层管线：独占指纹、加权评分、拿不准就明说">
   <defs>
-    <linearGradient id="wash2" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#d97757" stop-opacity="0.06"/>
-      <stop offset="0.6" stop-color="#d97757" stop-opacity="0"/>
-    </linearGradient>
   </defs>
 
-  <rect width="960" height="632" fill="#1F1E1D"/>
-  <rect width="960" height="632" fill="url(#wash2)"/>
+  <rect width="960" height="632" fill="#1A1A18"/>
 
-  <g font-family="'Segoe UI Variable Text', 'Segoe UI', Inter, 'PingFang SC', 'Microsoft YaHei UI', 'Noto Sans SC', sans-serif">
-    <text x="36" y="50" fill="#D97757" font-size="11.5" letter-spacing="1.9">本地语言检测</text>
-    <text x="36" y="84" fill="#F5F4EF" font-size="25" letter-spacing="-0.3">不联网，也能认出这是什么语言</text>
-    <text x="36" y="111" fill="#8A877E" font-size="12.5">三层管线，置信度从高到低。规则是数据驱动的，加一门语言只需要往表里加一行。</text>
+  <g font-family="'Microsoft YaHei UI', 'Segoe UI', sans-serif">
+    <text x="36" y="50" fill="#B49DDC" font-size="11.5">本地语言检测</text>
+    <text x="36" y="84" fill="#E8E6DF" font-size="25">不联网，也能认出这是什么语言</text>
+    <text x="36" y="111" fill="#A09E95" font-size="12.5">三层管线，置信度从高到低。规则是数据驱动的，加一门语言只需要往表里加一行。</text>
 
     <!-- ===== stage 1 ===== -->
-    <rect x="36" y="140" width="528" height="132" rx="12" fill="#262624" stroke="#45443F"/>
-    <rect x="36" y="140" width="3" height="132" rx="1.5" fill="#D97757"/>
-    <circle cx="72" cy="172" r="13" fill="#D97757" fill-opacity="0.16" stroke="#D97757" stroke-opacity="0.5"/>
-    <text x="72" y="176.5" fill="#D97757" font-size="12" text-anchor="middle">1</text>
-    <text x="100" y="177" fill="#F5F4EF" font-size="15">独占指纹</text>
-    <rect x="172" y="162" width="72" height="22" rx="6" fill="#7BA88A" fill-opacity="0.15"/>
-    <text x="208" y="177" fill="#7BA88A" font-size="10.5" text-anchor="middle">得分 100</text>
-    <text x="256" y="177" fill="#8A877E" font-size="11.5">命中就不用再算了</text>
+    <rect x="36" y="140" width="528" height="132" fill="#212120" stroke="#56564F"/>
+    <rect x="36" y="140" width="3" height="132" fill="#B49DDC"/>
+    <circle cx="72" cy="172" r="13" fill="#B49DDC" fill-opacity="0.16" stroke="#B49DDC" stroke-opacity="0.5"/>
+    <text x="72" y="176.5" fill="#B49DDC" font-size="12" text-anchor="middle">1</text>
+    <text x="100" y="177" fill="#E8E6DF" font-size="15">独占指纹</text>
+    <rect x="172" y="162" width="72" height="22" fill="#8CC28E" fill-opacity="0.15"/>
+    <text x="208" y="177" fill="#8CC28E" font-size="10.5" text-anchor="middle">得分 100</text>
+    <text x="256" y="177" fill="#A09E95" font-size="11.5">命中就不用再算了</text>
 
-    <rect x="60" y="196" width="480" height="34" rx="8" fill="#191918" stroke="#33322F"/>
-    <text x="76" y="218" fill="#F5F4EF" font-size="12.5" font-family="'Cascadia Code', Consolas, 'Sarasa Mono SC', monospace">#!/usr/bin/env bash</text>
-    <text x="524" y="218" fill="#7BA88A" font-size="10.5" text-anchor="end">bash</text>
+    <rect x="60" y="196" width="480" height="34" fill="#1A1A18" stroke="#3D3D39"/>
+    <text x="76" y="218" fill="#E8E6DF" font-size="12.5" font-family="Consolas, monospace">#!/usr/bin/env bash</text>
+    <text x="524" y="218" fill="#8CC28E" font-size="10.5" text-anchor="end">bash</text>
 
-    <text x="60" y="252" fill="#5C5A54" font-size="11">只有一种语言会这样开头：shebang、</text>
-    <text x="248" y="252" fill="#5C5A54" font-size="11" font-family="'Cascadia Code', Consolas, 'Sarasa Mono SC', monospace">&lt;?php</text>
-    <text x="290" y="252" fill="#5C5A54" font-size="11">、</text>
-    <text x="302" y="252" fill="#5C5A54" font-size="11" font-family="'Cascadia Code', Consolas, 'Sarasa Mono SC', monospace">&lt;!DOCTYPE html&gt;</text>
-    <text x="60" y="266" fill="#5C5A54" font-size="11">命中就锁定，不再往下算。</text>
+    <text x="60" y="252" fill="#6E6D66" font-size="11">只有一种语言会这样开头：shebang、</text>
+    <text x="248" y="252" fill="#6E6D66" font-size="11" font-family="Consolas, monospace">&lt;?php</text>
+    <text x="290" y="252" fill="#6E6D66" font-size="11">、</text>
+    <text x="302" y="252" fill="#6E6D66" font-size="11" font-family="Consolas, monospace">&lt;!DOCTYPE html&gt;</text>
+    <text x="60" y="266" fill="#6E6D66" font-size="11">命中就锁定，不再往下算。</text>
 
     <!-- ===== stage 2 ===== -->
-    <rect x="36" y="288" width="528" height="188" rx="12" fill="#262624" stroke="#45443F"/>
-    <rect x="36" y="288" width="3" height="188" rx="1.5" fill="#D97757"/>
-    <circle cx="72" cy="320" r="13" fill="#D97757" fill-opacity="0.16" stroke="#D97757" stroke-opacity="0.5"/>
-    <text x="72" y="324.5" fill="#D97757" font-size="12" text-anchor="middle">2</text>
-    <text x="100" y="325" fill="#F5F4EF" font-size="15">加权评分</text>
-    <text x="184" y="325" fill="#8A877E" font-size="11.5">候选必须至少命中一条强信号</text>
+    <rect x="36" y="288" width="528" height="188" fill="#212120" stroke="#56564F"/>
+    <rect x="36" y="288" width="3" height="188" fill="#B49DDC"/>
+    <circle cx="72" cy="320" r="13" fill="#B49DDC" fill-opacity="0.16" stroke="#B49DDC" stroke-opacity="0.5"/>
+    <text x="72" y="324.5" fill="#B49DDC" font-size="12" text-anchor="middle">2</text>
+    <text x="100" y="325" fill="#E8E6DF" font-size="15">加权评分</text>
+    <text x="184" y="325" fill="#A09E95" font-size="11.5">候选必须至少命中一条强信号</text>
 
     <g font-size="12">
-      <text x="60" y="364" fill="#F5F4EF">TypeScript</text>
-      <rect x="148" y="354" width="296" height="10" rx="5" fill="#191918"/>
-      <rect x="148" y="354" width="220" height="10" rx="5" fill="#D97757"/>
-      <text x="528" y="364" fill="#D97757" font-size="11.5" font-weight="600" text-anchor="end">74%</text>
+      <text x="60" y="364" fill="#E8E6DF">TypeScript</text>
+      <rect x="148" y="354" width="296" height="10" fill="#1A1A18"/>
+      <rect x="148" y="354" width="220" height="10" fill="#B49DDC"/>
+      <text x="528" y="364" fill="#B49DDC" font-size="11.5" font-weight="600" text-anchor="end">74%</text>
 
-      <text x="60" y="392" fill="#B8B5AD">JavaScript</text>
-      <rect x="148" y="382" width="296" height="10" rx="5" fill="#191918"/>
-      <rect x="148" y="382" width="124" height="10" rx="5" fill="#45443F"/>
-      <text x="528" y="392" fill="#8A877E" font-size="11.5" text-anchor="end">42%</text>
+      <text x="60" y="392" fill="#C4C2B9">JavaScript</text>
+      <rect x="148" y="382" width="296" height="10" fill="#1A1A18"/>
+      <rect x="148" y="382" width="124" height="10" fill="#56564F"/>
+      <text x="528" y="392" fill="#A09E95" font-size="11.5" text-anchor="end">42%</text>
 
-      <text x="60" y="420" fill="#B8B5AD">Go</text>
-      <rect x="148" y="410" width="296" height="10" rx="5" fill="#191918"/>
-      <rect x="148" y="410" width="76" height="10" rx="5" fill="#45443F"/>
-      <text x="528" y="420" fill="#8A877E" font-size="11.5" text-anchor="end">26%</text>
+      <text x="60" y="420" fill="#C4C2B9">Go</text>
+      <rect x="148" y="410" width="296" height="10" fill="#1A1A18"/>
+      <rect x="148" y="410" width="76" height="10" fill="#56564F"/>
+      <text x="528" y="420" fill="#A09E95" font-size="11.5" text-anchor="end">26%</text>
     </g>
 
-    <line x1="60" y1="440" x2="540" y2="440" stroke="#33322F"/>
-    <rect x="60" y="452" width="22" height="9" rx="4.5" fill="#D97757" fill-opacity="0.65"/>
-    <text x="88" y="461" fill="#8A877E" font-size="10.5">强信号</text>
-    <rect x="150" y="452" width="22" height="9" rx="4.5" fill="#45443F"/>
-    <text x="178" y="461" fill="#8A877E" font-size="10.5">弱信号</text>
-    <rect x="240" y="452" width="22" height="9" rx="4.5" fill="#8A877E" fill-opacity="0.55"/>
-    <text x="268" y="461" fill="#8A877E" font-size="10.5">命中行覆盖率</text>
+    <line x1="60" y1="440" x2="540" y2="440" stroke="#3D3D39"/>
+    <rect x="60" y="452" width="22" height="9" fill="#B49DDC" fill-opacity="0.65"/>
+    <text x="88" y="461" fill="#A09E95" font-size="10.5">强信号</text>
+    <rect x="150" y="452" width="22" height="9" fill="#56564F"/>
+    <text x="178" y="461" fill="#A09E95" font-size="10.5">弱信号</text>
+    <rect x="240" y="452" width="22" height="9" fill="#A09E95" fill-opacity="0.55"/>
+    <text x="268" y="461" fill="#A09E95" font-size="10.5">命中行覆盖率</text>
 
     <!-- ===== stage 3 ===== -->
-    <rect x="36" y="492" width="528" height="104" rx="12" fill="#262624" stroke="#45443F"/>
-    <rect x="36" y="492" width="3" height="104" rx="1.5" fill="#D9A95C"/>
-    <circle cx="72" cy="524" r="13" fill="#D9A95C" fill-opacity="0.16" stroke="#D9A95C" stroke-opacity="0.5"/>
-    <text x="72" y="528.5" fill="#D9A95C" font-size="12" text-anchor="middle">3</text>
-    <text x="100" y="529" fill="#F5F4EF" font-size="15">拿不准就明说</text>
-    <text x="200" y="529" fill="#8A877E" font-size="11.5">领先者优势不足阈值，就不给答案</text>
+    <rect x="36" y="492" width="528" height="104" fill="#212120" stroke="#56564F"/>
+    <rect x="36" y="492" width="3" height="104" fill="#E09A5A"/>
+    <circle cx="72" cy="524" r="13" fill="#E09A5A" fill-opacity="0.16" stroke="#E09A5A" stroke-opacity="0.5"/>
+    <text x="72" y="528.5" fill="#E09A5A" font-size="12" text-anchor="middle">3</text>
+    <text x="100" y="529" fill="#E8E6DF" font-size="15">拿不准就明说</text>
+    <text x="200" y="529" fill="#A09E95" font-size="11.5">领先者优势不足阈值，就不给答案</text>
 
-    <rect x="60" y="546" width="212" height="32" rx="8" fill="#191918" stroke="#33322F"/>
-    <text x="76" y="566" fill="#8A877E" font-size="11">领先 3 分，第二名咬得太紧</text>
-    <rect x="286" y="546" width="104" height="32" rx="8" fill="#D9A95C" fill-opacity="0.14" stroke="#D9A95C" stroke-opacity="0.36"/>
-    <text x="338" y="567" fill="#D9A95C" font-size="12.5" text-anchor="middle">未确定</text>
-    <text x="404" y="566" fill="#5C5A54" font-size="11">把选择权交回给你</text>
+    <rect x="60" y="546" width="212" height="32" fill="#1A1A18" stroke="#3D3D39"/>
+    <text x="76" y="566" fill="#A09E95" font-size="11">领先 3 分，第二名咬得太紧</text>
+    <rect x="286" y="546" width="104" height="32" fill="#E09A5A" fill-opacity="0.14" stroke="#E09A5A" stroke-opacity="0.36"/>
+    <text x="338" y="567" fill="#E09A5A" font-size="12.5" text-anchor="middle">未确定</text>
+    <text x="404" y="566" fill="#6E6D66" font-size="11">把选择权交回给你</text>
 
     <!-- ===== right rail : what the reader sees ===== -->
-    <text x="592" y="146" fill="#D97757" font-size="11.5" letter-spacing="1.7">代码块右上角的徽标</text>
+    <text x="592" y="146" fill="#B49DDC" font-size="11.5">代码块右上角的徽标</text>
 
-    <rect x="592" y="162" width="332" height="230" rx="12" fill="#191918" stroke="#33322F"/>
+    <rect x="592" y="162" width="332" height="230" fill="#1A1A18" stroke="#3D3D39"/>
 
-    <rect x="592" y="162" width="332" height="36" rx="12" fill="#262624"/>
-    <rect x="592" y="186" width="332" height="12" fill="#262624"/>
-    <line x1="592" y1="198" x2="924" y2="198" stroke="#33322F"/>
+    <rect x="592" y="162" width="332" height="36" fill="#212120"/>
+    <rect x="592" y="186" width="332" height="12" fill="#212120"/>
+    <line x1="592" y1="198" x2="924" y2="198" stroke="#3D3D39"/>
 
-    <rect x="608" y="172" width="94" height="18" rx="5" fill="#D97757" fill-opacity="0.14" stroke="#D97757" stroke-opacity="0.32"/>
-    <circle cx="619" cy="181" r="3" fill="#D97757"/>
-    <text x="628" y="185" fill="#D97757" font-size="10.5">TypeScript 74%</text>
-    <text x="888" y="185" fill="#5C5A54" font-size="12" text-anchor="end">⧉</text>
+    <rect x="608" y="172" width="94" height="18" fill="#B49DDC" fill-opacity="0.14" stroke="#B49DDC" stroke-opacity="0.32"/>
+    <circle cx="619" cy="181" r="3" fill="#B49DDC"/>
+    <text x="628" y="185" fill="#B49DDC" font-size="10.5">TypeScript 74%</text>
+    <text x="888" y="185" fill="#6E6D66" font-size="12" text-anchor="end">⧉</text>
 
-    <g font-size="11.5" font-family="'Cascadia Code', Consolas, 'Sarasa Mono SC', monospace">
-      <text x="616" y="228" fill="#C98A6B">interface</text>
-      <text x="692" y="228" fill="#B79BD1">DocumentMeta</text>
-      <text x="792" y="228" fill="#8A877E">{</text>
+    <g font-size="11.5" font-family="Consolas, monospace">
+      <text x="616" y="228" fill="#8CC28E">interface</text>
+      <text x="692" y="228" fill="#80B2E2">DocumentMeta</text>
+      <text x="792" y="228" fill="#A09E95">{</text>
 
-      <text x="632" y="252" fill="#8A877E">id</text>
-      <text x="656" y="252" fill="#8A877E">:</text>
-      <text x="670" y="252" fill="#7FB3C8">string</text>
+      <text x="632" y="252" fill="#A09E95">id</text>
+      <text x="656" y="252" fill="#A09E95">:</text>
+      <text x="670" y="252" fill="#80B2E2">string</text>
 
-      <text x="632" y="276" fill="#8A877E">path</text>
-      <text x="664" y="276" fill="#8A877E">:</text>
-      <text x="678" y="276" fill="#7FB3C8">string</text>
+      <text x="632" y="276" fill="#A09E95">path</text>
+      <text x="664" y="276" fill="#A09E95">:</text>
+      <text x="678" y="276" fill="#80B2E2">string</text>
 
-      <text x="632" y="300" fill="#8A877E">assetDir</text>
-      <text x="692" y="300" fill="#8A877E">:</text>
-      <text x="706" y="300" fill="#7FB3C8">string</text>
+      <text x="632" y="300" fill="#A09E95">assetDir</text>
+      <text x="692" y="300" fill="#A09E95">:</text>
+      <text x="706" y="300" fill="#80B2E2">string</text>
 
-      <text x="616" y="324" fill="#8A877E">}</text>
-      <text x="616" y="352" fill="#6E6B64">// 图片就放在 assetDir 里</text>
+      <text x="616" y="324" fill="#A09E95">}</text>
+      <text x="616" y="352" fill="#8A8880">// 图片就放在 assetDir 里</text>
     </g>
 
-    <text x="608" y="378" fill="#5C5A54" font-size="10.5">点徽标可以纠正，改一次这一块就不再猜了</text>
+    <text x="608" y="378" fill="#6E6D66" font-size="10.5">点徽标可以纠正，改一次这一块就不再猜了</text>
 
-    <rect x="592" y="408" width="332" height="188" rx="12" fill="#262624" stroke="#45443F"/>
-    <text x="616" y="438" fill="#F5F4EF" font-size="13.5">为什么宁可不猜</text>
-    <rect x="616" y="454" width="2" height="94" rx="1" fill="#D97757"/>
-    <text x="632" y="472" fill="#B8B5AD" font-size="11.5">错误的高亮比没有高亮更糟：</text>
-    <text x="632" y="494" fill="#B8B5AD" font-size="11.5">它让人以为读懂了，实际在</text>
-    <text x="632" y="516" fill="#B8B5AD" font-size="11.5">用别人的语法看这段代码。</text>
-    <text x="632" y="544" fill="#8A877E" font-size="11">规则表与 18 个单元测试都在</text>
-    <text x="632" y="566" fill="#8A877E" font-size="11" font-family="'Cascadia Code', Consolas, 'Sarasa Mono SC', monospace">markdown/detect.ts</text>
+    <rect x="592" y="408" width="332" height="188" fill="#212120" stroke="#56564F"/>
+    <text x="616" y="438" fill="#E8E6DF" font-size="13.5">为什么宁可不猜</text>
+    <rect x="616" y="454" width="2" height="94" fill="#B49DDC"/>
+    <text x="632" y="472" fill="#C4C2B9" font-size="11.5">错误的高亮比没有高亮更糟：</text>
+    <text x="632" y="494" fill="#C4C2B9" font-size="11.5">它让人以为读懂了，实际在</text>
+    <text x="632" y="516" fill="#C4C2B9" font-size="11.5">用别人的语法看这段代码。</text>
+    <text x="632" y="544" fill="#A09E95" font-size="11">规则表与 18 个单元测试都在</text>
+    <text x="632" y="566" fill="#A09E95" font-size="11" font-family="Consolas, monospace">markdown/detect.ts</text>
   </g>
 </svg>

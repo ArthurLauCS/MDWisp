@@ -1,5 +1,14 @@
 # 更新记录
 
+## 0.6.0 · 2026-10-29
+
+- 界面和导出换成“纸”风格：暖白纸面、墨色文字、细线分隔、一个克制的葡萄紫强调色；导出的 HTML 不再有渐变标题底板，改为平直的标题线。欢迎文档的插图一并重绘。
+- 内置三套字体：思源宋体（正文与标题）、霞鹜文楷（引用与中文强调）、Latin Modern Roman（西文），取代原来的圆体与站酷小薇。字体文件不进 git，运行源码前执行 scripts/fonts.ps1；HTML 导出只嵌入文档用到的字。
+- 过长的文字用省略号截断；修复空文档里光标被压扁的问题。
+- Restyle the app and exports in a paper style: warm paper surfaces, ink text, hairline rules and one muted grape accent; exported HTML drops the gradient title plate for a flat rule. The welcome document's illustrations are redrawn to match.
+- Bundle three typefaces: Noto Serif SC (body and headings), LXGW WenKai (quotes and CJK emphasis) and Latin Modern Roman (Latin text), replacing the rounded face and ZCOOL XiaoWei. The font files are not in git: run scripts/fonts.ps1 before running from source; HTML export embeds only the characters a document uses.
+- Text that does not fit is elided with an ellipsis; fix the caret being squashed in an empty document.
+
 ## 0.5.3 · 2026-10-22
 
 - 打开已在窗口中的文档时不再新开窗口，而是把那个窗口切到最前（最小化的会还原，带 #标题 的链接会跳到该标题）。

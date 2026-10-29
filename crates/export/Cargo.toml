@@ -1,6 +1,6 @@
 [package]
 name = "mdwisp-export"
-version = "0.5.3"
+version = "0.6.0"
 edition = "2024"
 
 [dependencies]
@@ -10,6 +10,7 @@ pulldown-cmark = { version = "0.13", default-features = false, features = ["html
 math-core = "0.9"
 regex = "1"
 base64 = "0.22"
+fontcull = { version = "2", default-features = false }
 miniz_oxide = "0.8"
 chrono = { version = "0.4", default-features = false, features = ["clock"] }
 windows-registry = "0.6"

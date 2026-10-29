@@ -71,9 +71,7 @@ pub fn paint(w: &mut Window, g: &Gfx) {
         let sw = sidebar_width(w);
         let side = body.cut_left(sw);
         g.with_opacity(enter, || {
-            g.translate(-12.0 * (1.0 - enter), 0.0);
             sidebar::paint(w, g, side);
-            g.reset_transform();
         });
     }
     pane::paint(w, g, body);
@@ -83,7 +81,6 @@ pub fn paint(w: &mut Window, g: &Gfx) {
         g.fill(body, crate::theme::with_alpha(th.bg_base, 0.5));
         w.ui.region(body, Hit::Backdrop);
         let side = Rect::new(body.x, body.y, sidebar_width(w), body.h);
-        g.shadow(side, 0.0, 24.0, 8.0, 0.46 * th.shadow);
         sidebar::paint(w, g, side);
     }
     modal::paint(w, g);

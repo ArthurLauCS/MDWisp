@@ -14,7 +14,7 @@ use super::images::Images;
 use super::layout::{self, Bg, Cache, Line, Look, Obj, disp_to_src, src_to_disp_pos};
 use super::table::{self, TableView};
 use crate::gfx::{Gfx, Rect};
-use crate::theme::{Color, Theme, mix, with_alpha};
+use crate::theme::{Theme, with_alpha};
 
 pub const PAD_TOP: f32 = 48.0;
 
@@ -414,44 +414,14 @@ impl View {
         // Line backgrounds.
         if d.code != Code::None {
             let r = Rect::new(x, y, w, line.h);
-            let radius = 8.0;
-            match d.code {
-                Code::Header => {
-                    g.clip(r);
-                    g.fill_round(Rect::new(x, y, w, line.h + radius), radius, t.bg_inset);
-                    g.unclip();
-                }
-                Code::End => {
-                    g.clip(r);
-                    g.fill_round(Rect::new(x, y - radius, w, line.h + radius), radius, t.bg_inset);
-                    g.unclip();
-                }
-                _ => g.fill(r, t.bg_inset),
-            }
+            // A `surface` block, square.
+            g.fill(r, t.bg_inset);
         } else if caret_line && self.highlight_line && self.focused {
             // The text rows only: a heading's spacing above it is not part of the line you are on.
             g.fill(Rect::new(x, y + s.pad_top, w, line.h - s.pad_top - s.pad_bottom), t.bg_hover);
         }
-        if d.heading == 1 {
-            let plate = Rect::new(x - 24.0, y, w + 24.0, line.h);
-            let clear = Color { a: 0.0, ..t.accent };
-            let brush = g.gradient(plate.x, plate.right(), y, &[(0.0, mix(t.accent, clear, 0.12)), (0.46, mix(t.accent, clear, 0.04)), (0.86, clear)]);
-            g.fill_with(plate, 8.0, &brush.into());
-            g.clip(Rect::new(plate.x, y, 2.0, line.h));
-            g.fill_round(Rect::new(plate.x, y, 10.0, line.h), 8.0, t.accent);
-            g.unclip();
-        }
-        if d.heading == 2 {
-            let clear = Color { a: 0.0, ..t.border_strong };
-            let brush = g.gradient(x, x + w, y, &[(0.0, t.border_strong), (0.78, clear)]);
-            g.fill_with(Rect::new(x, y + line.h - 1.0, w, 1.0), 0.0, &brush.into());
-        }
-        if d.heading == 5 {
-            g.fill(Rect::new(x, y + s.pad_top, 2.0, s.text_h), t.accent_line);
-        }
         if d.quote {
-            let indent = if d.list > 0 { 0.0 } else { 0.0 };
-            g.fill(Rect::new(x + indent, y, 2.0, line.h), t.accent_line);
+            g.fill(Rect::new(x, y, 2.0, line.h), t.text_primary);
         }
         if d.rule {
             g.fill(Rect::new(x, y + s.pad_top, w, 1.0), t.border_strong);
@@ -479,8 +449,8 @@ impl View {
                     let l = g.layout(&label, crate::gfx::Style::new(crate::gfx::Stack::Code, crate::theme::TEXT_XS), 400.0);
                     let m = crate::gfx::metrics(&l);
                     let cr = Rect::new(x + w - 16.0 - m.w - 16.0, y + (line.h - m.h - 8.0) / 2.0, m.w + 16.0, m.h + 8.0);
-                    g.fill_round(cr, 5.0, t.bg_overlay);
-                    g.stroke_round(cr, 5.0, t.border_soft, 1.0);
+                    g.fill(cr, t.bg_overlay);
+                    g.stroke_round(cr, 0.0, t.border_soft, 1.0);
                     g.text(&l, cr.x + 8.0, cr.y + 4.0, t.text_secondary);
                     self.widget_hits.push((cr, bi as u32));
                 }
@@ -538,12 +508,12 @@ impl View {
         for (r, bg) in &s.backgrounds {
             let c = match bg {
                 Bg::Code => t.bg_inset,
-                Bg::Mark => t.accent_soft,
+                Bg::Mark => with_alpha(t.hl_attr, 0.32),
             };
             for rr in range_rects(layout, r.start, r.end) {
                 let pad = if *bg == Bg::Code { 0.15 * self.look.size() } else { 0.0 };
                 let h = rr.h * 0.62;
-                g.fill_round(Rect::new(tx + rr.x - 1.0, ty + rr.y + (rr.h - h) / 2.0 - pad * 0.3, rr.w + 2.0, h + pad), 5.0, c);
+                g.fill_round(Rect::new(tx + rr.x - 1.0, ty + rr.y + (rr.h - h) / 2.0 - pad * 0.3, rr.w + 2.0, h + pad), 0.0, c);
             }
         }
 
@@ -563,18 +533,18 @@ impl View {
                 Obj::Checkbox { checked, .. } => {
                     let b = Rect::new(tx + px, ty + m.top + (m.height - 15.0) / 2.0, 15.0, 15.0);
                     if *checked {
-                        g.fill_round(b, 4.0, t.accent);
-                        g.line(b.x + 4.0, b.y + 7.8, b.x + 6.6, b.y + 10.4, crate::theme::WHITE, 2.0);
-                        g.line(b.x + 6.6, b.y + 10.4, b.x + 11.2, b.y + 4.6, crate::theme::WHITE, 2.0);
+                        g.fill(b, t.accent);
+                        g.line(b.x + 4.0, b.y + 7.8, b.x + 6.6, b.y + 10.4, t.on_accent, 2.0);
+                        g.line(b.x + 6.6, b.y + 10.4, b.x + 11.2, b.y + 4.6, t.on_accent, 2.0);
                     } else {
-                        g.stroke_round(b, 4.0, t.border_strong, 1.5);
+                        g.stroke_round(b, 0.0, t.border_strong, 1.5);
                     }
                 }
                 Obj::Image { src, alt, range } => {
                     let r = Rect::new(tx + px, ty + m.top, m.width, m.height);
                     self.images.draw(g, t, self.doc_dir.as_deref(), src, alt, r);
                     if self.image_selected && self.buf.sel.head == range.start {
-                        g.stroke_round(r.inset(-2.0), 9.0, t.accent_line, 2.0);
+                        g.stroke_round(r.inset(-2.0), 0.0, t.accent_line, 2.0);
                     }
                 }
             }
