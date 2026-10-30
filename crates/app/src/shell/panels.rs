@@ -905,7 +905,7 @@ fn paint_ctrl(ui: &mut crate::ui::Ui, g: &Gfx, c: &Ctrl, r: Rect, hits: &mut Vec
                 let on = i == *current;
                 if on {
                     g.fill_round(cell, RADIUS_SM, th.bg_base);
-                    g.fill(Rect::new(cell.x, cell.bottom() - 2.0, cell.w, 2.0), th.text_primary);
+                    g.fill(Rect::new(cell.x, cell.bottom() - 2.0, cell.w, 2.0), th.accent);
                 }
                 let c = if on { th.text_primary } else { theme::mix(th.text_secondary, th.text_tertiary, ui.hover_t(hit)) };
                 g.text(&l, cell.x + S3, cell.y + (cell.h - m.h) / 2.0, c);
@@ -1045,7 +1045,7 @@ pub fn paint(w: &mut Window, g: &Gfx) {
                 let on = i == section;
                 if on {
                     g.fill_round(row, RADIUS_SM, th.accent_soft);
-                    g.fill(Rect::new(row.x, row.y, 2.0, row.h), th.text_primary);
+                    g.fill(Rect::new(row.x, row.y, 2.0, row.h), th.accent);
                 } else {
                     g.fill_round(row, RADIUS_SM, theme::with_alpha(th.bg_hover, ui.hover_t(hit)));
                 }

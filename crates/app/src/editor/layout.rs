@@ -469,7 +469,7 @@ pub fn shape_line(g: &Gfx, cache: &mut Cache, src: &str, deco: &Deco, line: Rang
                     Mark::Code => {
                         g.set_family(l, code_family, range);
                         l.SetFontSize(size * 0.88, range).unwrap();
-                        l.SetDrawingEffect(&g.solid(t.text_primary), range).unwrap();
+                        l.SetDrawingEffect(&g.solid(t.accent), range).unwrap();
                         backgrounds.push((dr.clone(), Bg::Code));
                     }
                     Mark::Math => {
@@ -483,7 +483,7 @@ pub fn shape_line(g: &Gfx, cache: &mut Cache, src: &str, deco: &Deco, line: Rang
                         l.SetUnderline(true, range).unwrap();
                         l.SetDrawingEffect(&g.solid(t.link), range).unwrap();
                     }
-                    Mark::ListMarker => l.SetDrawingEffect(&g.solid(t.text_secondary), range).unwrap(),
+                    Mark::ListMarker => l.SetDrawingEffect(&g.solid(t.accent), range).unwrap(),
                     Mark::Hl(tok) => {
                         use mdwisp_text::highlight::Token as K;
                         let c = match tok {
@@ -513,7 +513,7 @@ pub fn shape_line(g: &Gfx, cache: &mut Cache, src: &str, deco: &Deco, line: Rang
         unsafe {
             let (a, d) = g.ascent(family.unwrap_or(g.primary_family(ls.style.stack)));
             l.SetLineSpacing(DWRITE_LINE_SPACING_METHOD_UNIFORM, ls.lh, (ls.lh - (a + d) * size) / 2.0 + a * size).unwrap();
-            l.SetDrawingEffect(&g.solid(t.text_secondary), DWRITE_TEXT_RANGE { startPosition: 0, length: text.encode_utf16().count() as u32 }).unwrap();
+            l.SetDrawingEffect(&g.solid(t.accent), DWRITE_TEXT_RANGE { startPosition: 0, length: text.encode_utf16().count() as u32 }).unwrap();
         }
         (l, end)
     });

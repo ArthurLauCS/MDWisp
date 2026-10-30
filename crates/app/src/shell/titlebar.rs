@@ -15,8 +15,8 @@ const WBTN_W: f32 = 46.0;
 
 pub fn paint(w: &mut Window, g: &Gfx, bar: Rect) {
     let th = app().theme;
-    g.fill(bar, th.bg_base);
-    g.fill(Rect::new(bar.x, bar.bottom() - 1.0, bar.w, 1.0), th.border_soft);
+    g.fill(bar, th.chrome);
+    g.fill(Rect::new(bar.x, bar.bottom() - 1.0, bar.w, 1.0), th.accent_line);
     w.ui.region(bar, Hit::Caption);
 
     // ---- right: caption buttons
@@ -76,7 +76,7 @@ pub fn paint(w: &mut Window, g: &Gfx, bar: Rect) {
     match &w.doc {
         Some(d) => {
             let dir = d.meta.as_ref().and_then(|m| m.parent_dir.file_name()).map(|n| n.to_string_lossy().into_owned()).unwrap_or_default();
-            let nl = g.layout(&d.name(), Style::new(Stack::Ui, TEXT_SM), 600.0);
+            let nl = g.layout(&d.name(), Style::new(Stack::Ui, TEXT_SM).weight(700), 600.0);
             let dl = g.layout(&dir, Style::new(Stack::Ui, TEXT_XS), 400.0);
             let (nm, dm) = (metrics(&nl), metrics(&dl));
             // The folder name drops out on narrow windows, like the CSS breakpoint.
@@ -89,9 +89,9 @@ pub fn paint(w: &mut Window, g: &Gfx, bar: Rect) {
                 if d.dirty() {
                     dirty_dot(g, cx, base + nm.h / 2.0);
                 }
-                g.text(&nl, cx + dot, base, th.text_secondary);
+                g.text(&nl, cx + dot, base, th.text_primary);
                 if show_dir {
-                    g.text(&dl, cx + dot + nm.w + S2, base + nm.h - dm.h - 1.0, th.text_disabled);
+                    g.text(&dl, cx + dot + nm.w + S2, base + nm.h - dm.h - 1.0, th.text_tertiary);
                 }
             }
         }

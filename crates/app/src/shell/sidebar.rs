@@ -68,7 +68,7 @@ pub fn paint(w: &mut Window, g: &Gfx, r: Rect) {
         let on = (i == 1) == s.outline_visible;
         let hit = Hit::SidebarTab(i as u8);
         if on {
-            g.fill(Rect::new(cell.x, cell.bottom() - 2.0, cell.w, 2.0), th.text_primary);
+            g.fill(Rect::new(cell.x, cell.bottom() - 2.0, cell.w, 2.0), th.accent);
         }
         let l = g.layout(&crate::actions::title(id), Style::new(Stack::Ui, TEXT_SM).weight(if on { 700 } else { 400 }), cell.w);
         let m = metrics(&l);
@@ -172,7 +172,7 @@ fn nav_row(w: &mut Window, g: &Gfx, r: Rect, hit: Hit, active: bool) -> crate::t
     let h = w.ui.hover_t(hit);
     if active {
         g.fill_round(r, RADIUS_SM, th.accent_soft);
-        g.fill(Rect::new(r.x, r.y, 2.0, r.h), th.text_primary);
+        g.fill(Rect::new(r.x, r.y, 2.0, r.h), th.accent);
     } else if h > 0.0 {
         g.fill_round(r, RADIUS_SM, theme::with_alpha(th.bg_hover, h));
     }

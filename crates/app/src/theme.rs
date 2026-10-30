@@ -18,7 +18,7 @@ pub fn with_alpha(c: Color, a: f32) -> Color {
 }
 
 /// `color-mix(in srgb, a p%, b)`.
-pub fn mix(a: Color, b: Color, p: f32) -> Color {
+pub const fn mix(a: Color, b: Color, p: f32) -> Color {
     Color { r: a.r * p + b.r * (1.0 - p), g: a.g * p + b.g * (1.0 - p), b: a.b * p + b.b * (1.0 - p), a: a.a * p + b.a * (1.0 - p) }
 }
 
@@ -44,6 +44,10 @@ pub struct Theme {
     pub accent_press: Color,
     pub accent_soft: Color,
     pub accent_line: Color,
+    /// A faint accent fill behind a block that should stand out: the H1 band.
+    pub accent_wash: Color,
+    /// The title bar: the page tinted with the accent, so the window reads as MDWisp's.
+    pub chrome: Color,
     pub success: Color,
     pub warning: Color,
     pub danger: Color,
@@ -81,6 +85,8 @@ pub const DARK: Theme = Theme {
     accent_press: hex(0x9e8ac2),
     accent_soft: rgba(180, 157, 220, SEL_DARK),
     accent_line: rgba(180, 157, 220, 0.34),
+    accent_wash: rgba(180, 157, 220, WASH_DARK),
+    chrome: mix(hex(0xb49ddc), hex(0x1a1a18), CHROME_DARK),
     success: hex(0x8cc28e),
     warning: hex(0xe09a5a),
     danger: hex(0xea7a72),
@@ -115,6 +121,8 @@ pub const LIGHT: Theme = Theme {
     accent_press: hex(0x5d4389),
     accent_soft: rgba(106, 76, 156, SEL_LIGHT),
     accent_line: rgba(106, 76, 156, 0.34),
+    accent_wash: rgba(106, 76, 156, WASH_LIGHT),
+    chrome: mix(hex(0x6a4c9c), hex(0xfdfdfb), CHROME_LIGHT),
     success: hex(0x2e6b30),
     warning: hex(0xa85010),
     danger: hex(0xb0231f),
@@ -132,6 +140,10 @@ pub const LIGHT: Theme = Theme {
 /// Selection alpha of the style: `#RRGGBB24` in light, `#RRGGBB47` in dark.
 const SEL_LIGHT: f32 = 0x24 as f32 / 255.0;
 const SEL_DARK: f32 = 0x47 as f32 / 255.0;
+const WASH_LIGHT: f32 = 0.1;
+const WASH_DARK: f32 = 0.14;
+const CHROME_LIGHT: f32 = 0.18;
+const CHROME_DARK: f32 = 0.22;
 
 /// The Windows close button: the one place a system colour is correct.
 pub const CLOSE_HOVER: Color = hex(0xc42b1c);
@@ -139,7 +151,7 @@ pub const CLOSE_PRESS: Color = hex(0xb1271a);
 pub const WHITE: Color = hex(0xffffff);
 
 impl Theme {
-    /// The accent is one value to the user and five tokens to the drawing code.
+    /// The accent is one value to the user and seven tokens to the drawing code.
     pub fn with_accent(mut self, accent: Color) -> Theme {
         let white = hex(0xffffff);
         let black = hex(0x000000);
@@ -149,6 +161,8 @@ impl Theme {
         self.accent_press = mix(accent, black, 0.88);
         self.accent_soft = mix(accent, clear, if self.dark { SEL_DARK } else { SEL_LIGHT });
         self.accent_line = mix(accent, clear, 0.34);
+        self.accent_wash = mix(accent, clear, if self.dark { WASH_DARK } else { WASH_LIGHT });
+        self.chrome = mix(accent, self.bg_base, if self.dark { CHROME_DARK } else { CHROME_LIGHT });
         self
     }
 }
@@ -271,7 +285,7 @@ mod tests {
     fn base_accent_tokens_follow_with_accent() {
         for th in [DARK, LIGHT] {
             let d = th.with_accent(th.accent);
-            for (a, b) in [(th.accent_hover, d.accent_hover), (th.accent_press, d.accent_press), (th.accent_soft, d.accent_soft), (th.accent_line, d.accent_line)] {
+            for (a, b) in [(th.accent_hover, d.accent_hover), (th.accent_press, d.accent_press), (th.accent_soft, d.accent_soft), (th.accent_line, d.accent_line), (th.accent_wash, d.accent_wash), (th.chrome, d.chrome)] {
                 assert!([a.r - b.r, a.g - b.g, a.b - b.b, a.a - b.a].iter().all(|v| v.abs() <= 0.5 / 255.0 + 1e-6));
             }
         }

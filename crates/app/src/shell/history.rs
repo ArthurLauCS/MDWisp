@@ -234,7 +234,7 @@ fn panel(w: &mut Window, g: &Gfx, r: Rect) {
         let h = w.ui.hover_t(hit);
         if on {
             g.fill_round(rr, RADIUS_MD, th.accent_soft);
-            g.fill(Rect::new(rr.x, rr.y, 2.0, rr.h), th.text_primary);
+            g.fill(Rect::new(rr.x, rr.y, 2.0, rr.h), th.accent);
         } else if h > 0.0 {
             g.fill_round(rr, RADIUS_MD, theme::with_alpha(th.bg_hover, h));
         }
