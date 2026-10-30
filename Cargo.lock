@@ -722,7 +722,7 @@ dependencies = [
 
 [[package]]
 name = "mdwisp"
-version = "0.6.0"
+version = "0.6.1"
 dependencies = [
  "mdwisp-core",
  "mdwisp-export",
@@ -739,7 +739,7 @@ dependencies = [
 
 [[package]]
 name = "mdwisp-core"
-version = "0.6.0"
+version = "0.6.1"
 dependencies = [
  "chrono",
  "miniz_oxide 0.8.9",
@@ -756,7 +756,7 @@ dependencies = [
 
 [[package]]
 name = "mdwisp-export"
-version = "0.6.0"
+version = "0.6.1"
 dependencies = [
  "base64 0.22.1",
  "chrono",
@@ -773,7 +773,7 @@ dependencies = [
 
 [[package]]
 name = "mdwisp-table"
-version = "0.6.0"
+version = "0.6.1"
 dependencies = [
  "mdwisp-core",
  "regex",
@@ -783,7 +783,7 @@ dependencies = [
 
 [[package]]
 name = "mdwisp-text"
-version = "0.6.0"
+version = "0.6.1"
 dependencies = [
  "chrono",
  "mdwisp-core",
