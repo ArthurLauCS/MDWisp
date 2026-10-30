@@ -42,7 +42,11 @@ Notes/
     └── architecture.svg
 ```
 
+![A document folder copied to another computer keeps its images](./Welcome_img/portable-folder.svg)
+
 Save before inserting images. Paste an image, drop image files into the editor, or use **Ctrl+Shift+I**. Images are saved beside the document and referenced with relative paths. Use **Organize into a document folder** for loose Markdown files. Share or archive the whole folder so links remain valid.
+
+Two small buttons beside the document name in the title bar show the document in File Explorer and copy its full path.
 
 ## Markdown editing
 
@@ -76,12 +80,62 @@ Choose an explicit language or let local rules detect it. Uncertain detection re
 
 ### Extended syntax
 
-Subscripts such as H~2~O, superscripts such as x^2^, footnotes[^note] and definition lists are supported by the HTML export pipeline. Some extensions are shown as source in the live editor. Math, Mermaid and `[TOC]` can be inserted as source; they are not rendered as diagrams or formulas.
+Subscripts such as H~2~O and superscripts such as x^2^ show in the editor and in exports. Footnotes[^note] and definition lists stay as source in the editor and render in HTML export. Math shows as styled TeX source in the editor and as formulas in HTML export. Mermaid and `[TOC]` stay as source.
 
 [^note]: A footnote rendered in HTML export.
 
 Document folder
 : A folder whose name matches the Markdown file and the prefix of its image directory.
+
+## Format sampler
+
+Every special format the editor knows appears below once. After a change, reading it top to bottom and Ctrl+clicking each link is a full check.
+
+### Inline formats
+
+**Bold**, *italic*, ***bold italic***, ~~strikethrough~~, ==highlight==, <u>underline</u>, `inline code`, H~2~O, x^2^, inline math $E = mc^2$ and a footnote[^sample]. Prices like $5 and $10 are not math; an escaped `\*` shows as \*asterisks\*.
+
+[^sample]: Footnotes stay as source in the editor.
+
+### Links
+
+- Bare URLs: https://github.com/ArthurLauCS/MDWisp and the releases page (https://github.com/ArthurLauCS/MDWisp/releases).
+- An [inline link](https://github.com/ArthurLauCS/MDWisp/releases), an autolink <https://example.com>, www.example.com and someone@example.com.
+- A reference link: [report an issue][issues].
+- In-document: [Write and save](#write-and-save); same document by relative path: [Follow links](./Welcome.md#follow-links).
+
+[issues]: https://github.com/ArthurLauCS/MDWisp/issues
+
+### Lists
+
+1. First ordered item
+2. Second item with a nested list
+   - Nested bullet with `code` and a [link](#format-sampler)
+   - [x] Nested done task
+   - [ ] Nested open task
+3. Third item
+
+### Quotes and rules
+
+> A quote with **bold** and a [link](#links).
+>
+> > A nested quote.
+
+---
+
+### Formats in a table
+
+| Format | Source | Result |
+| :--- | :---: | ---: |
+| Link | `[home](https://github.com/ArthurLauCS/MDWisp)` | [home](https://github.com/ArthurLauCS/MDWisp) |
+| Code | `` `x = 1` `` | `x = 1` |
+| Emphasis | `**bold** *italic*` | **bold** *italic* |
+
+### Display math
+
+$$
+\int_0^1 x^2 \, dx = \frac{1}{3}
+$$
 
 ## Appearance and language
 

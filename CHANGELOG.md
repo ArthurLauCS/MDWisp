@@ -1,5 +1,18 @@
 # 更新记录
 
+## 0.6.1 · 2026-10-30
+
+- 强调色用到更多地方：一级标题带淡色底和页边竖条，二级标题下有一条强调色细线；引用线、列表符号、行内代码、未勾选的任务框和表格顶线用强调色；侧栏、命令面板、历史和设置里选中的项用强调色标出；标题栏带一点强调色，文档名加粗。自定义强调色时这些一起变。
+- 标题栏文档名右侧新增两个小按钮：在资源管理器中显示当前文档、复制它的绝对路径（文档保存后出现）；命令面板里也有这两条命令。
+- 紧贴中文的裸网址和邮箱也会变成链接：`网站：https://a.cn。` 链接的是 `https://a.cn`，网址在第一个非 ASCII 字符处结束。HTML 导出同样识别裸网址；紧凑列表项里的网址和格式也能识别。
+- 编辑器里 H~2~O、x^2^ 显示为下标、上标，`$$ … $$` 公式段整体按公式样式显示。
+- 欢迎文档末尾新增格式速查，把每种链接、文内跳转和各类格式各写了一遍；英文欢迎文档补上了插图。
+- The accent reaches further: H1 sits on a faint band with a bar in the margin, H2 over an accent rule; quotes, list markers, inline code, open task boxes and a table's top rule use the accent; selected rows and tabs in the sidebar, palette, history and settings are marked in it; the title bar is tinted with it and the document name is bold. A custom accent changes all of them.
+- Two small title bar buttons after the document name show the document in File Explorer and copy its full path (once the document is saved); both are also palette commands.
+- Bare URLs and email addresses link even right against Chinese text: a URL ends at the first non-ASCII character, so Chinese punctuation after it stays out of the link. HTML export links bare URLs too, and URLs and formats in tight list items are found.
+- The editor shows H~2~O and x^2^ as sub- and superscripts and styles a `$$ … $$` paragraph as one formula.
+- The welcome documents end with a format sampler showing every link kind, in-document anchors and each format once; the English one gains its illustration.
+
 ## 0.6.0 · 2026-10-29
 
 - 界面和导出换成“纸”风格：暖白纸面、墨色文字、细线分隔、一个克制的葡萄紫强调色；导出的 HTML 不再有渐变标题底板，改为平直的标题线。欢迎文档的插图一并重绘。

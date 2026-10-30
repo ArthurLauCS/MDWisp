@@ -1,13 +1,14 @@
 //! Markdown → HTML for export, shaped like the markdown-it output the app's
 //! stylesheet was written against: heading anchors, footnote section, task
-//! list labels, `==mark==`, the code-block frame, and math as MathML so the
+//! list labels, `==mark==`, linkified bare URLs, the code-block frame, and math as MathML so the
 //! exported file needs no script and no font download.
 
 use std::collections::{HashMap, HashSet};
 
 use math_core::{LatexToMathML, MathDisplay};
 use mdwisp_core::i18n::t;
-use pulldown_cmark::{CodeBlockKind, CowStr, Event, Options, Parser, Tag, TagEnd, TextMergeStream, html};
+use mdwisp_text::{inline_span, links};
+use pulldown_cmark::{CodeBlockKind, CowStr, Event, LinkType, Options, Parser, Tag, TagEnd, TextMergeStream, html};
 
 pub fn escape(text: &str) -> String {
     let mut out = String::with_capacity(text.len());
@@ -47,6 +48,8 @@ pub fn render_markdown(source: &str) -> String {
     let mut label_open = false;
     // Alt text is written as an attribute; markup inside it would be escaped into view.
     let mut in_image = false;
+    let mut in_link = false;
+    let mut in_code = false;
 
     let mut i = 0;
     while i < events.len() {
@@ -134,13 +137,22 @@ pub fn render_markdown(source: &str) -> String {
             }
             Event::DisplayMath(tex) => sink.push(Event::Html(display_math(&math, &tex).into())),
             Event::InlineMath(tex) => sink.push(Event::InlineHtml(render_math(&math, &tex, MathDisplay::Inline).into())),
-            Event::Text(text) if !in_image && text.contains(['=', '^', '~']) => push_inline(&text, sink),
+            Event::Text(text) if !in_image && !in_code => push_text(&text, !in_link, sink),
             Event::Start(Tag::Image { .. }) => {
                 in_image = true;
                 sink.push(ev);
             }
             Event::End(TagEnd::Image) => {
                 in_image = false;
+                sink.push(ev);
+            }
+            Event::Start(Tag::Link { .. }) | Event::End(TagEnd::Link) => {
+                in_link = matches!(ev, Event::Start(_));
+                sink.push(ev);
+            }
+            // Fenced blocks are taken whole above; this is an indented one.
+            Event::Start(Tag::CodeBlock(_)) | Event::End(TagEnd::CodeBlock) => {
+                in_code = matches!(ev, Event::Start(_));
                 sink.push(ev);
             }
             ev => sink.push(ev),
@@ -287,14 +299,30 @@ fn display_math(math: &LatexToMathML, tex: &str) -> String {
     format!("<div class=\"math-block\">{}</div>\n", render_math(math, tex.trim(), MathDisplay::Block))
 }
 
-/// `==mark==`, `^sup^` and intraword `~sub~` within one text run, as the
-/// markdown-it plugins read them. pulldown-cmark has no highlight syntax, and
-/// its sub/superscript refuse intraword use, so `H~2~O` would stay literal.
+/// One text run: bare URLs and e-mail addresses become links (not inside a
+/// link label), the rest goes through `push_inline`.
+fn push_text<'a>(text: &str, linkify: bool, out: &mut Vec<Event<'a>>) {
+    let mut at = 0;
+    for (r, href) in if linkify { links::bare_links(text) } else { vec![] } {
+        push_inline(&text[at..r.start], out);
+        out.push(Event::Start(Tag::Link { link_type: LinkType::Autolink, dest_url: href.into(), title: "".into(), id: "".into() }));
+        out.push(Event::Text(text[r.clone()].to_string().into()));
+        out.push(Event::End(TagEnd::Link));
+        at = r.end;
+    }
+    push_inline(&text[at..], out);
+}
+
+/// `==mark==`, `^sup^` and intraword `~sub~` within one text run.
 fn push_inline<'a>(text: &str, out: &mut Vec<Event<'a>>) {
+    if !text.contains(['=', '^', '~']) {
+        out.push(Event::Text(text.to_string().into()));
+        return;
+    }
     let mut plain = String::new();
     let mut i = 0;
     while i < text.len() {
-        if let Some((tag, body, len)) = span(&text[i..]) {
+        if let Some((tag, body, len)) = inline_span(&text[i..]) {
             out.push(Event::Text(std::mem::take(&mut plain).into()));
             out.push(Event::InlineHtml(format!("<{tag}>").into()));
             out.push(Event::Text(body.to_string().into()));
@@ -307,28 +335,6 @@ fn push_inline<'a>(text: &str, out: &mut Vec<Event<'a>>) {
         i += c.len_utf8();
     }
     out.push(Event::Text(plain.into()));
-}
-
-/// The delimited span starting at `s`, as (tag, content, byte length).
-fn span(s: &str) -> Option<(&'static str, &str, usize)> {
-    if let Some(body) = s.strip_prefix("==") {
-        let c = body.find("==")?;
-        let content = &body[..c];
-        let edge = |x: Option<char>| x.is_some_and(|x| !x.is_whitespace());
-        return (edge(content.chars().next()) && edge(content.chars().last())).then_some(("mark", content, c + 4));
-    }
-    let (d, tag) = match s.as_bytes().first()? {
-        b'^' => ('^', "sup"),
-        b'~' => ('~', "sub"),
-        _ => return None,
-    };
-    let body = &s[1..];
-    if body.starts_with(d) {
-        return None;
-    }
-    let c = body.find(d)?;
-    let content = &body[..c];
-    (c > 0 && !content.contains(char::is_whitespace) && !body[c + 1..].starts_with(d)).then_some((tag, content, c + 2))
 }
 
 #[cfg(test)]
@@ -379,5 +385,13 @@ mod tests {
         let html = render_markdown("H~2~O x^2^ ~~gone~~\n\nTerm\n: Def\n");
         assert!(html.contains("<sub>2</sub>") && html.contains("<sup>2</sup>") && html.contains("<del>gone</del>"));
         assert!(html.contains("<dt>Term</dt>") && html.contains("<dd>Def</dd>"));
+    }
+
+    #[test]
+    fn links_bare_urls_and_emails_outside_links_and_code() {
+        let html = render_markdown("网站：https://a.cn/~x。邮件 me@a.cn\n\n[https://b.cn](https://b.cn) `https://c.cn`\n\n    https://d.cn");
+        assert!(html.contains(r#"网站：<a href="https://a.cn/~x">https://a.cn/~x</a>。"#), "{html}");
+        assert!(html.contains(r#"<a href="mailto:me@a.cn">me@a.cn</a>"#));
+        assert!(html.contains(r#"<a href="https://b.cn">https://b.cn</a>"#) && !html.contains("<a href=\"https://c.cn\"") && !html.contains("<a href=\"https://d.cn\""));
     }
 }

@@ -31,6 +31,7 @@ MDWisp parses Markdown with pulldown-cmark both for live-editing decorations and
 - Ctrl+click follows links. Ordinary clicks edit text.
 - Holding Ctrl shows a hand cursor over links; releasing it or leaving the window restores the text cursor. 按住 Ctrl 时链接显示手形指针，松开或窗口失焦后恢复文本光标。
 - Relative paths support spaces, Unicode, percent encoding, `..`, queries and heading fragments. Other documents open in new windows and preserve the current draft. Same-document anchors stay in the current window. 跨文档链接新开窗口，保留当前草稿；同文档锚点在原窗口定位。
+- Bare URLs (`https://`, `http://`, `www.`) and email addresses link in the editor, link lookup and HTML export by one rule (`links::bare_links`). Next to Chinese text a URL may start after any non-ASCII character and ends at the first one, so `网站：https://a.cn。` links `https://a.cn`. 裸网址紧贴中文也能识别，遇到第一个非 ASCII 字符结束。
 - HTTP, HTTPS and mailto use the system handler. Other external protocols and non-Markdown local files are rejected in the main process.
 - `[English]\(README.md)`, unresolved reference labels and links inside code are literal text, not navigable links.
 - 标题跳转复用大纲标识；重复标题使用 `-1`、`-2` 后缀。找不到标题时显示提示。
@@ -43,6 +44,7 @@ MDWisp parses Markdown with pulldown-cmark both for live-editing decorations and
 - `crates/core/src/paths.rs`: file resolution and protocol restrictions.
 - `crates/export/src/markdown.rs`: HTML output for standard syntax, extensions, math and code blocks.
 - `crates/core/src/assets.rs`: fenced and inline image examples are excluded from the sidebar.
+- `stock/欢迎使用/欢迎使用.md`, `stock/Welcome/Welcome.md`: the welcome documents show images, code and tables, and their format sampler shows each inline, link, list, quote, table, footnote, definition-list and math format once; read one and Ctrl+click its links after editor changes. 欢迎文档末尾的格式速查把这些格式各写了一遍。
 - `MDWISP_SCRIPT` runs (`crates/app/src/script.rs`): scripted editing, links, windows and layout on a real window, with self-captured screenshots.
 
 图片整理和资源扫描仍使用项目现有的行内图片扫描规则；复杂参考式图片的整理能力需单独扩展。Image organization and asset scanning still use the existing inline-image rules; complex reference-image organization needs separate work.

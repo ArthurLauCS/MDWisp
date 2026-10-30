@@ -39,6 +39,31 @@ pub fn frontmatter_end(src: &str) -> usize {
     RE.find(src).map_or(0, |m| m.end())
 }
 
+/// The `==mark==`, `^sup^` or `~sub~` span starting at `s`, as the markdown-it
+/// plugins read them: (html tag, content, byte length). pulldown-cmark has no
+/// highlight syntax, and its sub/superscript refuse intraword use, so `H~2~O`
+/// would stay literal; export and the editor both fill that in with this.
+pub fn inline_span(s: &str) -> Option<(&'static str, &str, usize)> {
+    if let Some(body) = s.strip_prefix("==") {
+        let c = body.find("==")?;
+        let content = &body[..c];
+        let edge = |x: Option<char>| x.is_some_and(|x| !x.is_whitespace());
+        return (edge(content.chars().next()) && edge(content.chars().last())).then_some(("mark", content, c + 4));
+    }
+    let (d, tag) = match s.as_bytes().first()? {
+        b'^' => ('^', "sup"),
+        b'~' => ('~', "sub"),
+        _ => return None,
+    };
+    let body = &s[1..];
+    if body.starts_with(d) {
+        return None;
+    }
+    let c = body.find(d)?;
+    let content = &body[..c];
+    (c > 0 && !content.contains(char::is_whitespace) && !body[c + 1..].starts_with(d)).then_some((tag, content, c + 2))
+}
+
 #[cfg(test)]
 mod tests {
     use super::frontmatter_end;

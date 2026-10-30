@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="300" viewBox="0 0 760 300" role="img" aria-label="A document folder copied to another computer keeps its images">
+  <defs>
+    <marker id="tip" viewBox="0 0 8 8" refX="6.4" refY="4" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0.6 L7 4 L0 7.4 z" fill="#A09E95"/>
+    </marker>
+  </defs>
+
+  <rect width="760" height="300" fill="#1A1A18"/>
+
+  <g font-family="'Segoe UI', sans-serif">
+    <text x="32" y="44" fill="#B49DDC" font-size="11.5">Portable folders</text>
+    <text x="32" y="74" fill="#E8E6DF" font-size="22">The folder is the document</text>
+
+    <rect x="32" y="100" width="300" height="164" fill="#212120" stroke="#56564F"/>
+    <text x="52" y="128" fill="#A09E95" font-size="12">This computer</text>
+    <g font-family="'Cascadia Mono', Consolas, monospace" font-size="13.5" fill="#E8E6DF">
+      <text x="52" y="160">Notes/</text>
+      <text x="52" y="186">├── Notes.md</text>
+      <text x="52" y="212">└── Notes_img/</text>
+      <text x="82" y="238" fill="#B49DDC">└── architecture.svg</text>
+    </g>
+
+    <line x1="350" y1="182" x2="408" y2="182" stroke="#A09E95" stroke-width="1.5" marker-end="url(#tip)"/>
+    <text x="379" y="170" fill="#A09E95" font-size="11.5" text-anchor="middle">copy</text>
+
+    <rect x="428" y="100" width="300" height="164" fill="#212120" stroke="#56564F"/>
+    <text x="448" y="128" fill="#A09E95" font-size="12">Any other computer</text>
+    <g font-family="'Cascadia Mono', Consolas, monospace" font-size="13.5" fill="#E8E6DF">
+      <text x="448" y="160">Notes/</text>
+      <text x="448" y="186">├── Notes.md</text>
+      <text x="448" y="212">└── Notes_img/</text>
+      <text x="478" y="238" fill="#B49DDC">└── architecture.svg</text>
+    </g>
+    <rect x="606" y="114" width="104" height="22" fill="#8CC28E" fill-opacity="0.15"/>
+    <text x="658" y="129.5" fill="#8CC28E" font-size="11.5" text-anchor="middle">images still load</text>
+  </g>
+</svg>

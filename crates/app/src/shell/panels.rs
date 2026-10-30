@@ -433,7 +433,7 @@ fn help_items(p: &Panel) -> Vec<Item> {
         Item::Section { title: t("入门").into(), aside: None, display: false },
         Item::Stack {
             name: t("欢迎使用 MDWisp").into(),
-            hint: Some(t("一篇用本应用写成的说明文档，包含图片、表格、代码检测和脚注的实际效果。 它同时演示了这个项目最重要的设计：文档和它的图片放在同一个文件夹里， 整个文件夹拷给别人就能正常显示。").into()),
+            hint: Some(t("一篇用本应用写成的说明文档，包含图片、表格和代码检测，末尾的格式速查把支持的每种格式各写了一遍。 它同时演示了这个项目最重要的设计：文档和它的图片放在同一个文件夹里， 整个文件夹拷给别人就能正常显示。").into()),
             ctrl: Ctrl::Buttons(vec![(C_WELCOME, t("打开欢迎文档").into(), Btn::Primary, welcome), (C_REVEAL_WELCOME, t("在文件夹中显示").into(), Btn::Normal, welcome)]),
             sample: None,
         },
@@ -905,7 +905,7 @@ fn paint_ctrl(ui: &mut crate::ui::Ui, g: &Gfx, c: &Ctrl, r: Rect, hits: &mut Vec
                 let on = i == *current;
                 if on {
                     g.fill_round(cell, RADIUS_SM, th.bg_base);
-                    g.fill(Rect::new(cell.x, cell.bottom() - 2.0, cell.w, 2.0), th.text_primary);
+                    g.fill(Rect::new(cell.x, cell.bottom() - 2.0, cell.w, 2.0), th.accent);
                 }
                 let c = if on { th.text_primary } else { theme::mix(th.text_secondary, th.text_tertiary, ui.hover_t(hit)) };
                 g.text(&l, cell.x + S3, cell.y + (cell.h - m.h) / 2.0, c);
@@ -1045,7 +1045,7 @@ pub fn paint(w: &mut Window, g: &Gfx) {
                 let on = i == section;
                 if on {
                     g.fill_round(row, RADIUS_SM, th.accent_soft);
-                    g.fill(Rect::new(row.x, row.y, 2.0, row.h), th.text_primary);
+                    g.fill(Rect::new(row.x, row.y, 2.0, row.h), th.accent);
                 } else {
                     g.fill_round(row, RADIUS_SM, theme::with_alpha(th.bg_hover, ui.hover_t(hit)));
                 }

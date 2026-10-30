@@ -37,7 +37,7 @@
 
 ## 下载与安装
 
-前往 **[Releases](https://github.com/ArthurLauCS/MDWisp/releases/latest)**，下载 `MDWisp-0.6.0-setup.exe`，也可自行构建（见[开发与验证](#开发与验证)）。安装时可以选择中英文、安装目录，并创建桌面快捷方式。按当前用户安装，不需要管理员权限；已装 0.4.x 时会先移除旧版，设置与历史记录保留。
+前往 **[Releases](https://github.com/ArthurLauCS/MDWisp/releases/latest)**，下载 `MDWisp-0.6.1-setup.exe`，也可自行构建（见[开发与验证](#开发与验证)）。安装时可以选择中英文、安装目录，并创建桌面快捷方式。按当前用户安装，不需要管理员权限；已装 0.4.x 时会先移除旧版，设置与历史记录保留。
 
 需要 **Windows 10 及以上 x64**；不支持 macOS 和 Linux。安装包暂未进行代码签名，Windows SmartScreen 可能提示「Windows 已保护你的电脑」，点击 **更多信息 → 仍要运行** 即可。
 
@@ -49,7 +49,9 @@
 
 在「设置 → 外观与字体 → 语言/Language」中切换「中文/Chinese」和「English」，即时生效并在重启后保留，不会翻译文档内容。
 
-按住 **Ctrl 点击**链接跳转。按住时链接显示手形指针。相对 Markdown 文档在新窗口打开，当前文档内的锚点在原窗口定位。支持网址、邮箱、参考式链接，以及表格中的链接。普通点击仍用于编辑。`[English](README.md)` 是链接；`[English]\(README.md)` 是转义后的普通文本。
+按住 **Ctrl 点击**链接跳转。按住时链接显示手形指针。相对 Markdown 文档在新窗口打开，当前文档内的锚点在原窗口定位。支持网址、邮箱、参考式链接，以及表格中的链接。普通点击仍用于编辑。粘贴的裸网址和邮箱即使紧贴中文也会立即变成链接：`网站：https://a.cn。` 链接的是 `https://a.cn`，网址在第一个非 ASCII 字符处结束；含中文路径的网址请从浏览器地址栏复制，浏览器会把中文转成百分号编码。`[English](README.md)` 是链接；`[English]\(README.md)` 是转义后的普通文本。
+
+标题栏文档名右侧的两个小按钮分别在资源管理器中显示当前文档、复制它的绝对路径，命令面板中也有这两条命令。
 
 语法覆盖和现有限制见 [Markdown 支持情况](docs/markdown-support.md)。
 
@@ -221,6 +223,8 @@ claude plugin validate plugin
 ```bash
 MDWISP_USER_DATA=<临时目录> MDWISP_SCRIPT=<脚本> target/release/mdwisp.exe <文档副本>
 ```
+
+欢迎文档（`stock/欢迎使用/欢迎使用.md`、`stock/Welcome/Welcome.md`，从「帮助 → 入门」打开）同时是格式测试文档：文中有图片、表格和代码，末尾的格式速查把各类链接、文内跳转、行内格式、列表、引用和公式各写了一遍。改动编辑器后，在浅色和深色下从头看一遍，并按住 Ctrl 把链接点一遍。
 
 开发约定见 [AGENTS.md](AGENTS.md)：资源路径集中处理；快捷键、右键菜单与命令面板共享动作注册表；颜色与动效统一取自主题。问题反馈请使用 [Issues](https://github.com/ArthurLauCS/MDWisp/issues)。
 

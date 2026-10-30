@@ -318,6 +318,25 @@ pub static ACTIONS: LazyLock<Vec<Action>> = LazyLock::new(|| {
             },
             ..a("document.organize", "整理为文档文件夹", "", Document, "file", &["organize", "folder", "文件夹", "散装", "转换"], |w| Modal::toggle(w, Modal::organize(w)))
         },
+        Action {
+            enabled: has_path,
+            reason: |w| (!has_path(w)).then(|| t("请先保存文档").to_string()),
+            ..a("document.reveal", "在文件管理器中显示", "", Document, "file", &["reveal", "explorer", "资源管理器", "文件夹"], |w| {
+                if let Some(p) = w.doc.as_ref().and_then(|d| d.path()) {
+                    dialog::reveal(p);
+                }
+            })
+        },
+        Action {
+            enabled: has_path,
+            reason: |w| (!has_path(w)).then(|| t("请先保存文档").to_string()),
+            ..a("document.copyPath", "复制文档路径", "", Document, "file", &["copy", "path", "路径", "绝对路径"], |w| {
+                if let Some(p) = w.doc.as_ref().and_then(|d| d.path()).map(|p| p.display().to_string()) {
+                    clipboard::set_text(w.hwnd, &p);
+                    w.toast(t("路径已复制"));
+                }
+            })
+        },
         a("document.undo", "撤销", "Ctrl+Z", Document, "file", &[], |w| {
             if let Some(d) = &mut w.doc {
                 if !d.view.read_only {

@@ -242,7 +242,7 @@ fn paint_palette(w: &mut Window, g: &Gfx) {
             let on = i == p.active;
             if on {
                 g.fill_round(rr, RADIUS_MD, th.accent_soft);
-                g.fill(Rect::new(rr.x, rr.y, 2.0, rr.h), th.text_primary);
+                g.fill(Rect::new(rr.x, rr.y, 2.0, rr.h), th.accent);
             }
             let key = actions::find(id).map(|a| a.key).unwrap_or("");
             let mut right = rr.right() - S3;

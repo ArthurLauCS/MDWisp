@@ -216,7 +216,7 @@ pub fn paint(g: &Gfx, t: &Theme, tv: &TableView, x: f32, y: f32, caret_cell: Opt
         }
         ry += rh;
     }
-    // Top and bottom rules, 1.5 px in the text colour.
-    g.fill(Rect::new(x, y - 0.75, w, 1.5), t.text_primary);
+    // Top and bottom rules, 1.5 px; the top one in the accent marks where a table starts.
+    g.fill(Rect::new(x, y - 0.75, w, 1.5), t.accent);
     g.fill(Rect::new(x, y + h - 0.75, w, 1.5), t.text_primary);
 }

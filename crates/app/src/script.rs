@@ -65,7 +65,7 @@ pub fn step(w: &mut Window) {
                 let sc = crate::win::dpi_of(w.hwnd) / 96.0;
                 let mut r = windows::Win32::Foundation::RECT::default();
                 let _ = GetWindowRect(w.hwnd, &mut r);
-                let _ = SetWindowPos(w.hwnd, None, r.left, r.top, (nums[0] * sc) as i32, (nums[1] * sc) as i32, SWP_NOZORDER);
+                let _ = SetWindowPos(w.hwnd, None, r.left, r.top, (nums[0] * sc) as i32, (nums[1] * sc) as i32, SWP_NOZORDER | SWP_NOACTIVATE);
             },
             "scroll" => {
                 if let Some(d) = &mut w.doc {

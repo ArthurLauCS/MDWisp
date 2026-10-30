@@ -33,7 +33,7 @@ Since 0.5 MDWisp is a native Windows app written in Rust: the window appears in 
 
 ## Download and installation
 
-Download `MDWisp-0.6.0-setup.exe` from [Releases](https://github.com/ArthurLauCS/MDWisp/releases/latest), or build it yourself (see [Development](#development-and-verification)). It needs Windows 10 or later, x64. Installation offers English and Simplified Chinese, a directory choice and a desktop shortcut. It installs for the current user without administrator rights, and removes an installed 0.4.x version while keeping its settings and history.
+Download `MDWisp-0.6.1-setup.exe` from [Releases](https://github.com/ArthurLauCS/MDWisp/releases/latest), or build it yourself (see [Development](#development-and-verification)). It needs Windows 10 or later, x64. Installation offers English and Simplified Chinese, a directory choice and a desktop shortcut. It installs for the current user without administrator rights, and removes an installed 0.4.x version while keeping its settings and history.
 
 The installer is unsigned, so Windows SmartScreen may show "Windows protected your PC". Choose **More info → Run anyway**. macOS and Linux are not supported.
 
@@ -64,7 +64,9 @@ Use **Ctrl+F** to find text and **Ctrl+H** to replace it in the current document
 
 Choose **Settings → Appearance & fonts → Language** for **English** or **中文/Chinese**. The choice applies immediately and persists across restarts without translating document content or resetting the editor.
 
-Use **Ctrl+click** to follow links. Holding the modifier displays a hand cursor over links. Relative Markdown files open in a new app window, heading anchors navigate within the current document, websites open in the default browser and email links use the mail handler. Reference links, table links and linked images are supported. Ordinary clicks remain editing actions.
+Use **Ctrl+click** to follow links. Holding the modifier displays a hand cursor over links. Relative Markdown files open in a new app window, heading anchors navigate within the current document, websites open in the default browser and email links use the mail handler. Reference links, table links and linked images are supported. Ordinary clicks remain editing actions. A pasted bare URL or email address becomes a link as soon as it is typed, even right against Chinese text: a URL ends at the first non-ASCII character, so Chinese punctuation after it stays out of the link. Copy URLs from the browser's address bar, which percent-encodes non-ASCII paths.
+
+The two buttons beside the document name in the title bar show the document in File Explorer and copy its full path; both are also in the command palette.
 
 ```markdown
 [English](README.md) · [简体中文](README.zh-CN.md)
@@ -175,6 +177,8 @@ UI regressions drive a real window with a script and save the app's own frames. 
 ```bash
 MDWISP_USER_DATA=<temp dir> MDWISP_SCRIPT=<script> target/release/mdwisp.exe <copy of a document>
 ```
+
+The welcome documents (`stock/Welcome/Welcome.md`, `stock/欢迎使用/欢迎使用.md`, opened from **Help → Getting started**) double as the format test document: they show images, tables and code, and their format sampler shows every link kind, in-document anchors and each inline, list, quote and math format. After an editor change, read one top to bottom in light and dark and Ctrl+click each link.
 
 See [AGENTS.md](AGENTS.md) (Chinese) for development rules. Report issues in the existing [GitHub repository](https://github.com/ArthurLauCS/MDWisp/issues).
 

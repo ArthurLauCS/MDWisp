@@ -10,13 +10,16 @@ use crate::window::Window;
 use crate::{app, win};
 
 pub const ACTION_IDS: [&str; 6] = ["document.new", "document.open", "document.save", "workspace.open", "view.settings", "view.help"];
+/// The icon buttons after the document name: show it in Explorer, copy its path.
+pub const DOC_ACTION_IDS: [&str; 2] = ["document.reveal", "document.copyPath"];
+const TOOL_W: f32 = 24.0;
 /// 46 px is the Windows 11 caption button metric; flush to the corner, no gaps.
 const WBTN_W: f32 = 46.0;
 
 pub fn paint(w: &mut Window, g: &Gfx, bar: Rect) {
     let th = app().theme;
-    g.fill(bar, th.bg_base);
-    g.fill(Rect::new(bar.x, bar.bottom() - 1.0, bar.w, 1.0), th.border_soft);
+    g.fill(bar, th.chrome);
+    g.fill(Rect::new(bar.x, bar.bottom() - 1.0, bar.w, 1.0), th.accent_line);
     w.ui.region(bar, Hit::Caption);
 
     // ---- right: caption buttons
@@ -76,22 +79,34 @@ pub fn paint(w: &mut Window, g: &Gfx, bar: Rect) {
     match &w.doc {
         Some(d) => {
             let dir = d.meta.as_ref().and_then(|m| m.parent_dir.file_name()).map(|n| n.to_string_lossy().into_owned()).unwrap_or_default();
-            let nl = g.layout(&d.name(), Style::new(Stack::Ui, TEXT_SM), 600.0);
+            let nl = g.layout(&d.name(), Style::new(Stack::Ui, TEXT_SM).weight(700), 600.0);
             let dl = g.layout(&dir, Style::new(Stack::Ui, TEXT_XS), 400.0);
             let (nm, dm) = (metrics(&nl), metrics(&dl));
             // The folder name drops out on narrow windows, like the CSS breakpoint.
             let show_dir = w.width > 900.0 && !dir.is_empty();
             let dot = if d.dirty() { DIRTY_W } else { 0.0 };
-            let total = dot + nm.w + if show_dir { S2 + dm.w } else { 0.0 };
+            // Only a saved document has a file to show or a path to copy.
+            let tools = if d.path().is_some() { S2 + TOOL_W * DOC_ACTION_IDS.len() as f32 } else { 0.0 };
+            let total = dot + nm.w + if show_dir { S2 + dm.w } else { 0.0 } + tools;
             let cx = start(total);
             if total <= right - left {
                 let base = bar.y + (bar.h - nm.h) / 2.0;
                 if d.dirty() {
                     dirty_dot(g, cx, base + nm.h / 2.0);
                 }
-                g.text(&nl, cx + dot, base, th.text_secondary);
+                g.text(&nl, cx + dot, base, th.text_primary);
                 if show_dir {
-                    g.text(&dl, cx + dot + nm.w + S2, base + nm.h - dm.h - 1.0, th.text_disabled);
+                    g.text(&dl, cx + dot + nm.w + S2, base + nm.h - dm.h - 1.0, th.text_tertiary);
+                }
+                let mut x = cx + total - tools + S2;
+                for i in 0..if tools > 0.0 { DOC_ACTION_IDS.len() } else { 0 } {
+                    let hit = Hit::TitleDocAction(i as u8);
+                    let r = Rect::new(x, bar.y + (bar.h - TOOL_W) / 2.0, TOOL_W, TOOL_W);
+                    button_bg(w, g, r, hit);
+                    let c = mix(th.text_primary, th.text_secondary, w.ui.hover_t(hit));
+                    if i == 0 { folder_icon(g, r, c) } else { copy_icon(g, r, c) }
+                    w.ui.region(r, hit);
+                    x += TOOL_W;
                 }
             }
         }
@@ -117,6 +132,27 @@ fn rail_icon(g: &Gfx, r: Rect, c: crate::theme::Color) {
     let b = Rect::new(r.x + (r.w - 12.0) / 2.0, r.y + (r.h - 11.0) / 2.0, 12.0, 11.0);
     g.stroke_round(b, 2.0, c, 1.4);
     g.fill(Rect::new(b.x + 3.4, b.y + 2.8, 1.4, b.h - 5.6), theme::with_alpha(c, 0.6));
+}
+
+/// A folder: Explorer opens with the document selected.
+fn folder_icon(g: &Gfx, r: Rect, c: crate::theme::Color) {
+    let x = (r.x + (r.w - 14.0) / 2.0).round() + 0.5;
+    let y = (r.y + (r.h - 11.0) / 2.0).round() + 0.5;
+    g.stroke_round(Rect::new(x, y + 2.0, 14.0, 9.0), 0.0, c, 1.0);
+    g.line(x, y + 2.0, x + 1.5, y, c, 1.0);
+    g.line(x + 1.5, y, x + 5.0, y, c, 1.0);
+    g.line(x + 5.0, y, x + 6.5, y + 2.0, c, 1.0);
+}
+
+/// Two stacked sheets: copy the document's full path.
+fn copy_icon(g: &Gfx, r: Rect, c: crate::theme::Color) {
+    let x = (r.x + (r.w - 12.0) / 2.0).round() + 0.5;
+    let y = (r.y + (r.h - 13.0) / 2.0).round() + 0.5;
+    g.stroke_round(Rect::new(x, y + 3.0, 9.0, 10.0), 0.0, c, 1.0);
+    g.line(x + 3.0, y + 3.0, x + 3.0, y, c, 1.0);
+    g.line(x + 3.0, y, x + 12.0, y, c, 1.0);
+    g.line(x + 12.0, y, x + 12.0, y + 10.0, c, 1.0);
+    g.line(x + 12.0, y + 10.0, x + 9.0, y + 10.0, c, 1.0);
 }
 
 /// Segoe-style 10×10 caption glyphs, 1 px strokes snapped to pixels.

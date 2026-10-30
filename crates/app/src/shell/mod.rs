@@ -316,6 +316,7 @@ pub fn click(w: &mut Window, hit: Hit) {
         },
         Hit::SidebarToggle => crate::actions::run(w, "view.toggleSidebar"),
         Hit::TitleAction(i) => crate::actions::run(w, titlebar::ACTION_IDS[i as usize]),
+        Hit::TitleDocAction(i) => crate::actions::run(w, titlebar::DOC_ACTION_IDS[i as usize]),
         Hit::Breadcrumb(1) => crate::actions::run(w, "document.organize"),
         Hit::Backdrop => app().patch(|s| s.sidebar_visible = false),
         Hit::Widget(id) if id >= pane::TABLE_BUTTON && id < pane::TABLE_BAR => pane::table_button(w, (id - pane::TABLE_BUTTON) as usize),

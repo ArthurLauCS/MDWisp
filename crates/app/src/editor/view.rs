@@ -14,7 +14,7 @@ use super::images::Images;
 use super::layout::{self, Bg, Cache, Line, Look, Obj, disp_to_src, src_to_disp_pos};
 use super::table::{self, TableView};
 use crate::gfx::{Gfx, Rect};
-use crate::theme::{Theme, with_alpha};
+use crate::theme::{S1, S2, S4, Theme, with_alpha};
 
 pub const PAD_TOP: f32 = 48.0;
 
@@ -420,8 +420,18 @@ impl View {
             // The text rows only: a heading's spacing above it is not part of the line you are on.
             g.fill(Rect::new(x, y + s.pad_top, w, line.h - s.pad_top - s.pad_bottom), t.bg_hover);
         }
+        // The two section levels carry the accent so a long document shows its structure at a glance:
+        // H1 sits on a band with a bar hung in the margin (the text keeps its left edge), H2 over a rule.
+        let rows = (y + s.pad_top, y + line.h - s.pad_bottom);
+        if d.heading == 1 {
+            g.fill(Rect::new(x - S4, rows.0 - S1, w + S4, rows.1 - rows.0 + S2), t.accent_wash);
+            g.fill(Rect::new(x - S4, rows.0 - S1, 3.0, rows.1 - rows.0 + S2), t.accent);
+        }
+        if d.heading == 2 {
+            g.fill(Rect::new(x, rows.1 + S1, w, 1.0), t.accent);
+        }
         if d.quote {
-            g.fill(Rect::new(x, y, 2.0, line.h), t.text_primary);
+            g.fill(Rect::new(x, y, 2.0, line.h), t.accent);
         }
         if d.rule {
             g.fill(Rect::new(x, y + s.pad_top, w, 1.0), t.border_strong);
@@ -537,7 +547,7 @@ impl View {
                         g.line(b.x + 4.0, b.y + 7.8, b.x + 6.6, b.y + 10.4, t.on_accent, 2.0);
                         g.line(b.x + 6.6, b.y + 10.4, b.x + 11.2, b.y + 4.6, t.on_accent, 2.0);
                     } else {
-                        g.stroke_round(b, 0.0, t.border_strong, 1.5);
+                        g.stroke_round(b, 0.0, t.accent, 1.5);
                     }
                 }
                 Obj::Image { src, alt, range } => {

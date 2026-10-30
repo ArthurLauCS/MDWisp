@@ -17,6 +17,8 @@ pub enum Hit {
     Close,
     SidebarToggle,
     TitleAction(u8),
+    /// The buttons beside the document name: `titlebar::DOC_ACTION_IDS`.
+    TitleDocAction(u8),
     SidebarTab(u8),
     TreeRow(u32),
     OutlineRow(u32),
