@@ -224,6 +224,8 @@ claude plugin validate plugin
 MDWISP_USER_DATA=<临时目录> MDWISP_SCRIPT=<脚本> target/release/mdwisp.exe <文档副本>
 ```
 
+欢迎文档（`stock/欢迎使用/欢迎使用.md`、`stock/Welcome/Welcome.md`，从「帮助 → 入门」打开）同时是格式测试文档：文中有图片、表格和代码，末尾的格式速查把各类链接、文内跳转、行内格式、列表、引用和公式各写了一遍。改动编辑器后，在浅色和深色下从头看一遍，并按住 Ctrl 把链接点一遍。
+
 开发约定见 [AGENTS.md](AGENTS.md)：资源路径集中处理；快捷键、右键菜单与命令面板共享动作注册表；颜色与动效统一取自主题。问题反馈请使用 [Issues](https://github.com/ArthurLauCS/MDWisp/issues)。
 
 ## 许可证与字体

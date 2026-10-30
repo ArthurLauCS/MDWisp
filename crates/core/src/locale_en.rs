@@ -314,7 +314,7 @@ pub static EN: &[(&str, &str)] = &[
     ("「设置」独立管理外观、文档、编辑器和图片；快捷键在其中按功能分类。F1 可直接进入快捷键页。", "Settings covers appearance, documents, the editor and images. Shortcuts are grouped by function. Press F1 to open the shortcuts page."),
     ("正文和图片随窗口伸缩；拖动正文两侧细线分别调整边距，双击恢复默认。导出快捷键 Ctrl+Shift+E 在其他面板中仍可用。", "Text and images adapt to the window. Drag either page edge to adjust margins; double-click to reset. Ctrl+Shift+E opens Export from other panels too."),
     ("入门", "Getting started"),
-    ("一篇用本应用写成的说明文档，包含图片、表格、代码检测和脚注的实际效果。 它同时演示了这个项目最重要的设计：文档和它的图片放在同一个文件夹里， 整个文件夹拷给别人就能正常显示。", "A guide written in this app with images, tables, code detection and footnotes. It demonstrates portable document folders: copy the whole folder to share the document with its images."),
+    ("一篇用本应用写成的说明文档，包含图片、表格和代码检测，末尾的格式速查把支持的每种格式各写了一遍。 它同时演示了这个项目最重要的设计：文档和它的图片放在同一个文件夹里， 整个文件夹拷给别人就能正常显示。", "A guide written in this app with images, tables and code detection; its format sampler shows every supported format once. It demonstrates portable document folders: copy the whole folder to share the document with its images."),
     ("打开欢迎文档", "Open welcome document"),
     ("在文件夹中显示", "Show in folder"),
     ("这个构建没有包含欢迎文档", "This build does not include the welcome document"),

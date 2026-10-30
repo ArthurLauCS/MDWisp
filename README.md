@@ -178,6 +178,8 @@ UI regressions drive a real window with a script and save the app's own frames. 
 MDWISP_USER_DATA=<temp dir> MDWISP_SCRIPT=<script> target/release/mdwisp.exe <copy of a document>
 ```
 
+The welcome documents (`stock/Welcome/Welcome.md`, `stock/欢迎使用/欢迎使用.md`, opened from **Help → Getting started**) double as the format test document: they show images, tables and code, and their format sampler shows every link kind, in-document anchors and each inline, list, quote and math format. After an editor change, read one top to bottom in light and dark and Ctrl+click each link.
+
 See [AGENTS.md](AGENTS.md) (Chinese) for development rules. Report issues in the existing [GitHub repository](https://github.com/ArthurLauCS/MDWisp/issues).
 
 ## License and fonts

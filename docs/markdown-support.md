@@ -44,6 +44,7 @@ MDWisp parses Markdown with pulldown-cmark both for live-editing decorations and
 - `crates/core/src/paths.rs`: file resolution and protocol restrictions.
 - `crates/export/src/markdown.rs`: HTML output for standard syntax, extensions, math and code blocks.
 - `crates/core/src/assets.rs`: fenced and inline image examples are excluded from the sidebar.
+- `stock/欢迎使用/欢迎使用.md`, `stock/Welcome/Welcome.md`: the welcome documents show images, code and tables, and their format sampler shows each inline, link, list, quote, table, footnote, definition-list and math format once; read one and Ctrl+click its links after editor changes. 欢迎文档末尾的格式速查把这些格式各写了一遍。
 - `MDWISP_SCRIPT` runs (`crates/app/src/script.rs`): scripted editing, links, windows and layout on a real window, with self-captured screenshots.
 
 图片整理和资源扫描仍使用项目现有的行内图片扫描规则；复杂参考式图片的整理能力需单独扩展。Image organization and asset scanning still use the existing inline-image rules; complex reference-image organization needs separate work.

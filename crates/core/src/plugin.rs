@@ -79,9 +79,11 @@ mod tests {
             let installed = fs::read_to_string(target.join(format!("mdwisp-{name}")).join("SKILL.md")).unwrap();
             assert_eq!(installed, source.replacen(&format!("name: {name}"), &format!("name: mdwisp-{name}"), 1));
         }
-        let stock = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../stock/欢迎使用");
-        let checked = std::process::Command::new("node").arg(target.join("mdwisp-doc/scripts/check.mjs")).arg(stock).status().unwrap();
-        assert!(checked.success());
+        for doc in ["欢迎使用", "Welcome"] {
+            let stock = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../stock").join(doc);
+            let checked = std::process::Command::new("node").arg(target.join("mdwisp-doc/scripts/check.mjs")).arg(stock).status().unwrap();
+            assert!(checked.success(), "{doc}");
+        }
         install_skills(&plugin(), root).unwrap();
         assert_eq!(fs::read_to_string(root.join("AGENTS.md")).unwrap(), "project rules");
         assert_eq!(fs::read_to_string(legacy.join("SKILL.md")).unwrap(), "custom legacy skill");
