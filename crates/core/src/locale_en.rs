@@ -196,6 +196,7 @@ pub static EN: &[(&str, &str)] = &[
     ("全屏查看", "View fullscreen"),
     ("复制图片路径", "Copy image path"),
     ("路径已复制", "Path copied"),
+    ("复制文档路径", "Copy document path"),
     ("在文件管理器中显示", "Show in file manager"),
     ("删除图片", "Delete image"),
     ("打开链接", "Open link"),

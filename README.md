@@ -66,6 +66,8 @@ Choose **Settings → Appearance & fonts → Language** for **English** or **中
 
 Use **Ctrl+click** to follow links. Holding the modifier displays a hand cursor over links. Relative Markdown files open in a new app window, heading anchors navigate within the current document, websites open in the default browser and email links use the mail handler. Reference links, table links and linked images are supported. Ordinary clicks remain editing actions. A pasted bare URL or email address becomes a link as soon as it is typed, even right against Chinese text: a URL ends at the first non-ASCII character, so Chinese punctuation after it stays out of the link. Copy URLs from the browser's address bar, which percent-encodes non-ASCII paths.
 
+The two buttons beside the document name in the title bar show the document in File Explorer and copy its full path; both are also in the command palette.
+
 ```markdown
 [English](README.md) · [简体中文](README.zh-CN.md)
 [Website](https://example.com)
