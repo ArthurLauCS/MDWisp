@@ -189,6 +189,15 @@ pub fn decorate(src: &str, focus: &Focus) -> Deco {
                 } else {
                     d.marks.push((m0..m1, Style::ListMarker));
                 }
+                // A tight item has no paragraph: its text is the events up to its first nested block.
+                if !matches!(events.get(i + 1), Some((Event::Start(Tag::Paragraph), _))) {
+                    let n = events[i + 1..].iter().position(|(e, _)| {
+                        matches!(e, Event::End(TagEnd::Item) | Event::Start(Tag::List(_) | Tag::CodeBlock(_) | Tag::BlockQuote(_) | Tag::Table(_) | Tag::HtmlBlock | Tag::Heading { .. }))
+                    });
+                    if let Some(n @ 1..) = n {
+                        inline_blocks.push(events[i + 1].1.start..events[i + n].1.end);
+                    }
+                }
             }
             Event::End(TagEnd::Item) => list_depth -= 1,
             Event::Start(Tag::Strong) => delim(r, 2, Style::Strong, &mut d, &mut hidden),
@@ -383,10 +392,35 @@ pub fn decorate(src: &str, focus: &Focus) -> Deco {
                 _ => {}
             }
         }
+        let before = d.marks.len();
+        // A `$$ … $$` paragraph is TeX source like `$inline$`, one formula.
+        if mdwisp_text::math::block_math(text).is_some() {
+            d.marks.push((block.clone(), Style::Math));
+        }
         for m in mdwisp_text::math::find_inline_math(text, |at| in_code(block.start + at)) {
             d.marks.push((block.start + m.start..block.start + m.end, Style::Math));
         }
         bare_urls(src, block.clone(), &parsed_links, &in_code, &mut d);
+        // Intraword `^sup^` / `~sub~`, which the parser leaves as text; never inside
+        // a formula, a bare URL, or a link or image source (an image may sit in a link).
+        let taken: Vec<Range<usize>> = d.marks[before..].iter().map(|(r, _)| r.clone()).collect();
+        let mut k = 0;
+        while let Some(p) = text[k..].find(['^', '~']) {
+            let at = block.start + k + p;
+            k += p + 1;
+            let i = d.reveal.partition_point(|r| r.start <= at);
+            // The second `~` of a `~~strike~~` delimiter never opens a span.
+            let doubled = at > 0 && src.as_bytes()[at - 1] == src.as_bytes()[at];
+            if doubled || in_code(at) || taken.iter().any(|r| r.contains(&at)) || d.reveal[..i].iter().rev().take(2).any(|r| r.contains(&at)) {
+                continue;
+            }
+            if let Some((tag, _, len)) = mdwisp_text::inline_span(&src[at..block.end]) {
+                hidden.push(at..at + 1);
+                hidden.push(at + len - 1..at + len);
+                d.marks.push((at + 1..at + len - 1, if tag == "sup" { Style::Sup } else { Style::Sub }));
+                k = at + len - block.start;
+            }
+        }
     }
     d.links.extend(parsed_links);
 
@@ -553,28 +587,14 @@ fn is_close(line: &str, open: &str) -> bool {
     fence_of(line).is_some_and(|f| f.as_bytes()[0] == open.as_bytes()[0] && f.len() >= open.len()) && line.trim().trim_matches(open.as_bytes()[0] as char).is_empty()
 }
 
-/// GFM bare URLs: `https://…` and `www.…`, minus trailing punctuation.
+/// Bare URLs and e-mail addresses by the shared rule, minus those inside code or a parsed link.
 fn bare_urls(src: &str, block: Range<usize>, links: &[Link], in_code: &impl Fn(usize) -> bool, d: &mut Deco) {
-    let text = &src[block.clone()];
-    let mut k = 0;
-    while k < text.len() {
-        let rest = &text[k..];
-        let at = ["https://", "http://", "www."].iter().filter_map(|p| rest.find(p)).min();
-        let Some(p) = at else { break };
-        let start = block.start + k + p;
-        let boundary = src[..start].chars().next_back().is_none_or(|c| c.is_whitespace() || "*_~(".contains(c));
-        let len = src[start..block.end].find(|c: char| c.is_whitespace() || c == '<').unwrap_or(block.end - start);
-        let mut end = start + len;
-        while end > start && src[..end].ends_with(['.', ',', ':', ';', '!', '?', '"', '\'', '*', '_', '~', ')']) {
-            end -= 1;
-        }
-        k += p + len.max(1);
+    for (r, href) in mdwisp_text::links::bare_links(&src[block.clone()]) {
+        let (start, end) = (block.start + r.start, block.start + r.end);
         let i = links.partition_point(|l| l.range.start <= start);
-        if !boundary || in_code(start) || (i > 0 && start < links[i - 1].range.end) || end - start < 5 {
+        if in_code(start) || (i > 0 && start < links[i - 1].range.end) {
             continue;
         }
-        let url = &src[start..end];
-        let href = if url.starts_with("www.") { format!("http://{url}") } else { url.to_string() };
         d.links.push(Link { range: start..end, href });
         d.marks.push((start..end, Style::Link));
     }
@@ -649,6 +669,28 @@ mod tests {
         assert!(d.lines[4].image);
         assert!(d.lines[6].rule);
         assert_eq!(d.links.last().map(|l| l.href.as_str()), Some("https://example.com"));
+    }
+
+    #[test]
+    fn links_urls_against_cjk_and_marks_intraword_sub_sup_and_block_math() {
+        let src = "网站：https://a.cn/~x~y。邮件me@a.cn\n\nH~2~O x^2^ ~~del~~x [a~b~](./c~d~.md) `e~f~`\n\n$$\nx^2^\n$$\n";
+        let d = decorate(src, &focus_none());
+        let hrefs: Vec<_> = d.links.iter().map(|l| l.href.as_str()).collect();
+        assert_eq!(hrefs, ["https://a.cn/~x~y", "mailto:me@a.cn", "./c~d~.md"]);
+        let marked = |s: Style| d.marks.iter().filter(|(_, m)| *m == s).map(|(r, _)| &src[r.clone()]).collect::<Vec<_>>();
+        assert_eq!(marked(Style::Sub), ["2"]);
+        assert_eq!(marked(Style::Sup), ["2"]);
+        assert_eq!(marked(Style::Math), ["$$\nx^2^\n$$\n"]);
+        assert_eq!(visible(src, &d).lines().nth(2), Some("H2O x2 delx a~b~ e~f~"));
+    }
+
+    #[test]
+    fn tight_list_items_get_the_inline_scan_once() {
+        let src = "- 主页https://a.cn ==m==\n  - www.b.cn\n- [ ] me@c.cn\n\n1. loose https://d.cn\n\n2. x\n";
+        let d = decorate(src, &focus_none());
+        let hrefs: Vec<_> = d.links.iter().map(|l| l.href.as_str()).collect();
+        assert_eq!(hrefs, ["https://a.cn", "http://www.b.cn", "mailto:me@c.cn", "https://d.cn"]);
+        assert_eq!(d.marks.iter().filter(|(_, m)| *m == Style::Mark).count(), 1);
     }
 
     #[test]

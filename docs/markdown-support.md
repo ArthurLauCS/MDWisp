@@ -31,6 +31,7 @@ MDWisp parses Markdown with pulldown-cmark both for live-editing decorations and
 - Ctrl+click follows links. Ordinary clicks edit text.
 - Holding Ctrl shows a hand cursor over links; releasing it or leaving the window restores the text cursor. 按住 Ctrl 时链接显示手形指针，松开或窗口失焦后恢复文本光标。
 - Relative paths support spaces, Unicode, percent encoding, `..`, queries and heading fragments. Other documents open in new windows and preserve the current draft. Same-document anchors stay in the current window. 跨文档链接新开窗口，保留当前草稿；同文档锚点在原窗口定位。
+- Bare URLs (`https://`, `http://`, `www.`) and email addresses link in the editor, link lookup and HTML export by one rule (`links::bare_links`). Next to Chinese text a URL may start after any non-ASCII character and ends at the first one, so `网站：https://a.cn。` links `https://a.cn`. 裸网址紧贴中文也能识别，遇到第一个非 ASCII 字符结束。
 - HTTP, HTTPS and mailto use the system handler. Other external protocols and non-Markdown local files are rejected in the main process.
 - `[English]\(README.md)`, unresolved reference labels and links inside code are literal text, not navigable links.
 - 标题跳转复用大纲标识；重复标题使用 `-1`、`-2` 后缀。找不到标题时显示提示。

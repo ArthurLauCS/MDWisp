@@ -57,19 +57,28 @@ pub fn links(src: &str) -> Vec<Link> {
             }
             Event::Start(Tag::CodeBlock(_)) => code = true,
             Event::End(TagEnd::CodeBlock) => code = false,
-            Event::Text(_) if open.is_empty() && !code => bare_urls(src, range, &mut out),
+            Event::Text(_) if open.is_empty() && !code => {
+                for (r, href) in bare_links(&src[range.clone()]) {
+                    out.push(Link { range: range.start + r.start..range.start + r.end, href: normalize(&href), label: None });
+                }
+            }
             _ => {}
         }
     }
     out
 }
 
-/// Linkify: `https://…`, `www.…` and e-mail addresses in plain text.
-fn bare_urls(src: &str, range: Range<usize>, out: &mut Vec<Link>) {
+/// Linkify: `https://…`, `www.…` and e-mail addresses in plain text, as
+/// (range in `text`, href). The editor, link lookup and export all use this.
+/// Chinese text sits right against a URL, so a URL may start after any
+/// non-ASCII character and ends at the first one: `网站：https://a.cn。` links
+/// `https://a.cn`. A browser copies a URL with its non-ASCII path percent-encoded.
+pub fn bare_links(text: &str) -> Vec<(Range<usize>, String)> {
     static URL: LazyLock<Regex> = LazyLock::new(|| {
-        Regex::new(r"(?i)\b(?:https?://|www\.)[^\s<]+|[\w.+-]+@[\w-]+(?:\.[\w-]+)+").unwrap()
+        // `[!-;=-~]`: printable ASCII except `<`.
+        Regex::new(r"(?i)(?:https?://|www\.)[!-;=-~]+|[a-z0-9.+_-]+@[a-z0-9-]+(?:\.[a-z0-9_-]+)+").unwrap()
     });
-    let text = &src[range.clone()];
+    let mut out = Vec::new();
     for m in URL.find_iter(text) {
         let mut url = m.as_str().trim_end_matches(['?', '!', '.', ',', ':', '*', '_', '~', '\'', '"']);
         // A closing parenthesis belongs to the URL only when it is balanced inside it.
@@ -77,19 +86,23 @@ fn bare_urls(src: &str, range: Range<usize>, out: &mut Vec<Link>) {
             url = url[..url.len() - 1].trim_end_matches(['?', '!', '.', ',', ':', '*', '_', '~']);
         }
         let lower = url.to_ascii_lowercase();
-        let href = if lower.starts_with("www.") {
-            if !url[4..].contains('.') {
+        let href = if ["http://", "https://", "www."].iter().any(|p| lower.starts_with(p)) {
+            // GFM's left edge (line start, whitespace, `*_~(`), plus any non-ASCII character.
+            if text[..m.start()].chars().next_back().is_some_and(|c| c.is_ascii() && !c.is_ascii_whitespace() && !"*_~(".contains(c)) {
                 continue;
             }
-            format!("http://{url}")
-        } else if lower.starts_with("http") {
-            url.to_string()
+            match lower.strip_prefix("www.") {
+                Some(host) if !host.contains('.') => continue,
+                Some(_) => format!("http://{url}"),
+                None if url.ends_with("//") => continue,
+                None => url.to_string(),
+            }
         } else {
             format!("mailto:{url}")
         };
-        let start = range.start + m.start();
-        out.push(Link { range: start..start + url.len(), href: normalize(&href), label: None });
+        out.push((m.start()..m.start() + url.len(), href));
     }
+    out
 }
 
 /// markdown-it's `validateLink` + `normalizeLink`: refuse script-capable
@@ -171,6 +184,11 @@ mod tests {
             ("> - [link](README.md)", "link", "README.md"),
             ("| Doc |\n| --- |\n| [link](README.md) |", "link", "README.md"),
             ("see https://example.com/a_(b).", "example", "https://example.com/a_(b)"),
+            ("网站：https://example.com/b", "example", "https://example.com/b"),
+            ("访问https://example.com/c了解更多", "example", "https://example.com/c"),
+            ("见 https://example.com/d。下一句", "example", "https://example.com/d"),
+            ("邮件someone@example.com。", "someone", "mailto:someone@example.com"),
+            ("httpd@example.com", "httpd", "mailto:httpd@example.com"),
         ];
         for (src, label, href) in cases {
             assert_eq!(at(src, label).as_deref(), Some(href), "{src}");
@@ -191,6 +209,9 @@ mod tests {
             "[link][missing]",
         ] {
             assert_eq!(at(src, "link"), None, "{src}");
+        }
+        for src in ["xhttps://link.com", "www.link", "https://"] {
+            assert!(bare_links(src).is_empty(), "{src}");
         }
     }
 

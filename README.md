@@ -64,7 +64,7 @@ Use **Ctrl+F** to find text and **Ctrl+H** to replace it in the current document
 
 Choose **Settings → Appearance & fonts → Language** for **English** or **中文/Chinese**. The choice applies immediately and persists across restarts without translating document content or resetting the editor.
 
-Use **Ctrl+click** to follow links. Holding the modifier displays a hand cursor over links. Relative Markdown files open in a new app window, heading anchors navigate within the current document, websites open in the default browser and email links use the mail handler. Reference links, table links and linked images are supported. Ordinary clicks remain editing actions.
+Use **Ctrl+click** to follow links. Holding the modifier displays a hand cursor over links. Relative Markdown files open in a new app window, heading anchors navigate within the current document, websites open in the default browser and email links use the mail handler. Reference links, table links and linked images are supported. Ordinary clicks remain editing actions. A pasted bare URL or email address becomes a link as soon as it is typed, even right against Chinese text: a URL ends at the first non-ASCII character, so Chinese punctuation after it stays out of the link. Copy URLs from the browser's address bar, which percent-encodes non-ASCII paths.
 
 ```markdown
 [English](README.md) · [简体中文](README.zh-CN.md)

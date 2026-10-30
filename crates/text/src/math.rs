@@ -57,7 +57,8 @@ pub fn find_inline_math(text: &str, skip: impl Fn(usize) -> bool) -> Vec<Range<u
 
 /// The formula of a paragraph that is a `$$ … $$` block.
 pub fn block_math(text: &str) -> Option<&str> {
-    static RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^ {0,3}\$\$([\s\S]*?)\$\$[ \t]*$").unwrap());
+    // A paragraph's range ends after its line break.
+    static RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^ {0,3}\$\$([\s\S]*?)\$\$\s*$").unwrap());
     let tex = RE.captures(text)?.get(1)?.as_str().trim();
     (!tex.is_empty()).then_some(tex)
 }
@@ -86,6 +87,7 @@ mod tests {
     fn display_block() {
         assert_eq!(block_math("$$\nE = mc^2\n$$"), Some("E = mc^2"));
         assert_eq!(block_math("$$a+b$$"), Some("a+b"));
+        assert_eq!(block_math("$$\r\nE = mc^2\r\n$$\r\n"), Some("E = mc^2"));
         assert_eq!(block_math("$$ $$"), None);
         assert_eq!(block_math("$$a$$ and more"), None);
     }
