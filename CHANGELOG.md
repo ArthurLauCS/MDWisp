@@ -1,5 +1,14 @@
 # 更新记录
 
+## 0.7.0 · 2026-11-02
+
+- Mermaid 代码块画成图：光标在块外时显示图，点击图或用方向键进入就显示源码可以编辑，离开后重新出图；查找时显示源码。导出的 HTML/PDF 里是内嵌 SVG，颜色跟随导出主题；渲染器读不懂的源码保持为代码块。
+- 表格画满网格：外框和每条行线、列线，线条对齐像素保持清晰，表头带底色；去掉表格顶部的强调色横线。HTML/PDF 导出同样是全网格。
+- 大纲跟随滚动：用滚轮或拖滚动条后，高亮窗口顶部所在的章节，滚到底时高亮最后一个标题；点击、打字或移动光标后，回到光标所在的章节。
+- Mermaid code blocks are drawn as diagrams: with the caret outside a block it shows the diagram; click it or arrow into it to edit the source, and leaving redraws it; search shows the source. HTML/PDF export inlines the SVG in the export theme; source the renderer cannot read stays a code block.
+- Tables are drawn as a full grid: a frame and every row and column rule, pixel-snapped so they stay crisp, with a tinted header row; the accent top rule is gone. HTML/PDF export uses the same grid.
+- The outline follows scrolling: after a wheel or scrollbar scroll it highlights the section at the top of the window, or the last heading at the end; a click, typing or caret motion returns it to the caret's section.
+
 ## 0.6.1 · 2026-10-30
 
 - 强调色用到更多地方：一级标题带淡色底和页边竖条，二级标题下有一条强调色细线；引用线、列表符号、行内代码、未勾选的任务框和表格顶线用强调色；侧栏、命令面板、历史和设置里选中的项用强调色标出；标题栏带一点强调色，文档名加粗。自定义强调色时这些一起变。
