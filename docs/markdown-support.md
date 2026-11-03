@@ -24,7 +24,8 @@ MDWisp parses Markdown with pulldown-cmark both for live-editing decorations and
 | 脚注、定义列表 / Footnotes and definition lists | 保留源码 / Source view | 支持 / Supported |
 | HTML、details、分页标签 / HTML, details, page breaks | 部分支持；其余源码 / Partial support; other tags stay as source | 按 HTML 渲染 / Rendered as HTML |
 | 数学公式 `$…$`、`$$…$$` / Math | 暂显示带样式的 TeX 源码 / Styled TeX source for now | MathML，浏览器原生渲染 / MathML, rendered natively by the browser |
-| Mermaid、TOC | 仅源码 / Source only | 仅源码或代码块 / Source or code block |
+| Mermaid | 光标在块外时画成图，进入块内编辑源码 / Drawn as a diagram; the caret inside shows the source | 内嵌 SVG / Inline SVG |
+| TOC | 仅源码 / Source only | 仅源码或代码块 / Source or code block |
 
 ## Links / 链接
 

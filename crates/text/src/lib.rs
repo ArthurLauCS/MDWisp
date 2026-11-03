@@ -11,6 +11,7 @@ pub mod history;
 pub mod keymap;
 pub mod links;
 pub mod math;
+pub mod mermaid;
 pub mod ops;
 pub mod outline;
 

@@ -33,7 +33,7 @@ Since 0.5 MDWisp is a native Windows app written in Rust: the window appears in 
 
 ## Download and installation
 
-Download `MDWisp-0.6.1-setup.exe` from [Releases](https://github.com/ArthurLauCS/MDWisp/releases/latest), or build it yourself (see [Development](#development-and-verification)). It needs Windows 10 or later, x64. Installation offers English and Simplified Chinese, a directory choice and a desktop shortcut. It installs for the current user without administrator rights, and removes an installed 0.4.x version while keeping its settings and history.
+Download `MDWisp-0.7.0-setup.exe` from [Releases](https://github.com/ArthurLauCS/MDWisp/releases/latest), or build it yourself (see [Development](#development-and-verification)). It needs Windows 10 or later, x64. Installation offers English and Simplified Chinese, a directory choice and a desktop shortcut. It installs for the current user without administrator rights, and removes an installed 0.4.x version while keeping its settings and history.
 
 The installer is unsigned, so Windows SmartScreen may show "Windows protected your PC". Choose **More info → Run anyway**. macOS and Linux are not supported.
 
@@ -52,7 +52,7 @@ New documents, opened files and repeated shortcut launches use independent windo
 
 Use **Ctrl+/** to switch between formatted editing and Markdown source. **Ctrl+= / Ctrl+- / Ctrl+0** enlarge, reduce or reset the body text size. The status bar counts Chinese characters, English words and selected text.
 
-Inline math uses `$...$`; display math uses `$$...$$`. The editor currently shows formulas as styled TeX source; HTML/PDF exports render them as MathML. Select text and paste a URL to turn it into a link. In tables, **Enter / Shift+Enter** move to the next or previous row while long cells remain multi-line.
+Inline math uses `$...$`; display math uses `$$...$$`. The editor currently shows formulas as styled TeX source; HTML/PDF exports render them as MathML. Mermaid code blocks are drawn as diagrams in the editor and in HTML/PDF exports; click a diagram or move the caret into it to edit its source. Select text and paste a URL to turn it into a link. In tables, **Enter / Shift+Enter** move to the next or previous row while long cells remain multi-line.
 
 For saved documents, drag the divider above the images panel to adjust its height relative to the outline or file tree. Drag to either edge to hide that section, then drag back to restore it. Double-click resets the split; a focused divider supports **Up / Down** keys. The split persists across restarts.
 

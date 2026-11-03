@@ -17,6 +17,8 @@ use crate::gfx::{Gfx, Rect};
 use crate::theme::{S1, S2, S4, Theme, with_alpha};
 
 pub const PAD_TOP: f32 = 48.0;
+/// Space above and below a mermaid diagram, as around a standalone image.
+const DIAGRAM_PAD: f32 = 24.0;
 
 pub struct View {
     pub buf: Buffer,
@@ -31,6 +33,9 @@ pub struct View {
     scroll_from: f32,
     scroll_target: f32,
     scroll_start: Option<Instant>,
+    /// (caret, text version) when the reader last scrolled by wheel or scrollbar:
+    /// while both still hold, the outline follows the view instead of the caret.
+    scroll_mark: Option<(usize, u64)>,
     /// Remembered x for vertical caret motion.
     goal_x: Option<f32>,
     pub blink: Instant,
@@ -82,6 +87,7 @@ impl View {
             scroll_from: 0.0,
             scroll_target: 0.0,
             scroll_start: None,
+            scroll_mark: None,
             goal_x: None,
             blink: Instant::now(),
             focused: true,
@@ -167,20 +173,37 @@ impl View {
         let mut budget = std::mem::take(&mut self.fill_budget);
         let mut pending = false;
         let mut next_table = 0;
+        let mut next_diagram = 0;
         let images = &self.images;
         let dir = self.doc_dir.clone();
         let size_of = |s: &str| images.size(dir.as_deref(), s);
+        let palette = d.diagrams.iter().any(|(.., collapsed)| *collapsed).then(|| super::images::palette(t));
         while l < d.starts.len() {
             let start = d.starts[l];
             while next_table < d.tables.len() && d.tables[next_table].start < start {
                 next_table += 1;
+            }
+            while next_diagram < d.diagrams.len() && d.diagrams[next_diagram].0.start < start {
+                next_diagram += 1;
+            }
+            // A collapsed mermaid block is one line holding its diagram; until the
+            // diagram is drawn, or when it cannot be, the block shows as code.
+            if let (Some((block, code, true)), Some(p)) = (d.diagrams.get(next_diagram).filter(|b| b.0.start == start), &palette) {
+                if let (key, Some((w, h))) = images.diagram(&src[code.clone()], p) {
+                    let k = (self.content_w / w).min(1.0);
+                    let lh = h * k + DIAGRAM_PAD * 2.0;
+                    lines.push(Line { src: start..block.end, deco: Default::default(), table: None, diagram: Some((key, w * k, h * k)), shaped: layout::Shaped::empty(), y, h: lh });
+                    y += lh;
+                    l = d.line_of(block.end) + 1;
+                    continue;
+                }
             }
             if let Some(ctx) = d.tables.get(next_table).filter(|c| c.start == start) {
                 let caret = (sel.head >= ctx.start && sel.head <= ctx.end).then_some(sel.head);
                 let tv = table::build(g, &mut self.cache, src, ctx, self.content_w, &self.look, t, caret);
                 let h = tv.h;
                 let end = ctx.end;
-                lines.push(Line { src: start..end, deco: Default::default(), table: Some(tables.len()), shaped: layout::Shaped::empty(), y, h });
+                lines.push(Line { src: start..end, deco: Default::default(), table: Some(tables.len()), diagram: None, shaped: layout::Shaped::empty(), y, h });
                 tables.push(tv);
                 y += h;
                 l = d.line_of(end.saturating_sub(1).max(start)) + 1;
@@ -203,7 +226,7 @@ impl View {
                 }
             };
             let h = shaped.pad_top + shaped.text_h + shaped.pad_bottom;
-            lines.push(Line { src: start..end, deco: ld, table: None, shaped, y, h });
+            lines.push(Line { src: start..end, deco: ld, table: None, diagram: None, shaped, y, h });
             y += h;
             l += 1;
         }
@@ -271,6 +294,11 @@ impl View {
         if let Some(ti) = line.table {
             return self.tables[ti].pos_at(wx - self.content_x, y - line.y - table::PAD_Y);
         }
+        if line.diagram.is_some() {
+            // Into the source: the top half opens it at the code's start, the bottom half at its end.
+            let code = self.deco.diagrams.iter().find(|(b, ..)| b.start == line.src.start).map_or(line.src.clone(), |(_, c, _)| c.clone());
+            return if y - line.y < line.h / 2.0 { code.start } else { code.end };
+        }
         let s = &line.shaped;
         let Some(layout) = &s.layout else { return line.src.start };
         let mut trailing = BOOL(0);
@@ -320,6 +348,26 @@ impl View {
     pub fn wheel(&mut self, lines: f32) {
         let base = if self.scroll_start.is_some() { self.scroll_target } else { self.scroll };
         self.scroll_to(base - lines * 100.0, true);
+        self.mark_scroll(base);
+    }
+
+    /// The reader moved the view; a scroll that went nowhere changes nothing.
+    fn mark_scroll(&mut self, from: f32) {
+        if self.scroll_target != from {
+            self.scroll_mark = Some((self.buf.sel.head, self.buf.version));
+        }
+    }
+
+    /// Where the outline's current section is: the caret, unless the reader
+    /// scrolled since it last moved. Then it is the line near the top of the
+    /// view (16 px down, where outline jumps put a heading), or the last line
+    /// once the end is reached, so short closing sections still light up.
+    pub fn outline_pos(&self) -> usize {
+        if self.scroll_mark != Some((self.buf.sel.head, self.buf.version)) || self.lines.is_empty() {
+            return self.buf.sel.head;
+        }
+        let y = if self.scroll >= self.max_scroll() - 1.0 { self.scroll + self.rect.h } else { self.scroll + 16.0 };
+        self.lines[self.line_at_y(y)].src.start
     }
 
     /// Advance smooth scrolling; true while it is still moving.
@@ -349,7 +397,7 @@ impl View {
         if self.pending {
             let (top, bottom) = (self.scroll - 200.0, self.scroll + rect.h + 200.0);
             let a = self.line_at_y(top.max(0.0));
-            let unshaped = self.lines[a..].iter().take_while(|l| l.y < bottom).any(|l| l.shaped.layout.is_none() && l.table.is_none() && !l.deco.blank && l.src.len() > 0);
+            let unshaped = self.lines[a..].iter().take_while(|l| l.y < bottom).any(|l| l.shaped.layout.is_none() && l.table.is_none() && l.diagram.is_none() && !l.deco.blank && l.src.len() > 0);
             if unshaped {
                 self.fill_budget = 200;
                 self.relayout(g, t);
@@ -406,6 +454,10 @@ impl View {
             let sel = self.buf.sel;
             let caret_cell = if self.focused { tv.cell_of(sel.head) } else { None };
             table::paint(g, t, tv, x, y, caret_cell, None, sel.from()..sel.to());
+            return;
+        }
+        if let Some((key, dw, dh)) = &line.diagram {
+            self.images.draw_key(g, t, Some(key), "", Rect::new(x + (w - dw) / 2.0, y + DIAGRAM_PAD, *dw, *dh));
             return;
         }
         let s = &line.shaped;
@@ -587,9 +639,11 @@ impl View {
 
     /// Scroll so the thumb's top follows a drag: `dy` pixels of thumb travel.
     pub fn thumb_drag(&mut self, start_scroll: f32, dy: f32) {
+        let from = self.scroll_target;
         let Some(th) = self.thumb() else { return };
         let travel = (self.rect.h - th.h).max(1.0);
         self.scroll_to(start_scroll + dy * self.max_scroll() / travel, false);
+        self.mark_scroll(from);
     }
 
     // ---- editing ---------------------------------------------------------------
@@ -683,6 +737,7 @@ impl View {
         self.buf.sel = if extend { Sel { anchor: self.buf.sel.anchor, head: pos } } else { Sel::at(pos) };
         self.buf.isolate();
         self.blink = Instant::now();
+        self.scroll_mark = None;
     }
 
     pub fn move_h(&mut self, dir: i32, word: bool, extend: bool) {

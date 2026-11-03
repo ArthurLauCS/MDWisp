@@ -72,6 +72,8 @@ pub fn step(w: &mut Window) {
                     d.view.scroll_to(nums[0], false);
                 }
             }
+            // Notches, positive up, routed by the pointer like WM_MOUSEWHEEL.
+            "wheel" => w.wheel(nums[0], 0.0),
             "goto" => {
                 if let Some(d) = &mut w.doc {
                     if let Some(at) = d.view.buf.text.find(arg) {

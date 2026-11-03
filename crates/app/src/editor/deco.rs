@@ -87,8 +87,11 @@ pub struct Deco {
     pub links: Vec<Link>,
     /// Fenced code blocks: (whole block, code text, language as written).
     pub code_blocks: Vec<(Range<usize>, Range<usize>, String)>,
-    /// Links and images: the only sources whose display depends on the selection.
+    /// Links and images: sources whose display depends on the selection inside them.
     pub reveal: Vec<Range<usize>>,
+    /// Closed mermaid blocks: (whole block, code text, collapsed). A collapsed block
+    /// is drawn as its diagram; a selection touching it, ends included, opens the source.
+    pub diagrams: Vec<(Range<usize>, Range<usize>, bool)>,
     /// Longest mark and link, so per-line lookups can binary-search.
     pub mark_span: usize,
     pub link_span: usize,
@@ -111,6 +114,7 @@ impl Deco {
     /// if neither the old nor the new selection does, the decorations stay the same.
     pub fn reveals(&self, from: usize, to: usize, head: usize) -> bool {
         self.reveal.iter().any(|r| (r.start < to && r.end > from) || (head > r.start && head < r.end))
+            || self.diagrams.iter().any(|(b, ..)| from <= b.end && to >= b.start)
     }
 }
 
@@ -345,6 +349,11 @@ pub fn decorate(src: &str, focus: &Focus) -> Deco {
                 }
                 d.widgets.push((from..first_end, Widget::CodeLang { block: from..end, info: info_range, lang: info.to_string(), detected }));
                 d.code_blocks.push((from..end, text_start..text_end, lang.to_string()));
+                if closed && lang == "mermaid" {
+                    // Search keeps sources open so its matches stay visible.
+                    let collapsed = !focus.searching && (focus.to < from || focus.from > end);
+                    d.diagrams.push((from..end, text_start..text_end, collapsed));
+                }
                 if closed {
                     hidden.push(d.starts[last]..d.line_end(last, src));
                 }

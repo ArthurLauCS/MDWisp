@@ -1,9 +1,11 @@
 //! Document images: decoded off the UI thread with WIC, uploaded as D2D
-//! bitmaps, keyed by absolute path. Remote URLs are not fetched — the editor
-//! never makes network requests on its own.
+//! bitmaps, keyed by absolute path; mermaid diagrams are drawn to SVG and
+//! cached the same way. Remote URLs are not fetched — the editor never makes
+//! network requests on its own.
 
 use std::cell::RefCell;
 use std::collections::HashMap;
+use std::hash::{Hash, Hasher};
 use std::path::{Path, PathBuf};
 use std::sync::mpsc::{Receiver, Sender, channel};
 
@@ -15,6 +17,7 @@ use windows::Win32::Graphics::Imaging::*;
 use windows::Win32::System::Com::*;
 use windows::Win32::UI::WindowsAndMessaging::PostMessageW;
 use windows::core::PCWSTR;
+use mdwisp_text::mermaid::Palette;
 use windows_numerics::Matrix3x2;
 
 use crate::gfx::{Gfx, Rect, Stack, Style, metrics};
@@ -57,6 +60,24 @@ impl Default for Images {
     }
 }
 
+/// Mermaid colours from the theme tokens: nodes on the raised surface, notes in the accent.
+pub fn palette(t: &Theme) -> Palette {
+    let css = |c: crate::theme::Color| {
+        let (r, g, b) = ((c.r * 255.0).round() as u8, (c.g * 255.0).round() as u8, (c.b * 255.0).round() as u8);
+        if c.a < 1.0 { format!("rgba({r},{g},{b},{:.3})", c.a) } else { format!("#{r:02x}{g:02x}{b:02x}") }
+    };
+    Palette {
+        dark: t.dark,
+        page: css(t.bg_base),
+        fill: css(t.bg_raised),
+        border: css(t.border_strong),
+        line: css(t.text_secondary),
+        text: css(t.text_primary),
+        note: css(t.accent_soft),
+        note_border: css(t.accent),
+    }
+}
+
 /// Where a markdown image target points on disk; None for remote or data URLs.
 pub fn resolve(dir: Option<&Path>, src: &str) -> Option<PathBuf> {
     let lower = src.to_ascii_lowercase();
@@ -76,18 +97,38 @@ impl Images {
     /// Natural size once decoded; starts the decode on first sight.
     pub fn size(&self, dir: Option<&Path>, src: &str) -> Option<(f32, f32)> {
         let path = resolve(dir, src)?;
+        let scale = self.scale;
+        self.load(path.clone(), || move || decode(&path, scale))
+    }
+
+    /// A mermaid diagram: its cache key and, once drawn, its natural size.
+    /// Diagrams share the cache under a `mermaid:<hash>` key no file path resolves to.
+    pub fn diagram(&self, code: &str, palette: &Palette) -> (PathBuf, Option<(f32, f32)>) {
+        let mut h = std::hash::DefaultHasher::new();
+        (code, palette).hash(&mut h);
+        let key = PathBuf::from(format!("mermaid:{:016x}", h.finish()));
+        let scale = self.scale;
+        let size = self.load(key.clone(), || {
+            let (code, palette) = (code.to_string(), palette.clone());
+            move || svg_pixels(mdwisp_text::mermaid::svg(&code, &palette)?.as_bytes(), None, scale)
+        });
+        (key, size)
+    }
+
+    /// Natural size of `key` once ready; on first sight `job()` makes the work
+    /// that produces its pixels, run off the UI thread.
+    fn load<J: FnOnce() -> Option<Pixels> + Send + 'static>(&self, key: PathBuf, job: impl FnOnce() -> J) -> Option<(f32, f32)> {
         let mut map = self.map.borrow_mut();
-        match map.get(&path) {
+        match map.get(&key) {
             Some(Entry::Ready { w, h, .. }) => Some((*w, *h)),
             Some(_) => None,
             None => {
-                map.insert(path.clone(), Entry::Loading);
+                map.insert(key.clone(), Entry::Loading);
                 let tx = self.tx.clone();
                 let hwnd = self.hwnd.0 as isize;
-                let scale = self.scale;
+                let job = job();
                 std::thread::spawn(move || {
-                    let out = decode(&path, scale);
-                    let _ = tx.send((path, out));
+                    let _ = tx.send((key, job()));
                     unsafe {
                         let _ = PostMessageW(Some(HWND(hwnd as _)), WM_APP_IMAGE, WPARAM(0), LPARAM(0));
                     }
@@ -138,9 +179,13 @@ impl Images {
     }
 
     pub fn draw(&self, g: &Gfx, t: &Theme, dir: Option<&Path>, src: &str, alt: &str, r: Rect) {
-        let path = resolve(dir, src);
+        self.draw_key(g, t, resolve(dir, src).as_deref(), alt, r);
+    }
+
+    /// Draw what is cached under `key` (a file path or a diagram key) into `r`.
+    pub fn draw_key(&self, g: &Gfx, t: &Theme, key: Option<&Path>, alt: &str, r: Rect) {
         let map = self.map.borrow();
-        match path.as_ref().and_then(|p| map.get(p)) {
+        match key.and_then(|p| map.get(p)) {
             Some(Entry::Ready { bmp, at, .. }) => unsafe {
                 let motion = crate::app().ui_motion();
                 let k = (at.elapsed().as_secs_f32() * 1000.0 / crate::theme::Dur::Slow.ms(motion)).min(1.0);
@@ -228,6 +273,11 @@ fn decode(path: &Path, scale: f32) -> Option<Pixels> {
 /// diagrams are mostly text. Rasterised at the display scale so it stays sharp
 /// on HiDPI without wasting memory at 100%; the returned size is the natural one.
 fn svg(path: &Path, display: f32) -> Option<Pixels> {
+    svg_pixels(&std::fs::read(path).ok()?, path.parent(), display)
+}
+
+/// SVG source to pixels; `dir` resolves the relative references of a file.
+fn svg_pixels(data: &[u8], dir: Option<&Path>, display: f32) -> Option<Pixels> {
     use resvg::{tiny_skia, usvg};
     static FONTS: std::sync::OnceLock<std::sync::Arc<usvg::fontdb::Database>> = std::sync::OnceLock::new();
     let fonts = FONTS.get_or_init(|| {
@@ -235,9 +285,8 @@ fn svg(path: &Path, display: f32) -> Option<Pixels> {
         db.load_system_fonts();
         std::sync::Arc::new(db)
     });
-    let data = std::fs::read(path).ok()?;
-    let opt = usvg::Options { resources_dir: path.parent().map(Into::into), fontdb: fonts.clone(), ..Default::default() };
-    let tree = usvg::Tree::from_data(&data, &opt).ok()?;
+    let opt = usvg::Options { resources_dir: dir.map(Into::into), fontdb: fonts.clone(), ..Default::default() };
+    let tree = usvg::Tree::from_data(data, &opt).ok()?;
     let size = tree.size();
     let scale = display.max(1.0).min(4096.0 / size.width().max(size.height()));
     let (w, h) = ((size.width() * scale).ceil() as u32, (size.height() * scale).ceil() as u32);

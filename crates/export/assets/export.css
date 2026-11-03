@@ -64,6 +64,7 @@ body {
   /* An image straddling a page break is worse than one pushed to the next. */
   .md img,
   .md table,
+  .md .mermaid,
   .md .codeblock {
     break-inside: avoid;
   }
