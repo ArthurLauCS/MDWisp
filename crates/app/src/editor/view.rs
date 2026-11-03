@@ -31,6 +31,9 @@ pub struct View {
     scroll_from: f32,
     scroll_target: f32,
     scroll_start: Option<Instant>,
+    /// (caret, text version) when the reader last scrolled by wheel or scrollbar:
+    /// while both still hold, the outline follows the view instead of the caret.
+    scroll_mark: Option<(usize, u64)>,
     /// Remembered x for vertical caret motion.
     goal_x: Option<f32>,
     pub blink: Instant,
@@ -82,6 +85,7 @@ impl View {
             scroll_from: 0.0,
             scroll_target: 0.0,
             scroll_start: None,
+            scroll_mark: None,
             goal_x: None,
             blink: Instant::now(),
             focused: true,
@@ -320,6 +324,26 @@ impl View {
     pub fn wheel(&mut self, lines: f32) {
         let base = if self.scroll_start.is_some() { self.scroll_target } else { self.scroll };
         self.scroll_to(base - lines * 100.0, true);
+        self.mark_scroll(base);
+    }
+
+    /// The reader moved the view; a scroll that went nowhere changes nothing.
+    fn mark_scroll(&mut self, from: f32) {
+        if self.scroll_target != from {
+            self.scroll_mark = Some((self.buf.sel.head, self.buf.version));
+        }
+    }
+
+    /// Where the outline's current section is: the caret, unless the reader
+    /// scrolled since it last moved. Then it is the line near the top of the
+    /// view (16 px down, where outline jumps put a heading), or the last line
+    /// once the end is reached, so short closing sections still light up.
+    pub fn outline_pos(&self) -> usize {
+        if self.scroll_mark != Some((self.buf.sel.head, self.buf.version)) || self.lines.is_empty() {
+            return self.buf.sel.head;
+        }
+        let y = if self.scroll >= self.max_scroll() - 1.0 { self.scroll + self.rect.h } else { self.scroll + 16.0 };
+        self.lines[self.line_at_y(y)].src.start
     }
 
     /// Advance smooth scrolling; true while it is still moving.
@@ -587,9 +611,11 @@ impl View {
 
     /// Scroll so the thumb's top follows a drag: `dy` pixels of thumb travel.
     pub fn thumb_drag(&mut self, start_scroll: f32, dy: f32) {
+        let from = self.scroll_target;
         let Some(th) = self.thumb() else { return };
         let travel = (self.rect.h - th.h).max(1.0);
         self.scroll_to(start_scroll + dy * self.max_scroll() / travel, false);
+        self.mark_scroll(from);
     }
 
     // ---- editing ---------------------------------------------------------------
@@ -683,6 +709,7 @@ impl View {
         self.buf.sel = if extend { Sel { anchor: self.buf.sel.anchor, head: pos } } else { Sel::at(pos) };
         self.buf.isolate();
         self.blink = Instant::now();
+        self.scroll_mark = None;
     }
 
     pub fn move_h(&mut self, dir: i32, word: bool, extend: bool) {

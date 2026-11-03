@@ -282,9 +282,8 @@ fn outline(w: &mut Window, g: &Gfx, r: Rect) {
         g.text(&l, r.x + S4, r.y + S6, th.text_tertiary);
         return;
     }
-    let cursor = d.view.buf.sel.head;
-    let active = heading_at(&headings, cursor).map(|h| h.id.clone());
-    // Collapsed parents of the heading under the caret open up so it stays visible.
+    let active = heading_at(&headings, d.view.outline_pos()).map(|h| h.id.clone());
+    // Collapsed parents of the current heading open up so it stays visible.
     if active != w.shell.sidebar.last_active {
         if let Some(a) = &active {
             let i = headings.iter().position(|h| &h.id == a).unwrap_or(0);
