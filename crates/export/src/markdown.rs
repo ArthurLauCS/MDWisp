@@ -1,7 +1,7 @@
 //! Markdown → HTML for export, shaped like the markdown-it output the app's
 //! stylesheet was written against: heading anchors, footnote section, task
-//! list labels, `==mark==`, linkified bare URLs, the code-block frame, and math as MathML so the
-//! exported file needs no script and no font download.
+//! list labels, `==mark==`, linkified bare URLs, the code-block frame, math as MathML and
+//! mermaid as inline SVG, so the exported file needs no script and no font download.
 
 use std::collections::{HashMap, HashSet};
 
@@ -9,6 +9,8 @@ use math_core::{LatexToMathML, MathDisplay};
 use mdwisp_core::i18n::t;
 use mdwisp_text::{inline_span, links};
 use pulldown_cmark::{CodeBlockKind, CowStr, Event, LinkType, Options, Parser, Tag, TagEnd, TextMergeStream, html};
+
+use crate::Theme;
 
 pub fn escape(text: &str) -> String {
     let mut out = String::with_capacity(text.len());
@@ -25,7 +27,8 @@ pub fn escape(text: &str) -> String {
     out
 }
 
-pub fn render_markdown(source: &str) -> String {
+/// `theme` colours the mermaid diagrams, which are drawn into the file.
+pub fn render_markdown(source: &str, theme: Theme) -> String {
     let opts = Options::ENABLE_TABLES
         | Options::ENABLE_FOOTNOTES
         | Options::ENABLE_STRIKETHROUGH
@@ -38,6 +41,7 @@ pub fn render_markdown(source: &str) -> String {
         | Options::ENABLE_YAML_STYLE_METADATA_BLOCKS;
     let events: Vec<Event> = TextMergeStream::new(Parser::new_ext(source, opts)).collect();
     let math = LatexToMathML::default();
+    let mut palette = None;
 
     let mut out: Vec<Event> = Vec::with_capacity(events.len());
     let mut slugs = HashSet::new();
@@ -94,7 +98,13 @@ pub fn render_markdown(source: &str) -> String {
                 }
                 i += 1; // End(CodeBlock)
                 let lang = info.split_whitespace().next().unwrap_or("");
-                sink.push(Event::Html(code_block(lang, &code).into()));
+                // Source the renderer cannot read stays a code block.
+                let diagram = if lang == "mermaid" { mdwisp_text::mermaid::svg(&code, palette.get_or_insert_with(|| crate::css::diagram_palette(theme))) } else { None };
+                let block = match diagram {
+                    Some(svg) => format!("<div class=\"mermaid\">{svg}</div>\n"),
+                    None => code_block(lang, &code),
+                };
+                sink.push(Event::Html(block.into()));
             }
             Event::Start(Tag::Item)
                 if matches!(events.get(i), Some(Event::TaskListMarker(_)))
@@ -343,7 +353,7 @@ mod tests {
 
     #[test]
     fn heading_carries_a_unique_slug_and_an_anchor() {
-        let html = render_markdown("# Hi there\n\n## Hi there\n\n## 标题");
+        let html = render_markdown("# Hi there\n\n## Hi there\n\n## 标题", Theme::Dark);
         assert!(html.contains(r##"<h1 id="hi-there" tabindex="-1"><a class="heading-anchor" href="#hi-there" aria-hidden="true">#</a> Hi there</h1>"##));
         assert!(html.contains(r#"<h2 id="hi-there-1""#));
         assert!(html.contains(r#"<h2 id="%E6%A0%87%E9%A2%98""#));
@@ -351,7 +361,7 @@ mod tests {
 
     #[test]
     fn footnotes_collect_into_one_section_in_reference_order() {
-        let html = render_markdown("a[^n] b[^1]\n\n[^1]: One.\n[^n]: En.\n");
+        let html = render_markdown("a[^n] b[^1]\n\n[^1]: One.\n[^n]: En.\n", Theme::Dark);
         assert!(html.contains(r##"<sup class="footnote-ref"><a href="#fn1" id="fnref1">[1]</a></sup>"##));
         assert!(html.contains(r#"<section class="footnotes">"#));
         let first = html.find(r#"<li id="fn1""#).unwrap();
@@ -360,20 +370,20 @@ mod tests {
 
     #[test]
     fn task_items_wrap_their_text_in_a_label() {
-        let html = render_markdown("- [x] done\n- [ ] todo\n");
+        let html = render_markdown("- [x] done\n- [ ] todo\n", Theme::Dark);
         assert!(html.contains(r#"<li class="task-list-item"><label><input class="task-list-item-checkbox" checked="" disabled="" type="checkbox"> done</label></li>"#));
         assert!(html.contains(r#"disabled="" type="checkbox"> todo</label>"#));
     }
 
     #[test]
     fn marks_highlights_but_not_comparisons() {
-        assert!(render_markdown("a ==hot== b").contains("a <mark>hot</mark> b"));
-        assert!(render_markdown("x == y").contains("x == y"));
+        assert!(render_markdown("a ==hot== b", Theme::Dark).contains("a <mark>hot</mark> b"));
+        assert!(render_markdown("x == y", Theme::Dark).contains("x == y"));
     }
 
     #[test]
     fn renders_math_as_mathml_and_drops_frontmatter() {
-        let html = render_markdown("---\ntitle: x\n---\n\n$a^2$\n\n$$\nE = mc^2\n$$\n");
+        let html = render_markdown("---\ntitle: x\n---\n\n$a^2$\n\n$$\nE = mc^2\n$$\n", Theme::Dark);
         assert!(!html.contains("title"));
         assert!(html.contains("<math"));
         assert!(html.contains("<div class=\"math-block\"><math display=\"block\">"));
@@ -382,14 +392,22 @@ mod tests {
 
     #[test]
     fn keeps_sub_sup_deflist_and_strikethrough() {
-        let html = render_markdown("H~2~O x^2^ ~~gone~~\n\nTerm\n: Def\n");
+        let html = render_markdown("H~2~O x^2^ ~~gone~~\n\nTerm\n: Def\n", Theme::Dark);
         assert!(html.contains("<sub>2</sub>") && html.contains("<sup>2</sup>") && html.contains("<del>gone</del>"));
         assert!(html.contains("<dt>Term</dt>") && html.contains("<dd>Def</dd>"));
     }
 
     #[test]
+    fn draws_mermaid_inline_in_the_theme_and_keeps_unreadable_source_as_code() {
+        let light = render_markdown("```mermaid\ngraph TD\n  A[开始] --> B\n```\n", Theme::Light);
+        assert!(light.contains(r#"<div class="mermaid"><svg"#) && light.contains("#f5f5f0") && light.contains("开始"));
+        assert!(render_markdown("```mermaid\ngraph TD\n  A --> B\n```\n", Theme::Dark).contains("#212120"));
+        assert!(render_markdown("```mermaid\nhello world\n```\n", Theme::Light).contains(r#"class="codeblock""#));
+    }
+
+    #[test]
     fn links_bare_urls_and_emails_outside_links_and_code() {
-        let html = render_markdown("网站：https://a.cn/~x。邮件 me@a.cn\n\n[https://b.cn](https://b.cn) `https://c.cn`\n\n    https://d.cn");
+        let html = render_markdown("网站：https://a.cn/~x。邮件 me@a.cn\n\n[https://b.cn](https://b.cn) `https://c.cn`\n\n    https://d.cn", Theme::Dark);
         assert!(html.contains(r#"网站：<a href="https://a.cn/~x">https://a.cn/~x</a>。"#), "{html}");
         assert!(html.contains(r#"<a href="mailto:me@a.cn">me@a.cn</a>"#));
         assert!(html.contains(r#"<a href="https://b.cn">https://b.cn</a>"#) && !html.contains("<a href=\"https://c.cn\"") && !html.contains("<a href=\"https://d.cn\""));

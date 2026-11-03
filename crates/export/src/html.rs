@@ -130,7 +130,7 @@ fn embed_images(html: &str, doc_dir: &Path) -> (String, Vec<String>, Vec<Omitted
 
 pub fn build_html(doc_path: &Path, source: &str, theme: Theme) -> io::Result<HtmlBuild> {
     let doc_dir = doc_path.parent().unwrap_or(Path::new(""));
-    let (body, inlined, missing, external) = embed_images(&render_markdown(source), doc_dir);
+    let (body, inlined, missing, external) = embed_images(&render_markdown(source, theme), doc_dir);
     let lang = match current_language() {
         Locale::En => "en",
         Locale::ZhCn => "zh-CN",

@@ -80,7 +80,7 @@ Choose an explicit language or let local rules detect it. Uncertain detection re
 
 ### Extended syntax
 
-Subscripts such as H~2~O and superscripts such as x^2^ show in the editor and in exports. Footnotes[^note] and definition lists stay as source in the editor and render in HTML export. Math shows as styled TeX source in the editor and as formulas in HTML export. Mermaid and `[TOC]` stay as source.
+Subscripts such as H~2~O and superscripts such as x^2^ show in the editor and in exports. Footnotes[^note] and definition lists stay as source in the editor and render in HTML export. Math shows as styled TeX source in the editor and as formulas in HTML export. Mermaid diagrams are drawn in the editor and in exports; put the caret in one to edit its source. `[TOC]` stays as source.
 
 [^note]: A footnote rendered in HTML export.
 
@@ -136,6 +136,16 @@ Every special format the editor knows appears below once. After a change, readin
 $$
 \int_0^1 x^2 \, dx = \frac{1}{3}
 $$
+
+### Mermaid diagram
+
+```mermaid
+graph LR
+  A[Write] --> B{Images beside it?}
+  B -->|Yes| C[Copy the folder]
+  B -->|No| D[Insert with Ctrl+Shift+I]
+  D --> C
+```
 
 ## Appearance and language
 

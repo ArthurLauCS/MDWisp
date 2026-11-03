@@ -507,6 +507,15 @@
   text-align: right;
 }
 
+.md .mermaid {
+  margin: 1.6em 0;
+  text-align: center;
+}
+.md .mermaid svg {
+  max-width: 100%;
+  height: auto;
+}
+
 /* ---- media -------------------------------------------------------------- */
 
 .md img {

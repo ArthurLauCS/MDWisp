@@ -13,7 +13,10 @@ use std::io;
 use std::path::PathBuf;
 
 use base64::Engine;
+use mdwisp_text::mermaid::Palette;
 use regex::Regex;
+
+use crate::Theme;
 
 const SHEETS: [&str; 5] = [
     include_str!("../assets/tokens.css"),
@@ -64,6 +67,27 @@ pub fn document_styles(text: &str) -> io::Result<String> {
     let mut sheets = SHEETS.map(String::from);
     sheets[1] = embed_fonts(&sheets[1], &chars);
     Ok(sheets.join("\n"))
+}
+
+/// Mermaid colours for `theme`, read from `tokens.css` like every other colour
+/// in the file: the light block overrides the dark `:root` defaults.
+pub fn diagram_palette(theme: Theme) -> Palette {
+    let (dark, light) = SHEETS[0].split_at(SHEETS[0].find("[data-theme='light']").unwrap());
+    let token = |name: &str| {
+        let key = format!("--{name}:");
+        let find = |block: &str| block.find(&key).map(|i| block[i + key.len()..].split(';').next().unwrap_or("").trim().to_string());
+        (if theme == Theme::Light { find(light) } else { None }).or_else(|| find(dark)).unwrap_or_default()
+    };
+    Palette {
+        dark: theme == Theme::Dark,
+        page: token("bg-base"),
+        fill: token("bg-raised"),
+        border: token("border-strong"),
+        line: token("text-secondary"),
+        text: token("text-primary"),
+        note: token("accent-soft"),
+        note_border: token("accent"),
+    }
 }
 
 #[cfg(test)]

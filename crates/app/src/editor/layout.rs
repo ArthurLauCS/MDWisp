@@ -124,6 +124,8 @@ pub struct Line {
     pub src: Range<usize>,
     pub deco: LineDeco,
     pub table: Option<usize>,
+    /// A collapsed mermaid block: its image key and drawn size.
+    pub diagram: Option<(std::path::PathBuf, f32, f32)>,
     pub shaped: Shaped,
     pub y: f32,
     pub h: f32,

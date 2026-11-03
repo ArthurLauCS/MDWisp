@@ -17,6 +17,19 @@ fn big_doc(copies: usize) -> String {
     (0..copies).map(|i| one.replace("的", &format!("的{i}"))).collect::<Vec<_>>().join("\n")
 }
 
+/// The editor reads its motion setting through `app()`: give the test process a
+/// throwaway App with motion off, so an image's fade-in is done on its first frame.
+fn test_app() {
+    let dir = std::env::temp_dir().join("mdwisp-bench");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(dir.join("settings.json"), r#"{"motion":"off"}"#).unwrap();
+    let settings = mdwisp_core::settings::Settings::new(&dir, mdwisp_core::i18n::Locale::En).unwrap();
+    let theme = crate::theme_for(settings.get());
+    let history = std::sync::Arc::new(mdwisp_core::history::History::new(&dir));
+    let app = crate::App { gfx: Default::default(), gfx_job: None, theme, settings, documents: Default::default(), history, user_data: dir, windows: vec![], restored: false };
+    unsafe { crate::APP = Box::into_raw(Box::new(app)) };
+}
+
 fn look() -> Look {
     Look { read: 16f32.to_bits(), line_height: 1.7f32.to_bits(), code: 14f32.to_bits(), tab: 4, ..Default::default() }
 }
@@ -127,6 +140,7 @@ fn stale_segs() {
 #[test]
 #[ignore]
 fn fuzz() {
+    test_app();
     let fonts = crate::resource_dir("fonts");
     let g = Gfx::new(fonts.as_deref(), false).unwrap();
     let t = theme::DARK;
@@ -141,8 +155,13 @@ fn fuzz() {
         let bmp = g.dc.CreateBitmap(D2D_SIZE_U { width: 1280, height: 840 }, None, 0, &props).unwrap();
         g.dc.SetTarget(&bmp);
     }
-    let pieces = ["中", "文", "a", "b", " ", "*", "**", "_", "`", "```", "~", "#", "# ", "## ", "- ", "1. ", "> ", "[", "]", "(", ")", "![", "|", "| a | b |\n|---|---|\n| 1 | 2 |", "$", "==", "<u>", "</u>", "http://x.cn ", "😀", "\t", "- [ ] ", "---", "\n", "\n\n", "é", "粘贴\r\n两行\r\n"];
+    let pieces = ["中", "文", "a", "b", " ", "*", "**", "_", "`", "```", "~", "#", "# ", "## ", "- ", "1. ", "> ", "[", "]", "(", ")", "![", "|", "| a | b |\n|---|---|\n| 1 | 2 |", "$", "==", "<u>", "</u>", "http://x.cn ", "😀", "\t", "- [ ] ", "---", "\n", "\n\n", "é", "```mermaid\ngraph TD\n  A[开始] --> B\n```\n","粘贴\r\n两行\r\n"];
     let seeds: u64 = std::env::var("FUZZ_SEEDS").ok().and_then(|s| s.parse().ok()).unwrap_or(200);
+    // Images post their arrival and fade frames to a window: a message-only one takes them.
+    let sink = unsafe {
+        use windows::Win32::UI::WindowsAndMessaging::{CreateWindowExW, HWND_MESSAGE, WINDOW_EX_STYLE, WINDOW_STYLE};
+        CreateWindowExW(WINDOW_EX_STYLE(0), windows::core::w!("STATIC"), None, WINDOW_STYLE(0), 0, 0, 0, 0, Some(HWND_MESSAGE), None, None, None).unwrap()
+    };
     for seed in 0..seeds {
         let mut r = seed.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
         let mut next = |n: usize| {
@@ -154,6 +173,7 @@ fn fuzz() {
         let start = (start..base.len()).find(|&i| base.is_char_boundary(i)).unwrap_or(0);
         let mut v = View::new(base[start..].chars().take(1500).collect(), None);
         v.set_look(look());
+        v.images.hwnd = sink;
         let mut log = vec![];
         for _ in 0..400 {
             let op = next(24);
@@ -219,6 +239,8 @@ fn fuzz() {
                         let _ = v.selected_text().len();
                     }
                 }
+                // Diagrams arrive from their threads, as WM_APP_IMAGE delivers them.
+                v.images.poll(&g);
                 v.relayout(&g, &t);
                 let _ = v.caret_at(v.buf.sel.head);
                 frame(&g, &mut v, &t);

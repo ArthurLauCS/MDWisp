@@ -9,6 +9,7 @@ pulldown-cmark = { version = "0.13", default-features = false }
 regex = { version = "1", default-features = false, features = ["std", "perf", "unicode-perl", "unicode-gencat", "unicode-script", "unicode-case"] }
 serde_json = "1"
 chrono = { version = "0.4", default-features = false, features = ["clock"] }
+mermaid-rs-renderer = { version = "0.3", default-features = false }
 
 [dev-dependencies]
 pulldown-cmark = { version = "0.13", default-features = false, features = ["html"] }
