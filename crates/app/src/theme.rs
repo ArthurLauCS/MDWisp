@@ -63,7 +63,7 @@ pub struct Theme {
 }
 
 /// Style `paper` (LaTeX paper), see the ui-style catalog: warm off-white
-/// stock, ink text, booktabs rules, radius 0, no shadows. The accent is
+/// stock, ink text, hairline rules, gridded tables, radius 0, no shadows. The accent is
 /// MDWisp's own hue (muted grape); links share it, so there is one accent.
 pub const DARK: Theme = Theme {
     dark: true,

@@ -180,14 +180,11 @@ pub fn paint(g: &Gfx, t: &Theme, tv: &TableView, x: f32, y: f32, caret_cell: Opt
     let y = y + PAD_Y;
     let w = tv.width();
     let h: f32 = tv.rows.iter().sum();
-    // Booktabs: no frame, no vertical lines, no zebra; the rules are drawn below.
+    g.fill(Rect::new(x, y, w, tv.rows[0]), t.bg_raised);
     let mut ry = y;
     for (row, rh) in tv.rows.iter().enumerate() {
         if row > 0 && hover_row == Some(row) {
             g.fill(Rect::new(x, ry, w, *rh), t.bg_hover);
-        }
-        if row == 0 && tv.rows.len() > 1 {
-            g.fill(Rect::new(x, ry + rh - 1.0, w, 1.0), t.text_primary);
         }
         let mut cx = x;
         for (col, cw) in tv.cols.iter().enumerate() {
@@ -201,9 +198,6 @@ pub fn paint(g: &Gfx, t: &Theme, tv: &TableView, x: f32, y: f32, caret_cell: Opt
                     }
                 }
             }
-            if caret_cell == Some(CellPos { row, col }) {
-                g.stroke_round(Rect::new(cx, ry, *cw, *rh), 0.0, t.accent_line, 1.0);
-            }
             if let Some(l) = &c.shaped.layout {
                 for (r, _) in &c.shaped.backgrounds {
                     for rr in super::view::range_rects(l, r.start, r.end) {
@@ -216,7 +210,30 @@ pub fn paint(g: &Gfx, t: &Theme, tv: &TableView, x: f32, y: f32, caret_cell: Opt
         }
         ry += rh;
     }
-    // Top and bottom rules, 1.5 px; the top one in the accent marks where a table starts.
-    g.fill(Rect::new(x, y - 0.75, w, 1.5), t.accent);
-    g.fill(Rect::new(x, y + h - 0.75, w, 1.5), t.text_primary);
+    // The grid: a frame and a rule between every row and column, one DIP wide,
+    // rounded to whole device pixels on pixel edges so it stays crisp at any scale.
+    let (mut dpi, mut dpi_y) = (96.0, 96.0);
+    unsafe { g.dc.GetDpi(&mut dpi, &mut dpi_y) };
+    let k = dpi / 96.0;
+    let snap = |v: f32| (v * k).round() / k;
+    let lw = k.round().max(1.0) / k;
+    let (x0, y0, x1, y1) = (snap(x), snap(y), snap(x + w) - lw, snap(y + h) - lw);
+    let mut ry = y;
+    for rh in &tv.rows[..tv.rows.len() - 1] {
+        ry += rh;
+        g.fill(Rect::new(x0, snap(ry), x1 + lw - x0, lw), t.border_strong);
+    }
+    let mut cx = x;
+    for cw in &tv.cols[..tv.cols.len() - 1] {
+        cx += cw;
+        g.fill(Rect::new(snap(cx), y0, lw, y1 + lw - y0), t.border_strong);
+    }
+    for r in [Rect::new(x0, y0, x1 + lw - x0, lw), Rect::new(x0, y1, x1 + lw - x0, lw), Rect::new(x0, y0, lw, y1 + lw - y0), Rect::new(x1, y0, lw, y1 + lw - y0)] {
+        g.fill(r, t.border_strong);
+    }
+    // Over the grid, so the rules do not cut the edited cell's outline.
+    if let Some(cp) = caret_cell {
+        let r = tv.cell_rect(cp.row, cp.col);
+        g.stroke_round(Rect::new(x + r.x, y + r.y, r.w, r.h), 0.0, t.accent_line, 1.0);
+    }
 }
